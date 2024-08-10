@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-09 18:23:16.668849",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "title",
+  "car_wash",
+  "connections_tab"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "\u0418\u043c\u044f",
+   "read_only": 1
+  },
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
+  }
+ ],
+ "hide_toolbar": 1,
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "Car wash appointment",
+   "link_fieldname": "worker"
+  }
+ ],
+ "modified": "2024-05-10 00:46:13.728742",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash worker",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}

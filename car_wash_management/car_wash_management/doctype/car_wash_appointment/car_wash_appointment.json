@@ -1,0 +1,256 @@
+{
+ "actions": [],
+ "autoname": "format:APMT-{YY}-{MM}-{DD}-{####}",
+ "creation": "2024-03-24 01:40:27.294038",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "general_tab",
+  "car_wash_section_break",
+  "car_wash_column_break",
+  "car_wash",
+  "workflow_state",
+  "column_break_betd",
+  "box",
+  "box_name",
+  "box_color",
+  "color",
+  "\u0434\u0430\u0442\u044b_section",
+  "starts_on",
+  "column_break_mzfn",
+  "ends_on",
+  "general",
+  "column_break_xron",
+  "worker",
+  "worker_name",
+  "column_break_gjig",
+  "services",
+  "services_total",
+  "duration_total",
+  "client_tab",
+  "customer",
+  "customer_name",
+  "car",
+  "heading",
+  "connections_tab"
+ ],
+ "fields": [
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "box",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "\u0411\u043e\u043a\u0441",
+   "options": "Car wash box"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "\u041a\u043b\u0438\u0435\u043d\u0442",
+   "options": "Car wash client",
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "starts_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "\u0412\u0440\u0435\u043c\u044f \u043d\u0430\u0447\u0430\u043b\u0430",
+   "reqd": 1
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "label": "\u0421\u0442\u0430\u0442\u0443\u0441",
+   "options": "Workflow State"
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u0421\u0432\u044f\u0437\u0438",
+   "show_dashboard": 1
+  },
+  {
+   "fieldname": "general_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435"
+  },
+  {
+   "fieldname": "general",
+   "fieldtype": "Section Break",
+   "label": "\u041e\u0441\u043d\u043e\u0432\u043d\u0430\u044f \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f"
+  },
+  {
+   "fieldname": "column_break_xron",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "client_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u041a\u043b\u0438\u0435\u043d\u0442"
+  },
+  {
+   "fieldname": "\u0434\u0430\u0442\u044b_section",
+   "fieldtype": "Section Break",
+   "label": "\u0414\u0430\u0442\u044b"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "services",
+   "fieldtype": "Table",
+   "ignore_user_permissions": 1,
+   "label": "\u0423\u0441\u043b\u0443\u0433\u0438",
+   "options": "Car wash appointment service"
+  },
+  {
+   "fieldname": "services_total",
+   "fieldtype": "Int",
+   "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c \u0443\u0441\u043b\u0443\u0433",
+   "read_only": 1
+  },
+  {
+   "fieldname": "duration_total",
+   "fieldtype": "Duration",
+   "label": "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0443\u0441\u043b\u0443\u0433",
+   "read_only": 1
+  },
+  {
+   "fieldname": "worker",
+   "fieldtype": "Link",
+   "label": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
+   "options": "Car wash worker"
+  },
+  {
+   "description": "\u0412\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0432\u044b\u0447\u0438\u0441\u043b\u044f\u0435\u0442\u0441\u044f \u043d\u0430 \u043e\u0441\u043d\u043e\u0432\u0435 \u0412\u0440\u0435\u043c\u0435\u043d\u0438 \u043d\u0430\u0447\u0430\u043b\u0430 \u0438 \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u0438 \u0443\u0441\u043b\u0443\u0433",
+   "fieldname": "ends_on",
+   "fieldtype": "Datetime",
+   "label": "\u0412\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "worker.title",
+   "fieldname": "worker_name",
+   "fieldtype": "Data",
+   "label": "\u0418\u043c\u044f \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044f",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "box.title",
+   "fieldname": "box_name",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0431\u043e\u043a\u0441\u0430",
+   "read_only": 1
+  },
+  {
+   "fieldname": "car_wash_section_break",
+   "fieldtype": "Section Break",
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430"
+  },
+  {
+   "fieldname": "car_wash_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "\u0418\u043c\u044f \u043a\u043b\u0438\u0435\u043d\u0442\u0430",
+   "read_only": 1
+  },
+  {
+   "fieldname": "car",
+   "fieldtype": "Link",
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c",
+   "options": "Car wash car",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_betd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_gjig",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_mzfn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "box.color",
+   "fieldname": "box_color",
+   "fieldtype": "Color",
+   "label": "\u0426\u0432\u0435\u0442 \u0431\u043e\u043a\u0441\u0430",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "box.color",
+   "fieldname": "color",
+   "fieldtype": "Data",
+   "label": "\u0426\u0432\u0435\u0442"
+  },
+  {
+   "fieldname": "heading",
+   "fieldtype": "Data",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "is_virtual": 1,
+   "label": "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a",
+   "length": 16,
+   "options": "f\"{doc.car}\"",
+   "read_only": 1
+  }
+ ],
+ "is_calendar_and_gantt": 1,
+ "links": [
+  {
+   "link_doctype": "Car wash feedback",
+   "link_fieldname": "appointment"
+  }
+ ],
+ "modified": "2024-05-10 21:08:22.278192",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash appointment",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

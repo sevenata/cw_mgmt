@@ -1,0 +1,21 @@
+{
+ "cards": [],
+ "charts": [
+  {
+   "chart": "\u0411\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f",
+   "width": "Half"
+  }
+ ],
+ "creation": "2024-03-24 04:55:39.726465",
+ "dashboard_name": "Car wash management dashboard",
+ "docstatus": 0,
+ "doctype": "Dashboard",
+ "idx": 0,
+ "is_default": 0,
+ "is_standard": 1,
+ "modified": "2024-03-24 04:59:03.609858",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash management dashboard",
+ "owner": "Administrator"
+}

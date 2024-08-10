@@ -1,0 +1,120 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-03-24 01:35:38.491285",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "appointment",
+  "customer",
+  "text",
+  "rating",
+  "rating_value",
+  "column_break_hylh",
+  "car_wash",
+  "car_wash_name",
+  "worker",
+  "duration_total",
+  "price_total"
+ ],
+ "fields": [
+  {
+   "fieldname": "text",
+   "fieldtype": "Small Text",
+   "label": "\u0422\u0435\u043a\u0441\u0442 \u043e\u0442\u0437\u044b\u0432\u0430"
+  },
+  {
+   "fieldname": "rating",
+   "fieldtype": "Rating",
+   "label": "\u0420\u0435\u0439\u0442\u0438\u043d\u0433"
+  },
+  {
+   "fieldname": "appointment",
+   "fieldtype": "Link",
+   "label": "\u0411\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
+   "options": "Car wash appointment"
+  },
+  {
+   "fetch_from": "appointment.car_wash",
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "appointment.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "\u041a\u043b\u0438\u0435\u043d\u0442",
+   "options": "Car wash client",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "appointment.worker",
+   "fieldname": "worker",
+   "fieldtype": "Link",
+   "label": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
+   "options": "Car wash worker",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "appointment.services_total",
+   "fieldname": "price_total",
+   "fieldtype": "Currency",
+   "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "appointment.duration_total",
+   "fieldname": "duration_total",
+   "fieldtype": "Duration",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hylh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "car_wash.title",
+   "fieldname": "car_wash_name",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0430\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0438",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rating_value",
+   "fieldtype": "Int",
+   "label": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435 \u0440\u0435\u0439\u0442\u0438\u043d\u0433\u0430",
+   "options": "f\"{doc.rating*5}\""
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-05-09 23:34:24.537936",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash feedback",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

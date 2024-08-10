@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-10 17:32:41.528331",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "synonym"
+ ],
+ "fields": [
+  {
+   "fieldname": "synonym",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u0421\u0438\u043d\u043e\u043d\u0438\u043c",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-05-10 17:33:04.857497",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car model synonym",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:alias",
+ "creation": "2024-05-10 17:27:48.524298",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_section_break",
+  "title",
+  "alias",
+  "synonyms"
+ ],
+ "fields": [
+  {
+   "fieldname": "general_section_break",
+   "fieldtype": "Section Break",
+   "label": "\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0435"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435",
+   "reqd": 1
+  },
+  {
+   "fieldname": "synonyms",
+   "fieldtype": "Table",
+   "label": "\u0421\u0438\u043d\u043e\u043d\u0438\u043c\u044b",
+   "options": "Car model synonym"
+  },
+  {
+   "fieldname": "alias",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Alias",
+   "reqd": 1,
+   "unique": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "\u041c\u043e\u0434\u0435\u043b\u044c",
+   "link_doctype": "Car model",
+   "link_fieldname": "make"
+  }
+ ],
+ "modified": "2024-05-10 18:10:14.181993",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car make",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}

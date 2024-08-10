@@ -1,0 +1,78 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-03-23 18:29:46.183033",
+ "description": "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "car_wash",
+  "color",
+  "connections_tab"
+ ],
+ "fields": [
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435",
+   "reqd": 1
+  },
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "label": "\u0426\u0432\u0435\u0442",
+   "reqd": 1
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "Car wash appointment",
+   "link_fieldname": "car_wash"
+  }
+ ],
+ "modified": "2024-05-10 01:10:16.518288",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash box",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}

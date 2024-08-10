@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-08 23:18:18.139743",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "service",
+  "service_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "service",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "\u0423\u0441\u043b\u0443\u0433\u0430",
+   "options": "Car wash service"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "allow_on_submit": 1,
+   "fetch_from": "service.type",
+   "fetch_if_empty": 1,
+   "fieldname": "service_name",
+   "fieldtype": "Read Only",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0443\u0441\u043b\u0443\u0433\u0438",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-05-09 00:57:44.987317",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash appointment service",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

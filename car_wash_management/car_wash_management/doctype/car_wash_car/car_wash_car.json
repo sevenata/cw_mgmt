@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-08 22:48:07.654571",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "make",
+  "model",
+  "body_type",
+  "virtual_car",
+  "column_break_djge",
+  "license_plate",
+  "year",
+  "color"
+ ],
+ "fields": [
+  {
+   "fieldname": "model",
+   "fieldtype": "Link",
+   "label": "\u041c\u043e\u0434\u0435\u043b\u044c",
+   "options": "Car model",
+   "reqd": 1
+  },
+  {
+   "fieldname": "make",
+   "fieldtype": "Link",
+   "label": "\u041c\u0430\u0440\u043a\u0430",
+   "options": "Car make",
+   "reqd": 1
+  },
+  {
+   "fieldname": "license_plate",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u041d\u043e\u043c\u0435\u0440",
+   "reqd": 1
+  },
+  {
+   "fieldname": "year",
+   "fieldtype": "Int",
+   "label": "\u0413\u043e\u0434"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "label": "\u0426\u0432\u0435\u0442"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "\u041a\u043b\u0438\u0435\u043d\u0442",
+   "options": "Car wash client",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "model.body_type",
+   "fieldname": "body_type",
+   "fieldtype": "Data",
+   "label": "\u0422\u0438\u043f \u043a\u0443\u0437\u043e\u0432\u0430"
+  },
+  {
+   "fieldname": "column_break_djge",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "virtual_car",
+   "fieldtype": "Link",
+   "label": "virtual car",
+   "options": "Virtual Car Make"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-05-10 22:28:52.178680",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash car",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "license_plate"
+}

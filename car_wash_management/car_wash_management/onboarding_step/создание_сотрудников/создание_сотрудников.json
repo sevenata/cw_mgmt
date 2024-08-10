@@ -1,0 +1,21 @@
+{
+ "action": "Create Entry",
+ "action_label": "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c",
+ "creation": "2024-05-10 20:03:37.714588",
+ "description": "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0448\u0430\u0433\u0430 \u043e \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u0438 \u0441\u043e\u0442\u0440\u0443\u0434\u043d\u0438\u043a\u043e\u0432",
+ "docstatus": 0,
+ "doctype": "Onboarding Step",
+ "idx": 0,
+ "is_complete": 0,
+ "is_single": 0,
+ "is_skipped": 0,
+ "modified": "2024-05-10 20:04:24.953269",
+ "modified_by": "Administrator",
+ "name": "\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0441\u043e\u0442\u0440\u0443\u0434\u043d\u0438\u043a\u043e\u0432",
+ "owner": "Administrator",
+ "reference_document": "Car wash worker",
+ "show_form_tour": 0,
+ "show_full_form": 0,
+ "title": "\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0441\u043e\u0442\u0440\u0443\u0434\u043d\u0438\u043a\u043e\u0432",
+ "validate_action": 1
+}

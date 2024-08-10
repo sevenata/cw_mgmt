@@ -1,7 +1,7 @@
 app_name = "car_wash_management"
 app_title = "Car Wash Management"
 app_publisher = "Rifat"
-app_description = "Car Wash Management"
+app_description = "Car wash management description"
 app_email = "jum.rifm@gmail.com"
 app_license = "mit"
 # required_apps = []

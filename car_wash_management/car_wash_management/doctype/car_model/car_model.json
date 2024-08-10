@@ -1,0 +1,80 @@
+{
+ "actions": [],
+ "autoname": "format:{make_alias}-{alias}",
+ "creation": "2024-05-10 17:38:46.545934",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "make",
+  "model",
+  "body_type",
+  "alias",
+  "make_alias"
+ ],
+ "fields": [
+  {
+   "fieldname": "make",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041c\u0430\u0440\u043a\u0430 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f",
+   "options": "Car make",
+   "reqd": 1
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u041c\u043e\u0434\u0435\u043b\u044c",
+   "reqd": 1
+  },
+  {
+   "fieldname": "body_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u0422\u0438\u043f \u043a\u0443\u0437\u043e\u0432\u0430",
+   "options": "Passenger\nSUV\nMinivan",
+   "reqd": 1
+  },
+  {
+   "fieldname": "alias",
+   "fieldtype": "Data",
+   "label": "Alias",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "make.alias",
+   "fieldname": "make_alias",
+   "fieldtype": "Data",
+   "label": "Alias \u043c\u0430\u0440\u043a\u0438",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-05-10 17:51:46.266127",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car model",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "model",
+ "translated_doctype": 1
+}
