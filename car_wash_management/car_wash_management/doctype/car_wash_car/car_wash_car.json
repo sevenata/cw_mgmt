@@ -10,7 +10,6 @@
   "make",
   "model",
   "body_type",
-  "virtual_car",
   "column_break_djge",
   "license_plate",
   "year",
@@ -64,17 +63,11 @@
   {
    "fieldname": "column_break_djge",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "virtual_car",
-   "fieldtype": "Link",
-   "label": "virtual car",
-   "options": "Virtual Car Make"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-05-10 22:28:52.178680",
+ "modified": "2024-08-11 02:12:13.350894",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash car",
