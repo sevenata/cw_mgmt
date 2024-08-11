@@ -1,0 +1,29 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-08-11 17:03:40.972405",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "threshold_between_washes"
+ ],
+ "fields": [
+  {
+   "fieldname": "threshold_between_washes",
+   "fieldtype": "Data",
+   "label": "\u0418\u043d\u0442\u0435\u0440\u0432\u0430\u043b \u043c\u0435\u0436\u0434\u0443 \u043c\u043e\u0439\u043a\u0430\u043c\u0438"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-08-11 17:10:32.661306",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash settings",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

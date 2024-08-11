@@ -7,8 +7,8 @@
  "engine": "InnoDB",
  "field_order": [
   "\u0443\u0441\u043b\u0443\u0433\u0430_section",
+  "car_wash",
   "title",
-  "type",
   "price",
   "duration",
   "description"
@@ -18,19 +18,13 @@
    "fieldname": "price",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c",
+   "label": "\u0411\u0430\u0437\u043e\u0432\u0430\u044f \u0441\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c",
    "reqd": 1
   },
   {
    "fieldname": "duration",
    "fieldtype": "Duration",
    "label": "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c"
-  },
-  {
-   "fieldname": "type",
-   "fieldtype": "Select",
-   "label": "\u0422\u0438\u043f \u0443\u0441\u043b\u0443\u0433\u0438",
-   "options": "\u0427\u0438\u0441\u0442\u043a\u0430 \u0441\u0430\u043b\u043e\u043d\u0430\n\u041f\u043e\u043b\u0438\u0440\u043e\u0432\u043a\u0430 \u043a\u0443\u0437\u043e\u0432\u0430\n\u0425\u0438\u043c\u0447\u0438\u0441\u0442\u043a\u0430 \u0441\u0430\u043b\u043e\u043d\u0430\n\u0427\u0438\u0441\u0442\u043a\u0430 \u043a\u043e\u043b\u0435\u0441\u043d\u044b\u0445 \u0434\u0438\u0441\u043a\u043e\u0432"
   },
   {
    "fieldname": "description",
@@ -41,18 +35,25 @@
    "fieldname": "title",
    "fieldtype": "Data",
    "ignore_user_permissions": 1,
-   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0443\u0441\u043b\u0443\u0433\u0438",
    "reqd": 1
   },
   {
    "fieldname": "\u0443\u0441\u043b\u0443\u0433\u0430_section",
    "fieldtype": "Section Break",
    "label": "\u0423\u0441\u043b\u0443\u0433\u0430"
+  },
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-05-09 20:09:48.608794",
+ "modified": "2024-08-11 17:30:59.212337",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service",

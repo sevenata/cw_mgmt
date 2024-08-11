@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-08-11 17:28:10.872732",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "body_type",
+  "price_segment",
+  "price",
+  "duration"
+ ],
+ "fields": [
+  {
+   "fieldname": "body_type",
+   "fieldtype": "Select",
+   "label": "\u0422\u0438\u043f \u043a\u0443\u0437\u043e\u0432\u0430",
+   "options": "Passenger\nSUV\nMinivan"
+  },
+  {
+   "fieldname": "price_segment",
+   "fieldtype": "Select",
+   "label": "\u0426\u0435\u043d\u043e\u0432\u043e\u0439 \u0441\u0435\u0433\u043c\u0435\u043d\u0442"
+  },
+  {
+   "fieldname": "price",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "\u0426\u0435\u043d\u0430",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "duration",
+   "fieldtype": "Duration",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-08-11 17:30:02.550391",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash service price",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

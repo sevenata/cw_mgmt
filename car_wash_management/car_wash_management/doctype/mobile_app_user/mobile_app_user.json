@@ -6,7 +6,10 @@
  "engine": "InnoDB",
  "field_order": [
   "phone",
-  "email"
+  "email",
+  "push_tokens",
+  "city",
+  "current_car"
  ],
  "fields": [
   {
@@ -23,11 +26,29 @@
    "label": "Phone",
    "no_copy": 1,
    "reqd": 1
+  },
+  {
+   "fieldname": "push_tokens",
+   "fieldtype": "Table",
+   "label": "\u041f\u0443\u0448 \u0442\u043e\u043a\u0435\u043d\u044b",
+   "options": "Mobile Push Token"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Link",
+   "label": "\u0413\u043e\u0440\u043e\u0434",
+   "options": "City"
+  },
+  {
+   "fieldname": "current_car",
+   "fieldtype": "Link",
+   "label": "\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c",
+   "options": "Car wash car"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-08-11 01:00:46.027448",
+ "modified": "2024-08-11 17:16:04.409202",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Mobile App User",

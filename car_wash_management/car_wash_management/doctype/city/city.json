@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-08-11 13:25:41.707304",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "alias",
+  "lat",
+  "lon"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435"
+  },
+  {
+   "fieldname": "alias",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Alias",
+   "reqd": 1
+  },
+  {
+   "fieldname": "lat",
+   "fieldtype": "Data",
+   "label": "\u0428\u0438\u0440\u043e\u0442\u0430"
+  },
+  {
+   "fieldname": "lon",
+   "fieldtype": "Data",
+   "label": "\u0414\u043e\u043b\u0433\u043e\u0442\u0430"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-08-11 13:36:57.386360",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "City",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}

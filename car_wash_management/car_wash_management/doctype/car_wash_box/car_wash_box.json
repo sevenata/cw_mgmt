@@ -10,6 +10,7 @@
   "title",
   "car_wash",
   "color",
+  "type",
   "connections_tab"
  ],
  "fields": [
@@ -42,6 +43,13 @@
    "fieldtype": "Tab Break",
    "label": "Connections",
    "show_dashboard": 1
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "\u0422\u0438\u043f \u0431\u043e\u043a\u0441\u0430",
+   "options": "IndividualOnly\nMixed",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -51,7 +59,7 @@
    "link_fieldname": "car_wash"
   }
  ],
- "modified": "2024-05-10 01:10:16.518288",
+ "modified": "2024-08-11 13:41:24.164430",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash box",

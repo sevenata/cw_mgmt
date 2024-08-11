@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:BOX-{###}",
+ "autoname": "format:WASH-{###}",
  "creation": "2024-03-23 18:16:20.652288",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -10,9 +10,17 @@
   "general",
   "title",
   "description",
+  "company",
   "contacts_tab",
   "contacts",
-  "connections_tab"
+  "city",
+  "lat",
+  "lon",
+  "address",
+  "connections_tab",
+  "settings_tab",
+  "settings",
+  "working_hours"
  ],
  "fields": [
   {
@@ -51,6 +59,53 @@
    "fieldtype": "Tab Break",
    "label": "\u0421\u0432\u044f\u0437\u0438",
    "show_dashboard": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f",
+   "options": "Car wash company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Link",
+   "label": "\u0413\u043e\u0440\u043e\u0434",
+   "options": "City",
+   "reqd": 1
+  },
+  {
+   "fieldname": "lat",
+   "fieldtype": "Data",
+   "label": "\u0428\u0438\u0440\u043e\u0442\u0430"
+  },
+  {
+   "fieldname": "lon",
+   "fieldtype": "Data",
+   "label": "\u0414\u043e\u043b\u0433\u043e\u0442\u0430"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Data",
+   "label": "\u0410\u0434\u0440\u0435\u0441"
+  },
+  {
+   "fieldname": "settings",
+   "fieldtype": "Table",
+   "label": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438",
+   "options": "Car wash settings"
+  },
+  {
+   "fieldname": "settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438"
+  },
+  {
+   "fieldname": "working_hours",
+   "fieldtype": "Table",
+   "label": "\u0412\u0440\u0435\u043c\u044f \u0440\u0430\u0431\u043e\u0442\u044b",
+   "options": "Car wash working hours"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -69,9 +124,14 @@
    "group": "\u0420\u0430\u0431\u043e\u0442\u043d\u0438\u043a\u0438",
    "link_doctype": "Car wash worker",
    "link_fieldname": "car_wash"
+  },
+  {
+   "group": "\u0423\u0441\u043b\u0443\u0433\u0438",
+   "link_doctype": "Car wash service",
+   "link_fieldname": "car_wash"
   }
  ],
- "modified": "2024-05-12 19:50:36.850869",
+ "modified": "2024-08-11 17:31:38.130005",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash",

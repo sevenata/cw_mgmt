@@ -14,9 +14,8 @@
   "basic_info",
   "naming_series",
   "customer_name",
-  "client_id",
+  "user",
   "column_break0",
-  "gender",
   "image",
   "more_info",
   "column_break_45",
@@ -64,13 +63,6 @@
    "fieldname": "column_break0",
    "fieldtype": "Column Break",
    "width": "50%"
-  },
-  {
-   "depends_on": "eval:doc.customer_type != 'Company'",
-   "fieldname": "gender",
-   "fieldtype": "Link",
-   "label": "Gender",
-   "options": "Gender"
   },
   {
    "fieldname": "image",
@@ -158,9 +150,10 @@
    "label": "Email Id"
   },
   {
-   "fieldname": "client_id",
-   "fieldtype": "Data",
-   "label": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u043a\u043b\u0438\u0435\u043d\u0442\u0430"
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
+   "options": "Mobile App User"
   }
  ],
  "icon": "fa fa-user",
@@ -178,7 +171,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-05-10 00:48:07.151382",
+ "modified": "2024-08-11 17:21:47.161903",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash client",

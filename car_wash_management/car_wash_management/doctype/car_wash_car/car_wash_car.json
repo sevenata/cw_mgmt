@@ -10,6 +10,7 @@
   "make",
   "model",
   "body_type",
+  "is_deleted",
   "column_break_djge",
   "license_plate",
   "year",
@@ -63,11 +64,17 @@
   {
    "fieldname": "column_break_djge",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_deleted",
+   "fieldtype": "Check",
+   "label": "\u0423\u0434\u0430\u043b\u0451\u043d \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0435\u043c"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-08-11 02:12:13.350894",
+ "modified": "2024-08-11 17:59:21.500419",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash car",
