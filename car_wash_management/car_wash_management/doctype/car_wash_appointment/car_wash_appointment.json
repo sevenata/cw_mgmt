@@ -26,9 +26,9 @@
   "worker",
   "worker_name",
   "column_break_gjig",
-  "services",
   "services_total",
   "duration_total",
+  "services",
   "client_tab",
   "customer",
   "customer_name",
@@ -112,14 +112,6 @@
    "fieldname": "\u0434\u0430\u0442\u044b_section",
    "fieldtype": "Section Break",
    "label": "\u0414\u0430\u0442\u044b"
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "services",
-   "fieldtype": "Table",
-   "ignore_user_permissions": 1,
-   "label": "\u0423\u0441\u043b\u0443\u0433\u0438",
-   "options": "Car wash appointment service"
   },
   {
    "fieldname": "services_total",
@@ -219,6 +211,12 @@
    "length": 16,
    "options": "f\"{doc.car}\"",
    "read_only": 1
+  },
+  {
+   "fieldname": "services",
+   "fieldtype": "Table",
+   "label": "\u0423\u0441\u043b\u0443\u0433\u0438",
+   "options": "Car wash appointment service"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -228,7 +226,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2024-05-10 21:08:22.278192",
+ "modified": "2024-08-12 03:12:54.328759",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",

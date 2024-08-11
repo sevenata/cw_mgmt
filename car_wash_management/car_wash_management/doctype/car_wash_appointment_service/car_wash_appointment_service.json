@@ -7,7 +7,9 @@
  "engine": "InnoDB",
  "field_order": [
   "service",
-  "service_name"
+  "service_name",
+  "duration",
+  "price"
  ],
  "fields": [
   {
@@ -20,7 +22,7 @@
   {
    "allow_in_quick_entry": 1,
    "allow_on_submit": 1,
-   "fetch_from": "service.type",
+   "fetch_from": "service.title",
    "fetch_if_empty": 1,
    "fieldname": "service_name",
    "fieldtype": "Read Only",
@@ -32,12 +34,26 @@
    "in_standard_filter": 1,
    "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0443\u0441\u043b\u0443\u0433\u0438",
    "read_only": 1
+  },
+  {
+   "fetch_from": "service.duration",
+   "fieldname": "duration",
+   "fieldtype": "Duration",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0443\u0441\u043b\u0443\u0433\u0438"
+  },
+  {
+   "fetch_from": "service.price",
+   "fieldname": "price",
+   "fieldtype": "Int",
+   "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c \u0443\u0441\u043b\u0443\u0433\u0438"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-05-09 00:57:44.987317",
+ "modified": "2024-08-12 03:11:03.046525",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment service",

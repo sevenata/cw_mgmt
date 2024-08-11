@@ -30,10 +30,6 @@ class Carwashbox(Document):
 
 		return working_hours_mapped
 
-	def get_appointments(self):
-		appointments = frappe.get_list('Car wash appointment', fields=['name', 'starts_on'])
-		return appointments
-
 	def get_time_intervals(self):
 		schedules = self.get_working_hours()
 		day_schedule = schedules[0]

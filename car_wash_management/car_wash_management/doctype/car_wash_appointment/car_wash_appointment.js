@@ -155,11 +155,11 @@ frappe.ui.form.on('Car wash appointment', {
 })
 
 frappe.ui.form.on('Car wash appointment service', {
-	service_price: function(frm, cdt, cdn) {
+	price: function(frm, cdt, cdn) {
 		total_incentive = 0
 		duration_total = 0
 		$.each(frm.doc.services,  function(i,  d) {
-			total_incentive += d.service_price || 0
+			total_incentive += d.price || 0
 			duration_total += d.duration || 0
 		});
 		frm.set_value('services_total', total_incentive)
