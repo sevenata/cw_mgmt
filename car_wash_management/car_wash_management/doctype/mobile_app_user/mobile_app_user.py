@@ -2,8 +2,10 @@
 # For license information, please see license.txt
 
 # import frappe
+import uuid
 from frappe.model.document import Document
 
 
 class MobileAppUser(Document):
-	pass
+	def autoname(self):
+            self.name = uuid.v4()

@@ -8,7 +8,7 @@
  "field_order": [
   "day_of_week",
   "start_time",
-  "\u0432\u0440\u0435\u043c\u044f_\u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f",
+  "end_time",
   "non_working"
  ],
  "fields": [
@@ -26,21 +26,21 @@
    "label": "\u0412\u0440\u0435\u043c\u044f \u043d\u0430\u0447\u0430\u043b\u0430"
   },
   {
-   "fieldname": "\u0432\u0440\u0435\u043c\u044f_\u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f",
-   "fieldtype": "Time",
-   "label": "\u0412\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f"
-  },
-  {
    "default": "0",
    "fieldname": "non_working",
    "fieldtype": "Check",
    "label": "\u041d\u0435\u0440\u0430\u0431\u043e\u0447\u0438\u0439 \u0434\u0435\u043d\u044c"
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "label": "\u0412\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-08-11 17:08:46.481451",
+ "modified": "2024-08-12 01:48:50.734697",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash working hours",
