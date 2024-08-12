@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-08-13 04:20:32.871036",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "worker",
+  "type",
+  "time",
+  "shift_schedule"
+ ],
+ "fields": [
+  {
+   "fieldname": "worker",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0420\u0430\u0431\u043e\u0442\u043d\u0438\u043a",
+   "options": "Car wash worker",
+   "reqd": 1
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "\u0422\u0438\u043f",
+   "options": "IN\nOUT"
+  },
+  {
+   "default": "Now",
+   "fieldname": "time",
+   "fieldtype": "Datetime",
+   "label": "\u0412\u0440\u0435\u043c\u044f",
+   "reqd": 1
+  },
+  {
+   "fieldname": "shift_schedule",
+   "fieldtype": "Link",
+   "label": "\u0421\u043c\u0435\u043d\u0430",
+   "options": "Work Shift Schedule",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-08-13 04:28:27.771057",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Worker Check In",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

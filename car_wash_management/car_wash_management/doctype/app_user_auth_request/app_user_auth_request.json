@@ -1,0 +1,65 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-08-13 03:28:39.172946",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "hash",
+  "phone",
+  "type",
+  "is_expired"
+ ],
+ "fields": [
+  {
+   "fieldname": "hash",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hash",
+   "reqd": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "\u041d\u043e\u043c\u0435\u0440 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0430"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u0422\u0438\u043f \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438",
+   "options": "SMS\nTelegram",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_expired",
+   "fieldtype": "Check",
+   "label": "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-08-13 03:30:44.506819",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "App User Auth Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
