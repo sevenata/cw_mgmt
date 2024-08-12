@@ -1,0 +1,61 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow",
+  "document_type": "Work Shift Schedule",
+  "is_active": 1,
+  "modified": "2024-08-13 04:49:15.035878",
+  "name": "Work Shift Schedule Workflow",
+  "override_status": 0,
+  "send_email_alert": 0,
+  "states": [
+   {
+    "allow_edit": "All",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Work Shift Schedule Workflow",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "state": "Open",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": "1"
+   },
+   {
+    "allow_edit": "All",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Work Shift Schedule Workflow",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "state": "Closed",
+    "update_field": "",
+    "update_value": "",
+    "workflow_builder_id": "2"
+   }
+  ],
+  "transitions": [
+   {
+    "action": "Close",
+    "allow_self_approval": 1,
+    "allowed": "All",
+    "condition": null,
+    "next_state": "Closed",
+    "parent": "Work Shift Schedule Workflow",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "state": "Open",
+    "workflow_builder_id": "action-1"
+   }
+  ],
+  "workflow_data": "[{\"type\":\"state\",\"dimensions\":{\"width\":88,\"height\":53},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":40.515625,\"y\":-11,\"width\":7,\"height\":7},{\"id\":\"right\",\"position\":\"right\",\"x\":92.03125,\"y\":23,\"width\":7,\"height\":7},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":40.515625,\"y\":57,\"width\":7,\"height\":7},{\"id\":\"left\",\"position\":\"left\",\"x\":-11,\"y\":23,\"width\":7,\"height\":7}]},\"computedPosition\":{\"x\":59.5,\"y\":224.5,\"z\":0},\"id\":\"1\",\"position\":{\"x\":59.5,\"y\":224.5}},{\"type\":\"state\",\"dimensions\":{\"width\":99,\"height\":53},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":45.8125,\"y\":-11,\"width\":7,\"height\":7},{\"id\":\"right\",\"position\":\"right\",\"x\":102.6328125,\"y\":23,\"width\":7,\"height\":7},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":45.8125,\"y\":57,\"width\":7,\"height\":7},{\"id\":\"left\",\"position\":\"left\",\"x\":-11,\"y\":23,\"width\":7,\"height\":7}]},\"computedPosition\":{\"x\":263.5,\"y\":224.5,\"z\":1000},\"id\":\"2\",\"position\":{\"x\":263.5,\"y\":224.5}},{\"type\":\"action\",\"dimensions\":{\"width\":60,\"height\":33},\"handleBounds\":{\"source\":[{\"id\":\"top\",\"position\":\"top\",\"x\":27.015625,\"y\":-2,\"width\":6,\"height\":6},{\"id\":\"right\",\"position\":\"right\",\"x\":56.03125,\"y\":13.5,\"width\":6,\"height\":6},{\"id\":\"bottom\",\"position\":\"bottom\",\"x\":27.015625,\"y\":29,\"width\":6,\"height\":6},{\"id\":\"left\",\"position\":\"left\",\"x\":-2,\"y\":13.5,\"width\":6,\"height\":6}]},\"computedPosition\":{\"x\":167.75,\"y\":234.5,\"z\":0},\"id\":\"action-1\",\"position\":{\"x\":167.75,\"y\":234.5},\"data\":{\"from_id\":\"1\",\"to_id\":\"2\"}},{\"sourceHandle\":\"right\",\"targetHandle\":\"left\",\"type\":\"transition\",\"source\":\"1\",\"target\":\"action-1\",\"updatable\":true,\"animated\":true,\"id\":\"vueflow__edge-1right-action-1left\",\"sourceX\":158.53125,\"sourceY\":251,\"targetX\":165.75,\"targetY\":251},{\"sourceHandle\":\"right\",\"targetHandle\":\"left\",\"type\":\"transition\",\"source\":\"action-1\",\"target\":\"2\",\"updatable\":true,\"animated\":true,\"id\":\"vueflow__edge-action-1right-2left\",\"sourceX\":229.78125,\"sourceY\":251,\"targetX\":252.5,\"targetY\":251,\"markerEnd\":{\"type\":\"arrow\",\"width\":15,\"height\":15,\"strokeWidth\":1.5,\"color\":\"#687178\"}}]",
+  "workflow_name": "Work Shift Schedule Workflow",
+  "workflow_state_field": "workflow_state"
+ }
+]

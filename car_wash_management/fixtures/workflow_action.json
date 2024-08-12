@@ -1,0 +1,170 @@
+[
+ {
+  "completed_by": "Administrator",
+  "completed_by_role": "All",
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 04:39:05.304057",
+  "name": "j5itpphkf8",
+  "permitted_roles": [
+   {
+    "parent": "j5itpphkf8",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "j5isp8vqol",
+  "status": "Completed",
+  "user": null,
+  "workflow_state": "Open"
+ },
+ {
+  "completed_by": "Administrator",
+  "completed_by_role": "All",
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 04:39:22.581872",
+  "name": "j5o90sr27n",
+  "permitted_roles": [
+   {
+    "parent": "j5o90sr27n",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "j5o9mmbd12",
+  "status": "Completed",
+  "user": null,
+  "workflow_state": "Open"
+ },
+ {
+  "completed_by": "Administrator",
+  "completed_by_role": "All",
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 04:40:48.880751",
+  "name": "j6j8nfdnv9",
+  "permitted_roles": [
+   {
+    "parent": "j6j8nfdnv9",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "j6j891s445",
+  "status": "Completed",
+  "user": null,
+  "workflow_state": "Open"
+ },
+ {
+  "completed_by": "Administrator",
+  "completed_by_role": "All",
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 04:44:28.620953",
+  "name": "j8nu04qta2",
+  "permitted_roles": [
+   {
+    "parent": "j8nu04qta2",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "j8nug0vsbm",
+  "status": "Completed",
+  "user": null,
+  "workflow_state": "Open"
+ },
+ {
+  "completed_by": "Administrator",
+  "completed_by_role": "All",
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 04:44:51.630083",
+  "name": "j8v4ajs29v",
+  "permitted_roles": [
+   {
+    "parent": "j8v4ajs29v",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "j8v4982tjo",
+  "status": "Completed",
+  "user": null,
+  "workflow_state": "Open"
+ },
+ {
+  "completed_by": "Administrator",
+  "completed_by_role": "All",
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 04:49:21.768534",
+  "name": "jbjhac3oei",
+  "permitted_roles": [
+   {
+    "parent": "jbjhac3oei",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "jbjhuqifce",
+  "status": "Completed",
+  "user": null,
+  "workflow_state": "Open"
+ },
+ {
+  "completed_by": "Administrator",
+  "completed_by_role": "All",
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 04:57:47.218291",
+  "name": "jghg3om6k7",
+  "permitted_roles": [
+   {
+    "parent": "jghg3om6k7",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "jghf4oormo",
+  "status": "Completed",
+  "user": null,
+  "workflow_state": "Open"
+ },
+ {
+  "completed_by": null,
+  "completed_by_role": null,
+  "docstatus": 0,
+  "doctype": "Workflow Action",
+  "modified": "2024-08-13 05:00:02.527488",
+  "name": "jhrps47lq8",
+  "permitted_roles": [
+   {
+    "parent": "jhrps47lq8",
+    "parentfield": "permitted_roles",
+    "parenttype": "Workflow Action",
+    "role": "All"
+   }
+  ],
+  "reference_doctype": "Work Shift Schedule",
+  "reference_name": "jhrparam46",
+  "status": "Open",
+  "user": null,
+  "workflow_state": "Open"
+ }
+]
