@@ -129,9 +129,14 @@
    "group": "\u0423\u0441\u043b\u0443\u0433\u0438",
    "link_doctype": "Car wash service",
    "link_fieldname": "car_wash"
+  },
+  {
+   "group": "\u0421\u043c\u0435\u043d\u044b",
+   "link_doctype": "Work Shift Schedule",
+   "link_fieldname": "car_wash"
   }
  ],
- "modified": "2024-08-11 17:31:38.130005",
+ "modified": "2024-08-13 05:16:47.847627",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash",

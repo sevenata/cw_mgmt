@@ -8,7 +8,10 @@
   "worker",
   "type",
   "time",
-  "shift_schedule"
+  "shift_schedule",
+  "car_wash",
+  "shift_start_time",
+  "amended_from"
  ],
  "fields": [
   {
@@ -38,11 +41,36 @@
    "label": "\u0421\u043c\u0435\u043d\u0430",
    "options": "Work Shift Schedule",
    "reqd": 1
+  },
+  {
+   "fetch_from": "shift_schedule.car_wash",
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Worker Check In",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "shift_schedule.start_time",
+   "fieldname": "shift_start_time",
+   "fieldtype": "Datetime",
+   "label": "\u0412\u0440\u0435\u043c\u044f \u043d\u0430\u0447\u0430\u043b\u0430 \u0441\u043c\u0435\u043d\u044b"
   }
  ],
  "index_web_pages_for_search": 1,
+ "is_submittable": 1,
  "links": [],
- "modified": "2024-08-13 04:28:27.771057",
+ "modified": "2024-08-13 05:04:56.437995",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Worker Check In",

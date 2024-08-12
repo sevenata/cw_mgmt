@@ -5,10 +5,13 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "details_tab",
+  "workflow_state",
   "start_time",
   "end_time",
-  "amended_from",
-  "workflow_state"
+  "car_wash",
+  "car_wash_name",
+  "connections_tab"
  ],
  "fields": [
   {
@@ -22,28 +25,52 @@
   {
    "fieldname": "end_time",
    "fieldtype": "Datetime",
-   "label": "\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u043c\u0435\u043d\u044b"
+   "label": "\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0441\u043c\u0435\u043d\u044b",
+   "read_only": 1
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Work Shift Schedule",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
+   "allow_on_submit": 1,
    "fieldname": "workflow_state",
    "fieldtype": "Link",
-   "label": "\u0421\u0442\u0430\u0442\u0443\u0441",
+   "hidden": 1,
+   "label": "Workflow State",
+   "no_copy": 1,
    "options": "Workflow State"
+  },
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "car_wash.title",
+   "fieldname": "car_wash_name",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043c\u043e\u0439\u043a\u0438"
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u0421\u0432\u044f\u0437\u0438",
+   "show_dashboard": 1
+  },
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u0414\u0435\u0442\u0430\u043b\u0438"
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2024-08-13 04:38:40.312873",
+ "links": [
+  {
+   "group": "\u0417\u0430\u043f\u0438\u0441\u0438 \u043e \u043f\u043e\u0441\u0435\u0449\u0435\u043d\u0438\u0438",
+   "link_doctype": "Worker Check In",
+   "link_fieldname": "shift_schedule"
+  }
+ ],
+ "modified": "2024-08-13 05:07:06.839674",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Work Shift Schedule",
