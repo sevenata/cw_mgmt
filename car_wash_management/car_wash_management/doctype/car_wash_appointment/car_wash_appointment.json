@@ -12,31 +12,44 @@
   "car_wash_column_break",
   "car_wash",
   "workflow_state",
+  "company",
+  "payment_status",
   "column_break_betd",
   "box",
-  "box_name",
+  "box_title",
   "box_color",
   "color",
   "\u0434\u0430\u0442\u044b_section",
   "starts_on",
+  "work_started_on",
+  "work_ended_on",
   "column_break_mzfn",
   "ends_on",
   "general",
   "column_break_xron",
-  "worker",
-  "worker_name",
+  "car_wash_worker",
+  "car_wash_worker_name",
   "column_break_gjig",
   "services_total",
   "duration_total",
   "services",
+  "services_json",
   "comments_section",
   "note",
   "staff_note",
+  "cancellation_reason",
   "client_tab",
   "customer",
   "customer_name",
   "car",
-  "heading",
+  "car_make",
+  "car_make_name",
+  "car_model",
+  "car_model_name",
+  "car_license_plate",
+  "car_body_type",
+  "car_color",
+  "customer_mobile_number",
   "connections_tab"
  ],
  "fields": [
@@ -81,6 +94,7 @@
    "reqd": 1
   },
   {
+   "default": "Pending",
    "fieldname": "workflow_state",
    "fieldtype": "Link",
    "label": "\u0421\u0442\u0430\u0442\u0443\u0441",
@@ -129,30 +143,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "worker",
-   "fieldtype": "Link",
-   "label": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
-   "options": "Car wash worker"
-  },
-  {
    "description": "\u0412\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0432\u044b\u0447\u0438\u0441\u043b\u044f\u0435\u0442\u0441\u044f \u043d\u0430 \u043e\u0441\u043d\u043e\u0432\u0435 \u0412\u0440\u0435\u043c\u0435\u043d\u0438 \u043d\u0430\u0447\u0430\u043b\u0430 \u0438 \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u0438 \u0443\u0441\u043b\u0443\u0433",
    "fieldname": "ends_on",
    "fieldtype": "Datetime",
    "label": "\u0412\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "worker.title",
-   "fieldname": "worker_name",
-   "fieldtype": "Data",
-   "label": "\u0418\u043c\u044f \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044f",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "box.title",
-   "fieldname": "box_name",
-   "fieldtype": "Data",
-   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0431\u043e\u043a\u0441\u0430",
    "read_only": 1
   },
   {
@@ -205,17 +199,6 @@
    "label": "\u0426\u0432\u0435\u0442"
   },
   {
-   "fieldname": "heading",
-   "fieldtype": "Data",
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "is_virtual": 1,
-   "label": "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a",
-   "length": 16,
-   "options": "f\"{doc.car}\"",
-   "read_only": 1
-  },
-  {
    "fieldname": "services",
    "fieldtype": "Table",
    "label": "\u0423\u0441\u043b\u0443\u0433\u0438",
@@ -235,6 +218,117 @@
    "fieldname": "staff_note",
    "fieldtype": "Small Text",
    "label": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u0430"
+  },
+  {
+   "fetch_from": "car_wash.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f",
+   "options": "Car wash company"
+  },
+  {
+   "default": "[]",
+   "fieldname": "services_json",
+   "fieldtype": "Data",
+   "is_virtual": 1,
+   "label": "\u0423\u0441\u043b\u0443\u0433\u0438 JSON"
+  },
+  {
+   "fetch_from": "car.make",
+   "fieldname": "car_make",
+   "fieldtype": "Link",
+   "label": "\u041c\u0430\u0440\u043a\u0430 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f",
+   "options": "Car make"
+  },
+  {
+   "fetch_from": "car.model",
+   "fieldname": "car_model",
+   "fieldtype": "Link",
+   "label": "\u041c\u043e\u0434\u0435\u043b\u044c \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f",
+   "options": "Car model"
+  },
+  {
+   "fetch_from": "car.license_plate",
+   "fieldname": "car_license_plate",
+   "fieldtype": "Data",
+   "label": "\u041d\u043e\u043c\u0435\u0440\u043d\u043e\u0439 \u0437\u043d\u0430\u043a"
+  },
+  {
+   "fetch_from": "car.body_type",
+   "fieldname": "car_body_type",
+   "fieldtype": "Data",
+   "label": "\u0422\u0438\u043f \u043a\u0443\u0437\u043e\u0432\u0430"
+  },
+  {
+   "fetch_from": "car_make.title",
+   "fieldname": "car_make_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043c\u0430\u0440\u043a\u0438 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f"
+  },
+  {
+   "fetch_from": "car_model.model",
+   "fieldname": "car_model_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043c\u043e\u0434\u0435\u043b\u0438 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f"
+  },
+  {
+   "fetch_from": "box.box_title",
+   "fieldname": "box_title",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0431\u043e\u043a\u0441\u0430",
+   "read_only": 1
+  },
+  {
+   "default": "Not paid",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043e\u043f\u043b\u0430\u0442\u044b",
+   "options": "Not paid\nPaid",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "car.color",
+   "fieldname": "car_color",
+   "fieldtype": "Data",
+   "label": "\u0426\u0432\u0435\u0442 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f"
+  },
+  {
+   "fetch_from": "customer.phone",
+   "fieldname": "customer_mobile_number",
+   "fieldtype": "Data",
+   "label": "\u041d\u043e\u043c\u0435\u0440 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0430 \u043a\u043b\u0438\u0435\u043d\u0442\u0430"
+  },
+  {
+   "fieldname": "cancellation_reason",
+   "fieldtype": "Small Text",
+   "label": "\u041f\u0440\u0438\u0447\u0438\u043d\u0430 \u043e\u0442\u043c\u0435\u043d\u044b"
+  },
+  {
+   "fieldname": "work_started_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "\u0424\u0430\u043a\u0442\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u0432\u0440\u0435\u043c\u044f \u043d\u0430\u0447\u0430\u043b\u0430"
+  },
+  {
+   "fieldname": "work_ended_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "\u0424\u0430\u043a\u0442\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f"
+  },
+  {
+   "fieldname": "car_wash_worker",
+   "fieldtype": "Link",
+   "label": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
+   "options": "Car wash worker"
+  },
+  {
+   "fetch_from": "car_wash_worker.first_name",
+   "fieldname": "car_wash_worker_name",
+   "fieldtype": "Data",
+   "label": "\u0418\u043c\u044f \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044f",
+   "read_only": 1
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -244,7 +338,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2024-08-13 03:26:44.382890",
+ "modified": "2024-08-29 01:52:21.439692",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",

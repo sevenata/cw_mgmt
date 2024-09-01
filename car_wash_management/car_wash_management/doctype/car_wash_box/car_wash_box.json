@@ -7,25 +7,13 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "title",
+  "box_title",
   "car_wash",
   "color",
   "type",
   "connections_tab"
  ],
  "fields": [
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "in_filter": 1,
-   "in_global_search": 1,
-   "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435",
-   "reqd": 1
-  },
   {
    "fieldname": "car_wash",
    "fieldtype": "Link",
@@ -45,10 +33,23 @@
    "show_dashboard": 1
   },
   {
+   "default": "Mixed",
    "fieldname": "type",
    "fieldtype": "Select",
    "label": "\u0422\u0438\u043f \u0431\u043e\u043a\u0441\u0430",
    "options": "IndividualOnly\nMixed",
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "box_title",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435",
    "reqd": 1
   }
  ],
@@ -59,7 +60,7 @@
    "link_fieldname": "car_wash"
   }
  ],
- "modified": "2024-08-11 13:41:24.164430",
+ "modified": "2024-08-18 19:50:55.081039",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash box",
@@ -82,5 +83,5 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "title"
+ "title_field": "box_title"
 }

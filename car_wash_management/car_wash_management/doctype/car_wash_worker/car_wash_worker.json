@@ -1,45 +1,108 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2024-05-09 18:23:16.668849",
+ "creation": "2024-08-29 01:25:17.416592",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "title",
+  "user",
+  "full_name",
+  "first_name",
+  "last_name",
+  "middle_name",
+  "gender",
+  "role",
+  "company",
+  "company_title",
   "car_wash",
-  "connections_tab"
+  "car_wash_title"
  ],
  "fields": [
   {
-   "fetch_from": "user.full_name",
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "label": "\u0418\u043c\u044f"
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f",
+   "options": "Car wash company",
+   "reqd": 1
   },
   {
    "fieldname": "car_wash",
    "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
-   "options": "Car wash",
-   "reqd": 1
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash"
   },
   {
-   "fieldname": "connections_tab",
-   "fieldtype": "Tab Break",
-   "label": "Connections",
-   "show_dashboard": 1
+   "fetch_from": "car_wash.title",
+   "fieldname": "car_wash_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043c\u043e\u0439\u043a\u0438"
+  },
+  {
+   "fetch_from": "company.title",
+   "fieldname": "company_title",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u0438"
+  },
+  {
+   "fetch_from": "user.first_name",
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u0418\u043c\u044f"
+  },
+  {
+   "fetch_from": "user.last_name",
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u0424\u0430\u043c\u0438\u043b\u0438\u044f"
+  },
+  {
+   "default": "Washer",
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u0420\u043e\u043b\u044c",
+   "options": "Administrator\nWasher\nCashier",
+   "reqd": 1,
+   "sort_options": 1
+  },
+  {
+   "fetch_from": "user.gender",
+   "fieldname": "gender",
+   "fieldtype": "Data",
+   "label": "\u041f\u043e\u043b"
+  },
+  {
+   "fetch_from": "user.middle_name",
+   "fieldname": "middle_name",
+   "fieldtype": "Data",
+   "label": "\u041e\u0442\u0447\u0435\u0441\u0442\u0432\u043e"
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u041f\u043e\u043b\u043d\u043e\u0435 \u0438\u043c\u044f"
   }
  ],
- "hide_toolbar": 1,
  "index_web_pages_for_search": 1,
  "links": [
   {
    "link_doctype": "Car wash appointment",
-   "link_fieldname": "worker"
+   "link_fieldname": "car_wash_worker"
   }
  ],
- "modified": "2024-08-11 17:25:34.103239",
+ "modified": "2024-08-29 02:15:01.154069",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash worker",
@@ -58,9 +121,7 @@
    "write": 1
   }
  ],
- "show_title_field_in_link": 1,
- "sort_field": "modified",
+ "sort_field": "creation",
  "sort_order": "DESC",
- "states": [],
- "title_field": "title"
+ "states": []
 }

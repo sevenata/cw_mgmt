@@ -1,4 +1,4 @@
-# Copyright (c) 2024, Rifat Dzhumagulov and contributors
+# Copyright (c) 2024, Rifat and contributors
 # For license information, please see license.txt
 
 # import frappe

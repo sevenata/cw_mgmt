@@ -6,10 +6,12 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "base_service",
   "body_type",
   "price_segment",
+  "duration",
   "price",
-  "duration"
+  "base_service_title"
  ],
  "fields": [
   {
@@ -37,18 +39,43 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c"
+  },
+  {
+   "fieldname": "base_service",
+   "fieldtype": "Link",
+   "label": "\u0411\u0430\u0437\u043e\u0432\u0430\u044f \u0443\u0441\u043b\u0443\u0433\u0430",
+   "options": "Car wash service"
+  },
+  {
+   "fetch_from": "base_service.title",
+   "fieldname": "base_service_title",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0431\u0430\u0437\u043e\u0432\u043e\u0439 \u0443\u0441\u043b\u0443\u0433\u0438"
   }
  ],
  "index_web_pages_for_search": 1,
- "istable": 1,
  "links": [],
- "modified": "2024-08-11 17:30:02.550391",
+ "modified": "2024-08-18 20:46:38.129054",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service price",
  "owner": "Administrator",
- "permissions": [],
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "track_changes": 1
 }
