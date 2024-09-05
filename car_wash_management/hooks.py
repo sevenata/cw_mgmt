@@ -288,9 +288,9 @@ fixtures = [
 	# {
 	# 	"doctype": "Work Shift Schedule"
 	# },
-	{
-		"doctype": "Worker Check In"
-	},
+	# {
+	# 	"doctype": "Worker Check In"
+	# },
 	{
 		"doctype": "Workflow"
 	},
