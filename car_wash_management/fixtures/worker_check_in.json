@@ -1,0 +1,54 @@
+[
+ {
+  "amended_from": null,
+  "car_wash": null,
+  "docstatus": 0,
+  "doctype": "Worker Check In",
+  "modified": "2024-08-13 04:23:12.833636",
+  "name": "is98vfpp43",
+  "shift_schedule": null,
+  "shift_start_time": null,
+  "time": "2024-08-13 04:22:54",
+  "type": "IN",
+  "worker": "cevvcjcfe9"
+ },
+ {
+  "amended_from": null,
+  "car_wash": "BOX-001",
+  "docstatus": 1,
+  "doctype": "Worker Check In",
+  "modified": "2024-08-13 05:03:54.953266",
+  "name": "ji796mkj95",
+  "shift_schedule": "jhrparam46",
+  "shift_start_time": "2024-08-13 04:59:59",
+  "time": "2024-08-13 05:00:16",
+  "type": "IN",
+  "worker": "cevvcjcfe9"
+ },
+ {
+  "amended_from": null,
+  "car_wash": "BOX-001",
+  "docstatus": 1,
+  "doctype": "Worker Check In",
+  "modified": "2024-08-13 05:17:30.645358",
+  "name": "js1mrobflv",
+  "shift_schedule": "jhrparam46",
+  "shift_start_time": "2024-08-13 04:59:59",
+  "time": "2024-08-13 05:17:14",
+  "type": "OUT",
+  "worker": "cevvcjcfe9"
+ },
+ {
+  "amended_from": null,
+  "car_wash": "BOX-001",
+  "docstatus": 1,
+  "doctype": "Worker Check In",
+  "modified": "2024-08-20 03:32:36.181923",
+  "name": "agq91236v7",
+  "shift_schedule": "jhrparam46",
+  "shift_start_time": "2024-08-13 04:59:59",
+  "time": "2024-08-20 03:32:25",
+  "type": "IN",
+  "worker": "apple_worker@juu.kz"
+ }
+]

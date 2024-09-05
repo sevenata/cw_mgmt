@@ -1,0 +1,13 @@
+[
+ {
+  "alias": "solaris",
+  "body_type": "Passenger",
+  "docstatus": 0,
+  "doctype": "Car model",
+  "make": "hyundai",
+  "make_alias": "hyundai",
+  "model": "Solaris",
+  "modified": "2024-08-11 02:11:42.787483",
+  "name": "hyundai-solaris"
+ }
+]

@@ -227,13 +227,102 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
-fixtures = [{
-	"doctype": "Workflow"
-},
+fixtures = [
+	{
+		"doctype": "Car make"
+	},
+	{
+		"doctype": "Car model"
+	},
+	{
+		"doctype": "Car model synonym"
+	},
+	{
+		"doctype": "Car wash"
+	},
+	{
+		"doctype": "Car wash box"
+	},
+	{
+		"doctype": "Car wash car"
+	},
+	{
+		"doctype": "Car wash client"
+	},
+	{
+		"doctype": "Car wash company"
+	},
+	{
+		"doctype": "Car wash contact"
+	},
+	{
+		"doctype": "Car wash feedback"
+	},
+	{
+		"doctype": "Car wash service"
+	},
+	{
+		"doctype": "Car wash service price"
+	},
+	{
+		"doctype": "Car wash settings"
+	},
+	{
+		"doctype": "Car wash worker"
+	},
+	{
+		"doctype": "Car wash working hours"
+	},
+	{
+		"doctype": "City"
+	},
+	{
+		"doctype": "Mobile App User"
+	},
+	{
+		"doctype": "Mobile Push Token"
+	},
+	{
+		"doctype": "Shift Type"
+	},
+	{
+		"doctype": "Work Shift Schedule"
+	},
+	{
+		"doctype": "Worker Check In"
+	},
+	{
+		"doctype": "Workflow"
+	},
 	{
 		"doctype": "Workflow State"
 	},
 	{
 		"doctype": "Workflow Action"
+	},
+# 	{
+# 		"doctype": "User",
+# "filters": [
+#             # Filter users whose role_profiles include the desired role profile
+#             ["role_profiles", "in", [["role_profile", "in", ["Car Wash Worker Role Profile"]]]]
+#         ]
+# 		# "filters": [
+# 		# 	["role_profile_name", "in",
+# 		# 	 ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
+# 		# 	  "Car Wash Worker Role Profile"]]
+# 		# ]
+# 	},
+	{
+		"doctype": "Role",
+		"filters": [
+			["name", "in", ["Car Wash Cashier", "Car Wash Administrator", "Car Wash Worker"]]
+		]
+	},
+	{
+		"doctype": "Role Profile",
+		"filters": [
+			["name", "in", ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
+							"Car Wash Worker Role Profile"]]
+		]
 	}
 ]

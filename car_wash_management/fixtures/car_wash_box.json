@@ -1,0 +1,52 @@
+[
+ {
+  "box_title": "Box A",
+  "car_wash": "BOX-001",
+  "color": "#29CD42",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "modified": "2024-08-18 19:48:45.671501",
+  "name": "8213lrjkg7",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Orange",
+  "car_wash": "WASH-007",
+  "color": "#761ACB",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "modified": "2024-08-18 02:57:47.335207",
+  "name": "cgon8fvv84",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Box B",
+  "car_wash": "BOX-001",
+  "color": "#ED6396",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "modified": "2024-08-18 19:49:00.798902",
+  "name": "7lg0b0h79l",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Box C",
+  "car_wash": "BOX-001",
+  "color": "#4F9DD9",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "modified": "2024-08-18 19:49:15.525123",
+  "name": "7lkjph9etr",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Box D",
+  "car_wash": "BOX-001",
+  "color": "#ECAD4B",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "modified": "2024-08-18 19:49:27.586960",
+  "name": "7lobseefff",
+  "type": "Mixed"
+ }
+]

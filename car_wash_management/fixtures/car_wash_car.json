@@ -1,0 +1,18 @@
+[
+ {
+  "body_type": "Passenger",
+  "color": "#29CD42",
+  "customer": "CUST-2024-00001",
+  "docstatus": 0,
+  "doctype": "Car wash car",
+  "is_deleted": 0,
+  "license_plate": "L001KZ",
+  "make": "hyundai",
+  "make_name": "Hyundai",
+  "model": "hyundai-solaris",
+  "model_name": "Solaris",
+  "modified": "2024-08-11 02:12:01.159458",
+  "name": "rntcu82lga",
+  "year": 1992
+ }
+]

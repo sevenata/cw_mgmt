@@ -1,0 +1,22 @@
+[
+ {
+  "alias": "astana",
+  "docstatus": 0,
+  "doctype": "City",
+  "lat": null,
+  "lon": null,
+  "modified": "2024-08-11 13:34:07.157456",
+  "name": "86j94quef0",
+  "title": "Астана"
+ },
+ {
+  "alias": "almaty",
+  "docstatus": 0,
+  "doctype": "City",
+  "lat": null,
+  "lon": null,
+  "modified": "2024-08-11 20:10:32.235069",
+  "name": "almaty",
+  "title": "Алматы"
+ }
+]

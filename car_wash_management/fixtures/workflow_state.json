@@ -70,5 +70,14 @@
   "name": "Closed",
   "style": "",
   "workflow_state_name": "Closed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2024-08-19 00:12:39.742527",
+  "name": "Finished",
+  "style": "",
+  "workflow_state_name": "Finished"
  }
 ]
