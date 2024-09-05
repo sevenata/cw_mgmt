@@ -300,6 +300,12 @@ fixtures = [
 	{
 		"doctype": "Workflow Action"
 	},
+	{
+		"doctype": "Car wash appointment"
+	},
+	{
+		"doctype": "Car wash appointment service"
+	},
 # 	{
 # 		"doctype": "User",
 # "filters": [
