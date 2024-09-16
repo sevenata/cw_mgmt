@@ -8,6 +8,8 @@
  "engine": "InnoDB",
  "field_order": [
   "general_tab",
+  "booking_section_break",
+  "booking",
   "car_wash_section_break",
   "car_wash_column_break",
   "car_wash",
@@ -329,6 +331,17 @@
    "fieldtype": "Data",
    "label": "\u0418\u043c\u044f \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044f",
    "read_only": 1
+  },
+  {
+   "fieldname": "booking_section_break",
+   "fieldtype": "Section Break",
+   "label": "\u0411\u0430\u0437\u043e\u0432\u043e\u0435 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435"
+  },
+  {
+   "fieldname": "booking",
+   "fieldtype": "Link",
+   "label": "\u0411\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
+   "options": "Car wash booking"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -338,7 +351,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2024-08-29 01:52:21.439692",
+ "modified": "2024-09-17 02:38:47.350241",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",
