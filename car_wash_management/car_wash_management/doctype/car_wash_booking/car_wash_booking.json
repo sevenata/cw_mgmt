@@ -18,7 +18,8 @@
   "car_make",
   "car_model",
   "car_make_name",
-  "car_model_name"
+  "car_model_name",
+  "car_color"
  ],
  "fields": [
   {
@@ -109,11 +110,17 @@
    "fieldname": "customer_phone",
    "fieldtype": "Data",
    "label": "\u041d\u043e\u043c\u0435\u0440 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0430 \u043a\u043b\u0438\u0435\u043d\u0442\u0430"
+  },
+  {
+   "fetch_from": "car.color",
+   "fieldname": "car_color",
+   "fieldtype": "Data",
+   "label": "\u0426\u0432\u0435\u0442 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-09-18 16:29:29.032674",
+ "modified": "2024-09-18 17:11:01.287345",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash booking",
