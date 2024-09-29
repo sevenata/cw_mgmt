@@ -11,7 +11,9 @@
   "price_segment",
   "duration",
   "price",
-  "base_service_title"
+  "base_service_title",
+  "is_disabled",
+  "is_deleted"
  ],
  "fields": [
   {
@@ -51,11 +53,23 @@
    "fieldname": "base_service_title",
    "fieldtype": "Data",
    "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0431\u0430\u0437\u043e\u0432\u043e\u0439 \u0443\u0441\u043b\u0443\u0433\u0438"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_disabled",
+   "fieldtype": "Check",
+   "label": "\u041e\u0442\u043a\u043b\u044e\u0447\u0435\u043d"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_deleted",
+   "fieldtype": "Check",
+   "label": "\u0423\u0434\u0430\u043b\u0435\u043d"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-08-18 20:46:38.129054",
+ "modified": "2024-09-29 18:55:32.452011",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service price",
