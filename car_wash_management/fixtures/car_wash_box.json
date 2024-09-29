@@ -5,7 +5,8 @@
   "color": "#29CD42",
   "docstatus": 0,
   "doctype": "Car wash box",
-  "modified": "2024-08-18 19:48:45.671501",
+  "is_deleted": 1,
+  "modified": "2024-09-23 03:11:37.484623",
   "name": "8213lrjkg7",
   "type": "Mixed"
  },
@@ -15,7 +16,8 @@
   "color": "#761ACB",
   "docstatus": 0,
   "doctype": "Car wash box",
-  "modified": "2024-08-18 02:57:47.335207",
+  "is_deleted": 1,
+  "modified": "2024-09-23 03:13:10.489701",
   "name": "cgon8fvv84",
   "type": "Mixed"
  },
@@ -25,7 +27,8 @@
   "color": "#ED6396",
   "docstatus": 0,
   "doctype": "Car wash box",
-  "modified": "2024-08-18 19:49:00.798902",
+  "is_deleted": 1,
+  "modified": "2024-09-23 03:11:37.481733",
   "name": "7lg0b0h79l",
   "type": "Mixed"
  },
@@ -35,7 +38,8 @@
   "color": "#4F9DD9",
   "docstatus": 0,
   "doctype": "Car wash box",
-  "modified": "2024-08-18 19:49:15.525123",
+  "is_deleted": 1,
+  "modified": "2024-09-23 03:11:37.478854",
   "name": "7lkjph9etr",
   "type": "Mixed"
  },
@@ -45,8 +49,97 @@
   "color": "#ECAD4B",
   "docstatus": 0,
   "doctype": "Car wash box",
-  "modified": "2024-08-18 19:49:27.586960",
+  "is_deleted": 1,
+  "modified": "2024-09-23 03:11:37.452380",
   "name": "7lobseefff",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 1",
+  "car_wash": "BOX-001",
+  "color": "#449CF0",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:38:20.084829",
+  "name": "fuboa2qegi",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 2",
+  "car_wash": "BOX-001",
+  "color": "#ECAD4B",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:38:27.399336",
+  "name": "fue2odi60c",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 3",
+  "car_wash": "BOX-001",
+  "color": "#29CD42",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:38:33.234786",
+  "name": "fufsi6qdv1",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 4",
+  "car_wash": "BOX-001",
+  "color": "#761ACB",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:38:39.362417",
+  "name": "fuhpaaq6ml",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 5",
+  "car_wash": "BOX-001",
+  "color": "#CB2929",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:38:47.039963",
+  "name": "fuk6e8a0r9",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 6",
+  "car_wash": "BOX-001",
+  "color": "#ED6396",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:38:54.323203",
+  "name": "fumfbr1qqr",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 7",
+  "car_wash": "BOX-001",
+  "color": "#4463F0",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:39:08.803702",
+  "name": "fur048pdk8",
+  "type": "Mixed"
+ },
+ {
+  "box_title": "Бокс 8",
+  "car_wash": "BOX-001",
+  "color": "#EC864B",
+  "docstatus": 0,
+  "doctype": "Car wash box",
+  "is_deleted": 0,
+  "modified": "2024-09-09 23:39:19.002379",
+  "name": "fuu6jp5tao",
   "type": "Mixed"
  }
 ]

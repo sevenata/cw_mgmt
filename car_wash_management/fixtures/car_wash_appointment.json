@@ -1,5 +1,6 @@
 [
  {
+  "booking": null,
   "box": "8213lrjkg7",
   "box_color": "#29CD42",
   "box_title": "Box A",
@@ -66,6 +67,7 @@
   "workflow_state": "Finished"
  },
  {
+  "booking": null,
   "box": "8213lrjkg7",
   "box_color": "#29CD42",
   "box_title": "Box A",
@@ -114,6 +116,7 @@
   "workflow_state": "Approved"
  },
  {
+  "booking": null,
   "box": "8213lrjkg7",
   "box_color": "#29CD42",
   "box_title": "Box A",
@@ -162,6 +165,7 @@
   "workflow_state": "In progress"
  },
  {
+  "booking": null,
   "box": "8213lrjkg7",
   "box_color": "#29CD42",
   "box_title": "Box A",
@@ -210,6 +214,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "cgon8fvv84",
   "box_color": "#761ACB",
   "box_title": "Orange",
@@ -258,6 +263,7 @@
   "workflow_state": null
  },
  {
+  "booking": null,
   "box": "7lg0b0h79l",
   "box_color": "#ED6396",
   "box_title": "Box B",
@@ -296,6 +302,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "7lkjph9etr",
   "box_color": "#4F9DD9",
   "box_title": "Box C",
@@ -334,6 +341,7 @@
   "workflow_state": "Rejected"
  },
  {
+  "booking": null,
   "box": "7lg0b0h79l",
   "box_color": "#ED6396",
   "box_title": "Box B",
@@ -382,6 +390,7 @@
   "workflow_state": "Finished"
  },
  {
+  "booking": null,
   "box": "7lkjph9etr",
   "box_color": "#4F9DD9",
   "box_title": "Box C",
@@ -439,6 +448,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "7lkjph9etr",
   "box_color": "#4F9DD9",
   "box_title": "Box C",
@@ -496,6 +506,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "7lg0b0h79l",
   "box_color": "#ED6396",
   "box_title": "Box B",
@@ -544,6 +555,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "7lkjph9etr",
   "box_color": "#4F9DD9",
   "box_title": "Box C",
@@ -592,6 +604,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "7lobseefff",
   "box_color": "#ECAD4B",
   "box_title": "Box D",
@@ -640,6 +653,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "8213lrjkg7",
   "box_color": "#29CD42",
   "box_title": "Box A",
@@ -688,6 +702,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "cgon8fvv84",
   "box_color": "#761ACB",
   "box_title": "Orange",
@@ -736,6 +751,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "8213lrjkg7",
   "box_color": "#29CD42",
   "box_title": "Box A",
@@ -784,6 +800,7 @@
   "workflow_state": "Pending"
  },
  {
+  "booking": null,
   "box": "8213lrjkg7",
   "box_color": "#29CD42",
   "box_title": "Box A",

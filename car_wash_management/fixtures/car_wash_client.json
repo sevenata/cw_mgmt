@@ -1,7 +1,7 @@
 [
  {
   "customer_details": null,
-  "customer_name": "Иван",
+  "customer_name": "Ивашка",
   "customer_primary_address": null,
   "customer_primary_contact": null,
   "docstatus": 0,
@@ -9,10 +9,10 @@
   "email_id": null,
   "image": null,
   "mobile_no": null,
-  "modified": "2024-08-20 02:15:54.259890",
+  "modified": "2024-09-29 22:39:50.034846",
   "name": "CUST-2024-00001",
   "naming_series": "CUST-.YYYY.-",
-  "phone": "+7-9269328983",
+  "phone": "+7(926)932-89-83",
   "primary_address": null,
   "user": ""
  }
