@@ -241,12 +241,6 @@ fixtures = [
 		"doctype": "City"
 	},
 	{
-		"doctype": "Mobile App User"
-	},
-	{
-		"doctype": "Mobile Push Token"
-	},
-	{
 		"doctype": "Shift Type"
 	},
 	# {
@@ -281,12 +275,12 @@ fixtures = [
 		"filters": [
 			["name", "in", ["Car Wash Cashier", "Car Wash Administrator", "Car Wash Worker"]]
 		]
-	},
-	{
-		"doctype": "Role Profile",
-		"filters": [
-			["name", "in", ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
-							"Car Wash Worker Role Profile"]]
-		]
+	}
+# 	{
+# 		"doctype": "Role Profile",
+# 		"filters": [
+# 			["name", "in", ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
+# 							"Car Wash Worker Role Profile"]]
+# 		]
 	}
 ]
