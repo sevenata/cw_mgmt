@@ -238,42 +238,6 @@ fixtures = [
 		"doctype": "Car model synonym"
 	},
 	{
-		"doctype": "Car wash"
-	},
-	{
-		"doctype": "Car wash box"
-	},
-	{
-		"doctype": "Car wash car"
-	},
-	{
-		"doctype": "Car wash client"
-	},
-	{
-		"doctype": "Car wash company"
-	},
-	{
-		"doctype": "Car wash contact"
-	},
-	{
-		"doctype": "Car wash feedback"
-	},
-	{
-		"doctype": "Car wash service"
-	},
-	{
-		"doctype": "Car wash service price"
-	},
-	{
-		"doctype": "Car wash settings"
-	},
-	{
-		"doctype": "Car wash worker"
-	},
-	{
-		"doctype": "Car wash working hours"
-	},
-	{
 		"doctype": "City"
 	},
 	{
@@ -299,12 +263,6 @@ fixtures = [
 	},
 	{
 		"doctype": "Workflow Action"
-	},
-	{
-		"doctype": "Car wash appointment"
-	},
-	{
-		"doctype": "Car wash appointment service"
 	},
 # 	{
 # 		"doctype": "User",
