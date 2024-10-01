@@ -282,5 +282,5 @@ fixtures = [
 # 			["name", "in", ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
 # 							"Car Wash Worker Role Profile"]]
 # 		]
-	}
+# 	}
 ]
