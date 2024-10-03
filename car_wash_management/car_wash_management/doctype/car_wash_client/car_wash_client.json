@@ -3,16 +3,14 @@
  "allow_events_in_timeline": 1,
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "naming_series:",
+ "autoname": "hash",
  "creation": "2024-05-08 23:02:11.530994",
  "default_view": "List",
- "description": "Buyer of Goods and Services.",
  "doctype": "DocType",
  "document_type": "Setup",
  "engine": "InnoDB",
  "field_order": [
   "basic_info",
-  "naming_series",
   "customer_name",
   "user",
   "phone",
@@ -38,14 +36,6 @@
    "fieldtype": "Section Break",
    "oldfieldtype": "Section Break",
    "options": "fa fa-user"
-  },
-  {
-   "fieldname": "naming_series",
-   "fieldtype": "Select",
-   "label": "Series",
-   "no_copy": 1,
-   "options": "CUST-.YYYY.-",
-   "set_only_once": 1
   },
   {
    "bold": 1,
@@ -178,11 +168,11 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-09-18 16:29:52.757101",
+ "modified": "2024-10-03 11:43:15.592844",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash client",
- "naming_rule": "By \"Naming Series\" field",
+ "naming_rule": "Random",
  "owner": "Administrator",
  "permissions": [
   {
