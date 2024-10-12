@@ -12,6 +12,7 @@
   "color",
   "type",
   "is_deleted",
+  "is_disabled",
   "connections_tab"
  ],
  "fields": [
@@ -58,6 +59,12 @@
    "fieldname": "is_deleted",
    "fieldtype": "Check",
    "label": "\u0423\u0434\u0430\u043b\u0451\u043d"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_disabled",
+   "fieldtype": "Check",
+   "label": "\u041e\u0442\u043a\u043b\u044e\u0447\u0451\u043d"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -67,7 +74,7 @@
    "link_fieldname": "car_wash"
   }
  ],
- "modified": "2024-09-23 03:01:35.147891",
+ "modified": "2024-10-11 14:33:09.580312",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash box",
