@@ -85,7 +85,7 @@ API_KEY = "61c936a3c66bc75fe6d12c42d1998738"  # Replace with your actual API key
 @frappe.whitelist()
 def get_weather():
 
-	import json
+    import json
 
     """
     Fetch weather forecast for Astana and cache it for 6 hours.
