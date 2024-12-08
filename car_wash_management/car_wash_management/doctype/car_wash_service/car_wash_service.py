@@ -4,7 +4,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe.utils import today, getdate
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class Carwashservice(Document):
 	pass
@@ -41,9 +41,20 @@ def get_services_statistics():
     # Today's date
     today_date = today()
 
-    # Start and end of the current month
-    current_month_start = datetime.today().replace(day=1).strftime('%Y-%m-%d')
-    current_month_end = datetime.today().strftime('%Y-%m-%d')
+    # Get the start of the current month
+    current_month_start = datetime.today().replace(day=1)
+
+    # Calculate the end of the current month
+    if current_month_start.month == 12:
+        # If it's December, next month is January of the next year
+        current_month_end = current_month_start.replace(year=current_month_start.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        # Get the start of the next month and subtract one day
+        current_month_end = current_month_start.replace(month=current_month_start.month + 1, day=1) - timedelta(days=1)
+
+    # Convert datetime objects to strings for filtering
+    current_month_start_str = current_month_start.strftime('%Y-%m-%d')
+    current_month_end_str = current_month_end.strftime('%Y-%m-%d')
 
     # Helper function to aggregate service statistics
     def aggregate_service_stats(start_date, end_date):
@@ -68,7 +79,7 @@ def get_services_statistics():
 
     # Get daily and monthly statistics
     daily_stats = aggregate_service_stats(today_date, today_date)
-    monthly_stats = aggregate_service_stats(current_month_start, current_month_end)
+    monthly_stats = aggregate_service_stats(current_month_start_str, current_month_end_str)
 
     return {
         "daily_stats": daily_stats,

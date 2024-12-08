@@ -55,6 +55,8 @@ def get_daily_car_wash_statistics():
     return daily_stats
 
 # http://localhost:8000/api/method/car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_appointment.get_monthly_car_wash_statistics
+from datetime import datetime, timedelta
+
 @frappe.whitelist()
 def get_monthly_car_wash_statistics():
     """
@@ -65,14 +67,16 @@ def get_monthly_car_wash_statistics():
     current_month_start = datetime.today().replace(day=1)
 
     # Calculate the end of the current month
-    # Assuming 31 days, adjust as needed for the correct month end
-    current_month_end = (current_month_start.replace(month=current_month_start.month % 12 + 1) - timedelta(days=1))
+    if current_month_start.month == 12:
+        # If it's December, next month is January of the next year
+        current_month_end = current_month_start.replace(year=current_month_start.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        # Get the start of the next month and subtract one day
+        current_month_end = current_month_start.replace(month=current_month_start.month + 1, day=1) - timedelta(days=1)
 
     # Convert datetime objects to strings for filtering
     current_month_start_str = current_month_start.strftime('%Y-%m-%d')
     current_month_end_str = current_month_end.strftime('%Y-%m-%d')
-
-#     return [current_month_start, current_month_end, current_month_start_str, current_month_end_str]
 
     # Fetch monthly appointments
     monthly_appointments = frappe.get_all(
@@ -81,12 +85,10 @@ def get_monthly_car_wash_statistics():
         fields=["services_total"]
     )
 
-    return monthly_appointments
-
     total_income = sum(flt(app["services_total"]) for app in monthly_appointments)
     total_cars_month = len(monthly_appointments)
-    average_daily_income = total_income / max(current_month_start.day, 1)  # Avoid divide by zero
-    average_cars_per_day = total_cars_month / max(current_month_start.day, 1)
+    average_daily_income = total_income / max(datetime.today().day, 1)  # Avoid divide by zero
+    average_cars_per_day = total_cars_month / max(datetime.today().day, 1)
     average_check = total_income / total_cars_month if total_cars_month > 0 else 0
 
     return {
