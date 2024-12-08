@@ -20,7 +20,7 @@
    "fieldname": "body_type",
    "fieldtype": "Select",
    "label": "\u0422\u0438\u043f \u043a\u0443\u0437\u043e\u0432\u0430",
-   "options": "Passenger\nSUV\nMinivan"
+   "options": "Passenger\nMinivan\nSedan\nCompactSUV\nJeep\nLargeSUV\nMinibus"
   },
   {
    "fieldname": "price_segment",
@@ -69,7 +69,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-09-29 18:55:32.452011",
+ "modified": "2024-12-07 03:07:16.408340",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service price",

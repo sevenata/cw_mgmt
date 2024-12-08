@@ -47,7 +47,6 @@
    "no_copy": 1,
    "oldfieldname": "customer_name",
    "oldfieldtype": "Data",
-   "reqd": 1,
    "search_index": 1
   },
   {
@@ -168,7 +167,7 @@
    "link_fieldname": "customer"
   }
  ],
- "modified": "2024-10-03 11:43:15.592844",
+ "modified": "2024-12-08 19:49:42.559102",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash client",

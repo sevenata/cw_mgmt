@@ -51,3 +51,24 @@ def get_free_slots(wash_id):
 	items = manager.get_free_slots()
 
 	return items
+
+@frappe.whitelist()
+def get_car_wash_services_with_prices():
+    # Fetch all Car wash service records
+    services = frappe.get_all(
+        "Car wash service",
+        fields=["*"],  # Fetch all fields
+        filters={"is_deleted": 0}  # Optional: Exclude deleted services
+    )
+
+    for service in services:
+        # Fetch related prices from Car wash service price
+        prices = frappe.get_all(
+            "Car wash service price",
+            fields=["price", "body_type"],
+            filters={"base_service": service["name"]}
+        )
+        # Add prices field to each service
+        service["prices"] = prices
+
+    return services

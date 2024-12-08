@@ -16,6 +16,7 @@
   "workflow_state",
   "company",
   "payment_status",
+  "payment_type",
   "column_break_betd",
   "box",
   "box_title",
@@ -342,6 +343,13 @@
    "fieldtype": "Link",
    "label": "\u0411\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
    "options": "Car wash booking"
+  },
+  {
+   "depends_on": "eval: doc.payment_status == 'Paid';",
+   "fieldname": "payment_type",
+   "fieldtype": "Select",
+   "label": "\u0422\u0438\u043f \u043e\u043f\u043b\u0430\u0442\u044b",
+   "options": "Cash\nCard\nKaspi"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -351,7 +359,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2024-09-17 02:38:47.350241",
+ "modified": "2024-12-08 15:57:49.660208",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",
