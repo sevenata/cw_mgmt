@@ -105,11 +105,8 @@ def get_weather():
         response.raise_for_status()  # Raise error for non-200 responses
         weather_data = response.json()
 
-        # Serialize weather data to avoid circular references
-        serialized_data = json.dumps(weather_data)
-
         # Save serialized data to cache for 6 hours
-        frappe.cache().set_value(cache_key, serialized_data, expires_in_sec=6 * 60 * 60)
+        frappe.cache().set_value(cache_key, weather_data, expires_in_sec=6 * 60 * 60)
 
         return weather_data
     except requests.exceptions.RequestException as e:
