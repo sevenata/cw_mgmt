@@ -3,7 +3,6 @@
 
 # import frappe
 from frappe.model.document import Document
-import json
 import frappe
 from frappe.utils import flt, cint, today, add_days
 from datetime import datetime, timedelta
@@ -55,8 +54,6 @@ def get_daily_car_wash_statistics():
     return daily_stats
 
 # http://localhost:8000/api/method/car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_appointment.get_monthly_car_wash_statistics
-from datetime import datetime, timedelta
-
 @frappe.whitelist()
 def get_monthly_car_wash_statistics():
     """
