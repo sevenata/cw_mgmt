@@ -159,9 +159,10 @@ app_license = "mit"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "car_wash_management.event.get_events"
-# }
+override_whitelisted_methods = {
+	"car_wash_management.car_wash_management.doctype.car_wash_service.car_wash_service.get_random": "car_wash_management.car_wash_management.doctype.car_wash_service.car_wash_service.get_random",
+	"car_wash_management.car_wash_management.doctype.car_wash_service.car_wash_service.get_services_with_prices": "car_wash_management.car_wash_management.doctype.car_wash_service.car_wash_service.get_services_with_prices"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
