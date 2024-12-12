@@ -13,6 +13,7 @@ class Carwashservice(Document):
 # http://localhost:8000/api/method/car_wash_management.api.get_car_wash_services_with_prices
 @frappe.whitelist(allow_guest=True)
 def get_services_with_prices():
+	return "123"
     # Fetch all Car wash service records
 	services = frappe.get_all(
 		"Car wash service",
