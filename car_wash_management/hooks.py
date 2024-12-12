@@ -228,15 +228,15 @@ app_license = "mit"
 # }
 
 fixtures = [
-	{
-		"doctype": "Car make"
-	},
-	{
-		"doctype": "Car model"
-	},
-	{
-		"doctype": "Car model synonym"
-	},
+# 	{
+# 		"doctype": "Car make"
+# 	},
+# 	{
+# 		"doctype": "Car model"
+# 	},
+# 	{
+# 		"doctype": "Car model synonym"
+# 	},
 	{
 		"doctype": "City"
 	},
