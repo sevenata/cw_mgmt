@@ -14,3 +14,7 @@ class Carwashservice(Document):
 @frappe.whitelist(allow_guest=True)
 def get_services_with_prices():
 	return "123"
+
+@frappe.whitelist(allow_guest=True)
+def get_random():
+	return "123"
