@@ -95,3 +95,41 @@ def get_monthly_car_wash_statistics():
         "average_cars_per_day": average_cars_per_day,
         "average_check": average_check
     }
+
+from datetime import datetime, timedelta
+import frappe
+
+@frappe.whitelist()
+def get_last_7_days_car_wash_statistics():
+    """
+    Fetch car wash appointment statistics for each of the last 7 days.
+    """
+    today = datetime.today()
+    stats = {}
+
+    for i in range(7):
+        # Calculate the date for the current day in the loop
+        day_date = today - timedelta(days=i)
+        day_start = day_date.strftime('%Y-%m-%d') + " 00:00:00"
+        day_end = day_date.strftime('%Y-%m-%d') + " 23:59:59"
+
+        # Fetch appointments for the current day
+        daily_appointments = frappe.get_all(
+            "Car wash appointment",
+            filters={"starts_on": ["between", [day_start, day_end]]},
+            fields=["services_total"]
+        )
+
+        # Calculate stats for the current day
+        total_income = sum(flt(app["services_total"]) for app in daily_appointments)
+        total_cars = len(daily_appointments)
+        average_check = total_income / total_cars if total_cars > 0 else 0
+
+        # Store stats for the day
+        stats[day_date.strftime('%Y-%m-%d')] = {
+            "total_income": total_income,
+            "total_cars": total_cars,
+            "average_check": average_check
+        }
+
+    return stats
