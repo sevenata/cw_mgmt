@@ -19,7 +19,6 @@
   "address",
   "connections_tab",
   "settings_tab",
-  "settings",
   "working_hours"
  ],
  "fields": [
@@ -91,12 +90,6 @@
    "label": "\u0410\u0434\u0440\u0435\u0441"
   },
   {
-   "fieldname": "settings",
-   "fieldtype": "Table",
-   "label": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438",
-   "options": "Car wash settings"
-  },
-  {
    "fieldname": "settings_tab",
    "fieldtype": "Tab Break",
    "label": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438"
@@ -134,9 +127,14 @@
    "group": "\u0421\u043c\u0435\u043d\u044b",
    "link_doctype": "Work Shift Schedule",
    "link_fieldname": "car_wash"
+  },
+  {
+   "group": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438",
+   "link_doctype": "Car wash settings",
+   "link_fieldname": "car_wash"
   }
  ],
- "modified": "2024-08-13 05:16:47.847627",
+ "modified": "2024-12-14 16:17:18.724874",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash",

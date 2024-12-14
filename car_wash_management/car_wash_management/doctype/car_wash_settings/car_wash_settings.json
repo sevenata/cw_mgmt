@@ -5,24 +5,51 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "threshold_between_washes"
+  "threshold_between_washes",
+  "monthly_plan",
+  "car_wash"
  ],
  "fields": [
   {
    "fieldname": "threshold_between_washes",
    "fieldtype": "Data",
    "label": "\u0418\u043d\u0442\u0435\u0440\u0432\u0430\u043b \u043c\u0435\u0436\u0434\u0443 \u043c\u043e\u0439\u043a\u0430\u043c\u0438"
+  },
+  {
+   "fieldname": "monthly_plan",
+   "fieldtype": "Int",
+   "label": "\u041c\u0435\u0441\u044f\u0447\u043d\u044b\u0439 \u043f\u043b\u0430\u043d"
+  },
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
- "istable": 1,
  "links": [],
- "modified": "2024-08-11 17:10:32.661306",
+ "modified": "2024-12-14 16:16:45.339957",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash settings",
  "owner": "Administrator",
- "permissions": [],
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": []
