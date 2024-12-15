@@ -47,10 +47,12 @@ def _get_worker_stats(start_date=None, end_date=None, today_date=None):
         start_date = "1900-01-01"  # Default start date for overall stats
         end_date = today()
 
+	car_wash = frappe.form_dict.get("car_wash")
+
     # Fetch worker appointments within the specified date range
     appointments = frappe.get_all(
         "Car wash appointment",
-        filters={"starts_on": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]], "workflow_state": "Finished"},
+        filters={"starts_on": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]], "workflow_state": "Finished", "car_wash": car_wash},
         fields=["car_wash_worker", "car_wash_worker_name", "duration_total", "services_total"]
     )
 

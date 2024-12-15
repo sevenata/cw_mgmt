@@ -13,24 +13,37 @@ class Carwashservice(Document):
 # http://localhost:8000/api/method/car_wash_management.api.get_car_wash_services_with_prices
 @frappe.whitelist()
 def get_services_with_prices():
-    # Fetch all Car wash service records
-	services = frappe.get_all(
-		"Car wash service",
-		fields=["*"],  # Fetch all fields
-		filters={"is_deleted": 0}  # Optional: Exclude deleted services
-	)
+    """
+    Fetch Car wash services with their prices, optionally filtered by car_wash.
+    """
+    # Fetch the optional query parameter 'car_wash'
+    car_wash = frappe.form_dict.get("car_wash")
 
-	for service in services:
-		# Fetch related prices from Car wash service price
-		prices = frappe.get_all(
-			"Car wash service price",
-			fields=["price", "body_type", "name"],
-			filters={"base_service": service["name"]}
-		)
-		# Add prices field to each service
-		service["prices"] = prices
+    # Set up the base filters
+    filters = {"is_deleted": 0}
 
-	return services
+    # Add the 'car_wash' filter if provided
+    if car_wash:
+        filters["car_wash"] = car_wash
+
+    # Fetch all Car wash service records with the applied filters
+    services = frappe.get_all(
+        "Car wash service",
+        fields=["*"],  # Fetch all fields
+        filters=filters  # Include the dynamic filter
+    )
+
+    for service in services:
+        # Fetch related prices from Car wash service price
+        prices = frappe.get_all(
+            "Car wash service price",
+            fields=["price", "body_type", "name"],
+            filters={"base_service": service["name"]}
+        )
+        # Add prices field to each service
+        service["prices"] = prices
+
+    return services
 
 # http://localhost:8000/api/method/car_wash_management.car_wash_management.doctype.car_wash_service.car_wash_service.get_services_statistics
 @frappe.whitelist()
@@ -56,13 +69,16 @@ def get_services_statistics():
     current_month_start_str = current_month_start.strftime('%Y-%m-%d')
     current_month_end_str = current_month_end.strftime('%Y-%m-%d')
 
+    car_wash = frappe.form_dict.get("car_wash")
+
     # Helper function to aggregate service statistics
     def aggregate_service_stats(start_date, end_date):
         # Fetch services within the given date range
         services = frappe.get_all(
             "Car wash appointment service",
             filters={
-                "creation": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]]
+                "creation": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]],
+                "car_wash": car_wash
             },
             fields=["service_name", "price"]
         )

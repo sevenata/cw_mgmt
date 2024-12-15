@@ -9,7 +9,8 @@
   "service",
   "service_name",
   "duration",
-  "price"
+  "price",
+  "car_wash"
  ],
  "fields": [
   {
@@ -48,12 +49,18 @@
    "fieldname": "price",
    "fieldtype": "Int",
    "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c \u0443\u0441\u043b\u0443\u0433\u0438"
+  },
+  {
+   "fetch_from": "service.car_wash",
+   "fieldname": "car_wash",
+   "fieldtype": "Data",
+   "label": "\u041c\u043e\u0439\u043a\u0430"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-08-12 03:11:03.046525",
+ "modified": "2024-12-16 01:28:14.723957",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment service",
