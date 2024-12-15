@@ -24,8 +24,7 @@
    "fieldname": "user",
    "fieldtype": "Link",
    "label": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
-   "options": "User",
-   "reqd": 1
+   "options": "User"
   },
   {
    "fieldname": "company",
@@ -116,7 +115,7 @@
    "link_fieldname": "car_wash_worker"
   }
  ],
- "modified": "2024-10-03 13:03:22.163807",
+ "modified": "2024-12-16 02:45:16.566744",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash worker",
