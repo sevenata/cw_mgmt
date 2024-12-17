@@ -115,7 +115,7 @@
    "link_fieldname": "car_wash_worker"
   }
  ],
- "modified": "2024-12-16 02:45:16.566744",
+ "modified": "2024-12-17 02:50:24.100910",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash worker",
@@ -134,7 +134,9 @@
    "write": 1
   }
  ],
+ "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "full_name"
 }

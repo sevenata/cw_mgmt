@@ -23,8 +23,7 @@
    "fieldname": "model",
    "fieldtype": "Link",
    "label": "\u041c\u043e\u0434\u0435\u043b\u044c",
-   "options": "Car model",
-   "reqd": 1
+   "options": "Car model"
   },
   {
    "fieldname": "make",
@@ -90,7 +89,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-07 02:42:29.954757",
+ "modified": "2024-12-18 04:53:43.120268",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash car",

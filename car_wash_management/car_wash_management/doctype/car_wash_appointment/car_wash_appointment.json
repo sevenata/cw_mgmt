@@ -330,7 +330,7 @@
    "options": "Car wash worker"
   },
   {
-   "fetch_from": "car_wash_worker.first_name",
+   "fetch_from": "car_wash_worker.full_name",
    "fieldname": "car_wash_worker_name",
    "fieldtype": "Data",
    "label": "\u0418\u043c\u044f \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044f",
@@ -378,7 +378,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2024-12-13 00:38:50.615193",
+ "modified": "2024-12-17 02:44:46.740988",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",
