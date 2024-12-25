@@ -22,6 +22,7 @@
   "box_title",
   "box_color",
   "color",
+  "is_deleted",
   "\u0434\u0430\u0442\u044b_section",
   "starts_on",
   "work_started_on",
@@ -369,6 +370,12 @@
    "fieldname": "out_of_turn",
    "fieldtype": "Check",
    "label": "\u041d\u0435\u0441\u043e\u0431\u043b\u044e\u0434\u0435\u043d\u0438\u0435 \u043e\u0447\u0435\u0440\u0435\u0434\u0438"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_deleted",
+   "fieldtype": "Check",
+   "label": "\u0423\u0434\u0430\u043b\u0435\u043d\u043e"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -378,7 +385,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2024-12-17 02:44:46.740988",
+ "modified": "2024-12-25 20:56:42.701669",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",
