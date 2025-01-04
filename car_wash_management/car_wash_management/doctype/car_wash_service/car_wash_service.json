@@ -15,7 +15,8 @@
   "description_for_worker",
   "is_disabled",
   "is_deleted",
-  "is_quick_entry"
+  "is_quick_entry",
+  "priority"
  ],
  "fields": [
   {
@@ -76,6 +77,11 @@
    "fieldname": "is_quick_entry",
    "fieldtype": "Check",
    "label": "\u0411\u044b\u0441\u0442\u0440\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f"
+  },
+  {
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -85,7 +91,7 @@
    "link_fieldname": "base_service"
   }
  ],
- "modified": "2024-12-16 02:29:30.963208",
+ "modified": "2025-01-04 17:34:35.958579",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service",
