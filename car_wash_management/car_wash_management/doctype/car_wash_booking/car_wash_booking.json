@@ -26,7 +26,8 @@
   "has_appointment",
   "out_of_turn",
   "out_of_turn_reason",
-  "num"
+  "num",
+  "source_type"
  ],
  "fields": [
   {
@@ -163,11 +164,18 @@
    "fieldname": "num",
    "fieldtype": "Data",
    "label": "\u041d\u043e\u043c\u0435\u0440 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f"
+  },
+  {
+   "default": "Direct",
+   "fieldname": "source_type",
+   "fieldtype": "Select",
+   "label": "\u0422\u0438\u043f \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0430",
+   "options": "Direct\nWebPanel"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-05 03:49:38.426140",
+ "modified": "2025-01-05 13:42:13.808743",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash booking",
