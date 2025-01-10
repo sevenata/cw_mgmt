@@ -30,7 +30,7 @@ def get_daily_car_wash_statistics():
     # Fetch daily appointments
     daily_appointments = frappe.get_all(
         "Car wash appointment",
-        filters={"starts_on": ["between", [today_date + " 00:00:00", today_date + " 23:59:59"]], "workflow_state": "Finished", "car_wash": car_wash},
+        filters={"starts_on": ["between", [today_date + " 00:00:00", today_date + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
         fields=["payment_type", "services_total"]
     )
 
@@ -88,7 +88,7 @@ def get_monthly_car_wash_statistics():
     # Fetch monthly appointments
     monthly_appointments = frappe.get_all(
         "Car wash appointment",
-        filters={"starts_on": ["between", [current_month_start_str + " 00:00:00", current_month_end_str + " 23:59:59"]], "workflow_state": "Finished", "car_wash": car_wash},
+        filters={"starts_on": ["between", [current_month_start_str + " 00:00:00", current_month_end_str + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
         fields=["services_total"]
     )
 
@@ -128,7 +128,7 @@ def get_last_7_days_car_wash_statistics():
         # Fetch appointments for the current day
         daily_appointments = frappe.get_all(
             "Car wash appointment",
-            filters={"starts_on": ["between", [day_start, day_end]], "workflow_state": "Finished", "car_wash": car_wash},
+            filters={"starts_on": ["between", [day_start, day_end]], "payment_status": "Paid", "car_wash": car_wash},
             fields=["services_total"]
         )
 
