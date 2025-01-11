@@ -4,8 +4,10 @@
 # import frappe
 from frappe.model.document import Document
 import frappe
-from frappe.utils import flt, cint, today, add_days
+from frappe.utils import flt, cint, today, add_days, getdate
 from datetime import datetime, timedelta
+from io import StringIO
+import csv
 
 class Carwashappointment(Document):
 	pass
@@ -145,3 +147,95 @@ def get_last_7_days_car_wash_statistics():
         }
 
     return stats
+
+@frappe.whitelist()
+def get_appointments_by_date(selected_date=None):
+    """
+    Extracts Car Wash Appointment records for the selected date.
+
+    Args:
+    selected_date (str): The date in "YYYY-MM-DD" format to filter appointments.
+
+    Returns:
+    list: A list of appointments with the specified fields.
+    """
+    if not selected_date:
+        frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+
+    # Validate the date format
+    try:
+        getdate(selected_date)
+    except ValueError:
+        frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+
+    # Define the filters
+    filters = {
+        "starts_on": ["between", [f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
+        "is_deleted": 0,
+        "payment_status": "Paid"
+    }
+
+    # Fetch the required fields
+    fields = [
+        "name",
+        "box_title",
+        "work_started_on",
+        "car_wash_worker_name",
+        "services_total",
+        "car_make_name",
+        "car_model_name",
+        "car_license_plate",
+        "car_body_type",
+        "payment_type",
+        "payment_status"
+    ]
+
+    # Query the database
+    appointments = frappe.get_all(
+        "Car wash appointment",
+        filters=filters,
+        fields=fields
+    )
+
+    return appointments
+
+@frappe.whitelist()
+def export_appointments_to_csv(selected_date=None):
+    """
+    Extract Car Wash Appointments for a selected date and directly return a CSV file for download.
+    """
+    if not selected_date:
+        frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+
+    # Validate the date format
+    try:
+        getdate(selected_date)
+    except ValueError:
+        frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+
+    # Fetch appointments using the get_appointments_by_date logic
+    appointments = get_appointments_by_date(selected_date)
+
+    if not appointments:
+        frappe.throw(f"No appointments found for the date {selected_date}.")
+
+    # Use StringIO to generate CSV in memory
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Write headers
+    headers = list(appointments[0].keys())
+    writer.writerow(headers)
+
+    # Write data rows
+    for appointment in appointments:
+        writer.writerow([appointment.get(header, "") for header in headers])
+
+    # Set the response headers to indicate a file download
+    frappe.response["type"] = "binary"
+    frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.csv"
+    frappe.response["filecontent"] = output.getvalue()
+    frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+
+    # Close the StringIO object
+    output.close()
