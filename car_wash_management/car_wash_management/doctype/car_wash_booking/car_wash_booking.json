@@ -27,7 +27,10 @@
   "out_of_turn",
   "out_of_turn_reason",
   "num",
-  "source_type"
+  "source_type",
+  "payment_status",
+  "payment_type",
+  "payment_received_on"
  ],
  "fields": [
   {
@@ -171,11 +174,30 @@
    "fieldtype": "Select",
    "label": "\u0422\u0438\u043f \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0430",
    "options": "Direct\nWebPanel"
+  },
+  {
+   "default": "Not paid",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043e\u043f\u043b\u0430\u0442\u044b",
+   "options": "Not paid\nPaid",
+   "reqd": 1
+  },
+  {
+   "fieldname": "payment_type",
+   "fieldtype": "Select",
+   "label": "\u0422\u0438\u043f \u043e\u043f\u043b\u0430\u0442\u044b",
+   "options": "Cash\nCard\nKaspi\nContract"
+  },
+  {
+   "fieldname": "payment_received_on",
+   "fieldtype": "Datetime",
+   "label": "\u0412\u0440\u0435\u043c\u044f \u043f\u0440\u0438\u0451\u043c\u0430 \u043e\u043f\u043b\u0430\u0442\u044b"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-05 13:42:13.808743",
+ "modified": "2025-01-11 17:34:49.552017",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash booking",
