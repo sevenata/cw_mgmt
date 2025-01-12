@@ -18,6 +18,7 @@
   "payment_status",
   "payment_type",
   "payment_received_on",
+  "num",
   "column_break_betd",
   "box",
   "box_title",
@@ -383,6 +384,11 @@
    "fieldtype": "Datetime",
    "in_list_view": 1,
    "label": "\u0412\u0440\u0435\u043c\u044f \u043f\u0440\u0438\u0451\u043c\u0430 \u043e\u043f\u043b\u0430\u0442\u044b"
+  },
+  {
+   "fieldname": "num",
+   "fieldtype": "Data",
+   "label": "\u041d\u043e\u043c\u0435\u0440 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -392,7 +398,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2025-01-11 17:29:08.522073",
+ "modified": "2025-01-12 11:50:19.218987",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",
