@@ -239,3 +239,101 @@ def export_appointments_to_csv(selected_date=None):
 
     # Close the StringIO object
     output.close()
+
+@frappe.whitelist()
+def get_car_wash_statistics():
+    """
+    Fetch car wash statistics for today, a specific date, or a date range.
+
+    Query parameters:
+    - `date` (optional): Specific date in 'YYYY-MM-DD' format.
+    - `start_date` and `end_date` (optional): Date range in 'YYYY-MM-DD' format.
+    - `car_wash` (optional): Filter by car wash name.
+    """
+    car_wash = frappe.form_dict.get("car_wash")
+    date = frappe.form_dict.get("date")
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+
+    # Determine the date range
+    if date:
+        # Use a single day (midnight to midnight)
+        try:
+            selected_date = str(getdate(date))
+            start_date = selected_date + " 00:00:00"
+            end_date = selected_date + " 23:59:59"
+        except ValueError:
+            frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
+    elif start_date and end_date:
+        # Use the provided date range
+        try:
+            start_date = str(getdate(start_date)) + " 00:00:00"
+            end_date = str(getdate(end_date)) + " 23:59:59"
+        except ValueError:
+            frappe.throw("Invalid date range format. Please use 'YYYY-MM-DD'.")
+    else:
+        # Default to today's date
+        today_date = today()
+        start_date = today_date + " 00:00:00"
+        end_date = today_date + " 23:59:59"
+
+    # Fetch appointments within the specified date range
+    appointments = frappe.get_all(
+        "Car wash appointment",
+        filters={
+            "starts_on": ["between", [start_date, end_date]],
+            "payment_status": "Paid",
+            "car_wash": car_wash,
+        },
+        fields=["payment_type", "services_total"],
+    )
+
+    # Initialize stats
+    stats = {
+        "total_cars": len(appointments),
+        "total_income": 0,
+        "cash_payment": {"count": 0, "total": 0},
+        "card_payment": {"count": 0, "total": 0},
+        "kaspi_payment": {"count": 0, "total": 0},
+        "contract_payment": {"count": 0, "total": 0},
+    }
+
+    # Aggregate statistics
+    for appointment in appointments:
+        stats["total_income"] += flt(appointment["services_total"])
+        if appointment["payment_type"] == "Cash":
+            stats["cash_payment"]["count"] += 1
+            stats["cash_payment"]["total"] += flt(appointment["services_total"])
+        elif appointment["payment_type"] == "Card":
+            stats["card_payment"]["count"] += 1
+            stats["card_payment"]["total"] += flt(appointment["services_total"])
+        elif appointment["payment_type"] == "Kaspi":
+            stats["kaspi_payment"]["count"] += 1
+            stats["kaspi_payment"]["total"] += flt(appointment["services_total"])
+        elif appointment["payment_type"] == "Contract":
+            stats["contract_payment"]["count"] += 1
+            stats["contract_payment"]["total"] += flt(appointment["services_total"])
+
+    # Add additional statistics if it's a month-long range
+    try:
+        range_start_date = getdate(start_date.split(" ")[0])
+        range_end_date = getdate(end_date.split(" ")[0])
+        num_days = (range_end_date - range_start_date).days + 1
+
+        if num_days > 1:
+            stats["average_daily_income"] = (
+                stats["total_income"] / num_days if num_days > 0 else 0
+            )
+            stats["average_cars_per_day"] = (
+                stats["total_cars"] / num_days if num_days > 0 else 0
+            )
+            stats["average_check"] = (
+                stats["total_income"] / stats["total_cars"]
+                if stats["total_cars"] > 0
+                else 0
+            )
+    except ValueError:
+        # Skip additional stats if the date range is invalid
+        pass
+
+    return stats
