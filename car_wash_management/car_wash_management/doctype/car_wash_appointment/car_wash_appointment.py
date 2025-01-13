@@ -6,7 +6,7 @@ from frappe.model.document import Document
 import frappe
 from frappe.utils import flt, cint, today, add_days, getdate
 from datetime import datetime, timedelta
-from io import StringIO
+from io import StringIO, BytesIO
 import csv
 
 class Carwashappointment(Document):
@@ -337,3 +337,68 @@ def get_car_wash_statistics():
         pass
 
     return stats
+
+@frappe.whitelist()
+def export_appointments_to_excel(selected_date=None):
+    """
+    Generate an Excel file in SpreadsheetML format for the selected date and return for download.
+    """
+    from io import BytesIO
+    from frappe.utils import getdate
+
+    if not selected_date:
+        frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+
+    # Validate the date format
+    try:
+        getdate(selected_date)
+    except ValueError:
+        frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+
+    # Fetch appointments using the get_appointments_by_date logic
+    appointments = get_appointments_by_date(selected_date)
+
+    if not appointments:
+        frappe.throw(f"No appointments found for the date {selected_date}.")
+
+    # Create an in-memory buffer for the Excel file
+    output = BytesIO()
+
+    # Write SpreadsheetML XML content
+    output.write(b'<?xml version="1.0"?>\n')
+    output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
+                 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
+                 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
+                 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+    output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
+
+    # Write headers
+    headers = list(appointments[0].keys())
+    output.write(b"<Row>\n")
+    for header in headers:
+        output.write(f'<Cell><Data ss:Type="String">{header}</Data></Cell>\n'.encode('utf-8'))
+    output.write(b"</Row>\n")
+
+    # Write data rows
+    for appointment in appointments:
+        output.write(b"<Row>\n")
+        for header in headers:
+            value = appointment.get(header, "")
+            if isinstance(value, (int, float)):
+                cell_type = "Number"
+            else:
+                cell_type = "String"
+            output.write(f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
+        output.write(b"</Row>\n")
+
+    # Close XML structure
+    output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
+
+    # Prepare the response
+    frappe.response["type"] = "binary"
+    frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.xls"
+    frappe.response["filecontent"] = output.getvalue()
+    frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+
+    # Close the output buffer
+    output.close()
