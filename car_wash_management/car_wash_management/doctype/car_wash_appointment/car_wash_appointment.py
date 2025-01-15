@@ -32,7 +32,7 @@ def get_daily_car_wash_statistics():
     # Fetch daily appointments
     daily_appointments = frappe.get_all(
         "Car wash appointment",
-        filters={"starts_on": ["between", [today_date + " 00:00:00", today_date + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
+        filters={"payment_received_on": ["between", [today_date + " 00:00:00", today_date + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
         fields=["payment_type", "services_total"]
     )
 
@@ -90,7 +90,7 @@ def get_monthly_car_wash_statistics():
     # Fetch monthly appointments
     monthly_appointments = frappe.get_all(
         "Car wash appointment",
-        filters={"starts_on": ["between", [current_month_start_str + " 00:00:00", current_month_end_str + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
+        filters={"payment_received_on": ["between", [current_month_start_str + " 00:00:00", current_month_end_str + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
         fields=["services_total"]
     )
 
@@ -130,7 +130,7 @@ def get_last_7_days_car_wash_statistics():
         # Fetch appointments for the current day
         daily_appointments = frappe.get_all(
             "Car wash appointment",
-            filters={"starts_on": ["between", [day_start, day_end]], "payment_status": "Paid", "car_wash": car_wash},
+            filters={"payment_received_on": ["between", [day_start, day_end]], "payment_status": "Paid", "car_wash": car_wash},
             fields=["services_total"]
         )
 
@@ -170,7 +170,7 @@ def get_appointments_by_date(selected_date=None):
 
     # Define the filters
     filters = {
-        "starts_on": ["between", [f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
+        "payment_received_on": ["between", [f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
         "is_deleted": 0,
         "payment_status": "Paid"
     }
@@ -281,7 +281,7 @@ def get_car_wash_statistics():
     appointments = frappe.get_all(
         "Car wash appointment",
         filters={
-            "starts_on": ["between", [start_date, end_date]],
+            "payment_received_on": ["between", [start_date, end_date]],
             "payment_status": "Paid",
             "car_wash": car_wash,
         },

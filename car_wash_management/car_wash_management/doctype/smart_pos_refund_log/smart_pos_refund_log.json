@@ -1,0 +1,84 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-14 20:01:55.532796",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+  "field_order": [
+    "refund_id",
+    "transaction_id",
+    "amount",
+    "status",
+    "timestamp",
+    "refund_method",
+    "customer_confirmation"
+  ],
+  "fields": [
+    {
+      "fieldname": "refund_id",
+      "fieldtype": "Data",
+      "label": "Refund ID",
+      "reqd": 1
+    },
+    {
+      "fieldname": "transaction_id",
+      "fieldtype": "Data",
+      "label": "Transaction ID",
+      "reqd": 1
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "label": "Amount",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending\nSuccess\nFail",
+      "reqd": 1
+    },
+    {
+      "fieldname": "timestamp",
+      "fieldtype": "Datetime",
+      "label": "Timestamp",
+      "reqd": 1
+    },
+    {
+      "fieldname": "refund_method",
+      "fieldtype": "Select",
+      "label": "Refund Method",
+      "options": "QR\nCard\nCash"
+    },
+    {
+      "fieldname": "customer_confirmation",
+      "fieldtype": "Check",
+      "label": "Customer Confirmation"
+    }
+  ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-14 20:01:55.532796",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Smart POS Refund Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
