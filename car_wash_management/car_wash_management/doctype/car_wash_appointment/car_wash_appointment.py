@@ -188,7 +188,7 @@ def get_appointments_by_date(selected_date=None):
         "car_license_plate",
         "car_body_type",
         "payment_type",
-        "payment_status"
+        "payment_status",
         "payment_received_on"
     ]
 
