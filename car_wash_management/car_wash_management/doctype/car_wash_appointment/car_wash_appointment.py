@@ -178,6 +178,7 @@ def get_appointments_by_date(selected_date=None):
     # Fetch the required fields
     fields = [
         "name",
+        "num",
         "box_title",
         "work_started_on",
         "car_wash_worker_name",
@@ -188,6 +189,7 @@ def get_appointments_by_date(selected_date=None):
         "car_body_type",
         "payment_type",
         "payment_status"
+        "payment_received_on"
     ]
 
     # Query the database
