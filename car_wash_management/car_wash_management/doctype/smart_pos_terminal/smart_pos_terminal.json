@@ -1,69 +1,41 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-01-14 19:46:24.003551",
+ "creation": "2025-01-18 19:51:38.918569",
  "doctype": "DocType",
  "engine": "InnoDB",
-  "field_order": [
-    "terminal_id",
-    "serial_number",
-    "ip_address",
-    "mac_address",
-    "status",
-    "connection_type",
-    "last_updated",
-    "notes"
-  ],
+ "field_order": [
+  "ip",
+  "car_wash_company"
+ ],
  "fields": [
   {
-    "fieldname": "terminal_id",
-    "fieldtype": "Data",
-    "in_list_view": 1,
-    "label": "Terminal ID",
-    "reqd": 1
+   "fieldname": "ip",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "IP Address",
+   "reqd": 1
   },
   {
-    "fieldname": "serial_number",
-    "fieldtype": "Data",
-    "label": "Serial Number"
-  },
-  {
-    "fieldname": "ip_address",
-    "fieldtype": "Data",
-    "label": "IP Address",
-    "reqd": 1
-  },
-  {
-    "fieldname": "mac_address",
-    "fieldtype": "Data",
-    "label": "MAC Address"
-  },
-  {
-    "fieldname": "status",
-    "fieldtype": "Select",
-    "label": "Status",
-    "options": "Active\nInactive\nError"
-  },
-  {
-    "fieldname": "connection_type",
-    "fieldtype": "Select",
-    "label": "Connection Type",
-    "options": "LAN\nWi-Fi"
-  },
-  {
-    "fieldname": "last_updated",
-    "fieldtype": "Datetime",
-    "label": "Last Updated"
-  },
-  {
-    "fieldname": "notes",
-    "fieldtype": "Small Text",
-    "label": "Notes"
+   "fieldname": "car_wash_company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Car wash company",
+   "reqd": 1
   }
-],
+ ],
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2025-01-14 19:47:43.415126",
+ "links": [
+  {
+   "link_doctype": "Smart POS Refund Log",
+   "link_fieldname": "terminal"
+  },
+  {
+   "link_doctype": "Smart POS Terminal Transaction Log",
+   "link_fieldname": "terminal"
+  }
+ ],
+ "modified": "2025-01-18 19:52:43.382167",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Smart POS Terminal",

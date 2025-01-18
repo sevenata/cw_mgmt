@@ -4,62 +4,75 @@
  "creation": "2025-01-14 20:01:55.532796",
  "doctype": "DocType",
  "engine": "InnoDB",
-  "field_order": [
-    "refund_id",
-    "transaction_id",
-    "amount",
-    "status",
-    "timestamp",
-    "refund_method",
-    "customer_confirmation"
-  ],
-  "fields": [
-    {
-      "fieldname": "refund_id",
-      "fieldtype": "Data",
-      "label": "Refund ID",
-      "reqd": 1
-    },
-    {
-      "fieldname": "transaction_id",
-      "fieldtype": "Data",
-      "label": "Transaction ID",
-      "reqd": 1
-    },
-    {
-      "fieldname": "amount",
-      "fieldtype": "Currency",
-      "label": "Amount",
-      "reqd": 1
-    },
-    {
-      "fieldname": "status",
-      "fieldtype": "Select",
-      "label": "Status",
-      "options": "Pending\nSuccess\nFail",
-      "reqd": 1
-    },
-    {
-      "fieldname": "timestamp",
-      "fieldtype": "Datetime",
-      "label": "Timestamp",
-      "reqd": 1
-    },
-    {
-      "fieldname": "refund_method",
-      "fieldtype": "Select",
-      "label": "Refund Method",
-      "options": "QR\nCard\nCash"
-    },
-    {
-      "fieldname": "customer_confirmation",
-      "fieldtype": "Check",
-      "label": "Customer Confirmation"
-    }
-  ],
+ "field_order": [
+  "terminal",
+  "refund_id",
+  "transaction_id",
+  "amount",
+  "status",
+  "timestamp",
+  "refund_method",
+  "customer_confirmation"
+ ],
+ "fields": [
+  {
+   "fieldname": "refund_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Refund ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "transaction_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Transaction ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Pending\nSuccess\nFail",
+   "reqd": 1
+  },
+  {
+   "fieldname": "timestamp",
+   "fieldtype": "Datetime",
+   "label": "Timestamp",
+   "reqd": 1
+  },
+  {
+   "fieldname": "refund_method",
+   "fieldtype": "Select",
+   "label": "Refund Method",
+   "options": "QR\nCard\nCash"
+  },
+  {
+   "default": "0",
+   "fieldname": "customer_confirmation",
+   "fieldtype": "Check",
+   "label": "Customer Confirmation"
+  },
+  {
+   "fieldname": "terminal",
+   "fieldtype": "Link",
+   "label": "Terminal",
+   "options": "Smart POS Terminal",
+   "reqd": 1
+  }
+ ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-14 20:01:55.532796",
+ "modified": "2025-01-18 19:44:58.674443",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Smart POS Refund Log",

@@ -26,6 +26,7 @@
   "has_appointment",
   "out_of_turn",
   "out_of_turn_reason",
+  "staff_note",
   "num",
   "source_type",
   "payment_status",
@@ -193,11 +194,16 @@
    "fieldname": "payment_received_on",
    "fieldtype": "Datetime",
    "label": "\u0412\u0440\u0435\u043c\u044f \u043f\u0440\u0438\u0451\u043c\u0430 \u043e\u043f\u043b\u0430\u0442\u044b"
+  },
+  {
+   "fieldname": "staff_note",
+   "fieldtype": "Text",
+   "label": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u0430"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-11 17:34:49.552017",
+ "modified": "2025-01-18 21:27:18.606160",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash booking",
