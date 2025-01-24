@@ -10,7 +10,19 @@ from io import StringIO, BytesIO
 import csv
 
 class Carwashappointment(Document):
-	pass
+    def before_insert(self):
+        if not self.car_wash:
+            frappe.throw("Car Wash is required")
+
+        max_num = frappe.db.sql(
+            """
+            SELECT CAST(MAX(num) AS SIGNED) FROM `tabCar wash appointment`
+            WHERE DATE(creation) = %s AND car_wash = %s
+            """,
+            (today(), self.car_wash),
+        )
+
+        self.num = (max_num[0][0] or 0) + 1
 # 	@property
 # 	def services_json(self):
 # 		return frappe.utils.now_datetime() - self.creation
