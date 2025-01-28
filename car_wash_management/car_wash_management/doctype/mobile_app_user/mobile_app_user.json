@@ -9,12 +9,17 @@
   "city",
   "current_car",
   "push_token",
-  "city_alias"
+  "city_alias",
+  "refresh_token",
+  "last_logged_at",
+  "is_blocked",
+  "telegram_user"
  ],
  "fields": [
   {
    "fieldname": "email",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Email",
    "no_copy": 1,
    "options": "Email"
@@ -24,8 +29,7 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Phone",
-   "no_copy": 1,
-   "reqd": 1
+   "no_copy": 1
   },
   {
    "fieldname": "city",
@@ -50,6 +54,28 @@
    "fieldname": "city_alias",
    "fieldtype": "Data",
    "label": "Alias \u0433\u043e\u0440\u043e\u0434\u0430"
+  },
+  {
+   "fieldname": "refresh_token",
+   "fieldtype": "Data",
+   "label": "Refresh token"
+  },
+  {
+   "fieldname": "last_logged_at",
+   "fieldtype": "Datetime",
+   "label": "Last login"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_blocked",
+   "fieldtype": "Check",
+   "label": "Is blocked"
+  },
+  {
+   "fieldname": "telegram_user",
+   "fieldtype": "Link",
+   "label": "Telegram user",
+   "options": "Telegram App User"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -59,7 +85,7 @@
    "link_fieldname": "user"
   }
  ],
- "modified": "2024-08-11 20:14:06.624642",
+ "modified": "2025-01-28 02:00:04.558216",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Mobile App User",
@@ -79,7 +105,9 @@
    "write": 1
   }
  ],
+ "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "phone"
 }

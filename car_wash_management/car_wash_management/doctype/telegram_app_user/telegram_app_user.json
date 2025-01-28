@@ -1,0 +1,104 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-27 00:54:45.813783",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "id",
+  "first_name",
+  "last_name",
+  "language_code",
+  "photo_url",
+  "username",
+  "user",
+  "last_latitude",
+  "last_longitude",
+  "location_updated_at",
+  "phone"
+ ],
+ "fields": [
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "\u0418\u043c\u044f"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "\u0424\u0430\u043c\u0438\u043b\u0438\u044f"
+  },
+  {
+   "fieldname": "language_code",
+   "fieldtype": "Data",
+   "label": "\u042f\u0437\u044b\u043a"
+  },
+  {
+   "fieldname": "photo_url",
+   "fieldtype": "Data",
+   "label": "\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435"
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "label": "\u0418\u043c\u044f \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f"
+  },
+  {
+   "fieldname": "id",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "Mobile App User"
+  },
+  {
+   "fieldname": "last_latitude",
+   "fieldtype": "Float",
+   "label": "Last latitude"
+  },
+  {
+   "fieldname": "last_longitude",
+   "fieldtype": "Float",
+   "label": "Last longitude"
+  },
+  {
+   "fieldname": "location_updated_at",
+   "fieldtype": "Datetime",
+   "label": "Location updated at"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "\u041d\u043e\u043c\u0435\u0440 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0430"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-28 01:47:55.515230",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Telegram App User",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

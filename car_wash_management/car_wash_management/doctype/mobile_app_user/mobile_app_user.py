@@ -8,4 +8,4 @@ from frappe.model.document import Document
 
 class MobileAppUser(Document):
 	def autoname(self):
-            self.name = uuid.v4()
+            self.name = str(uuid.uuid4())
