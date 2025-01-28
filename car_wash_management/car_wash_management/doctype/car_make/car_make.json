@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:alias",
  "creation": "2024-05-10 17:27:48.524298",
@@ -47,7 +48,7 @@
    "link_fieldname": "make"
   }
  ],
- "modified": "2024-05-10 18:10:14.181993",
+ "modified": "2025-01-28 15:35:20.654349",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car make",
