@@ -24,6 +24,8 @@
   "is_deleted",
   "appointment",
   "has_appointment",
+  "appointment_status",
+  "appointment_payment_status",
   "out_of_turn",
   "out_of_turn_reason",
   "staff_note",
@@ -199,11 +201,23 @@
    "fieldname": "staff_note",
    "fieldtype": "Text",
    "label": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u0430"
+  },
+  {
+   "fetch_from": "appointment.workflow_state",
+   "fieldname": "appointment_status",
+   "fieldtype": "Data",
+   "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f"
+  },
+  {
+   "fetch_from": "appointment.payment_status",
+   "fieldname": "appointment_payment_status",
+   "fieldtype": "Data",
+   "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043e\u043f\u043b\u0430\u0442\u044b \u043d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-18 21:27:18.606160",
+ "modified": "2025-01-28 17:34:09.109539",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash booking",
