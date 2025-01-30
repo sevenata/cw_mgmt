@@ -8,8 +8,13 @@ from frappe import _
 
 import frappe
 
+from ..car_wash_booking.car_wash_booking import update_or_create_availability
+
 
 class Carwashbox(Document):
+
+	def validate(self):
+		update_or_create_availability(self)
 
 	def get_working_hours(self):
 		car_wash = frappe.get_doc('Car wash', self.car_wash)

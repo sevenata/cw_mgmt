@@ -18,7 +18,8 @@
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
    "label": "\u0423\u0441\u043b\u0443\u0433\u0430",
-   "options": "Car wash service"
+   "options": "Car wash service",
+   "reqd": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -60,7 +61,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-12-16 01:28:14.723957",
+ "modified": "2025-01-30 21:53:25.573227",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment service",

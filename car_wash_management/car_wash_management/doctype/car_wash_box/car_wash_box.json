@@ -20,7 +20,8 @@
    "fieldname": "car_wash",
    "fieldtype": "Link",
    "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
-   "options": "Car wash"
+   "options": "Car wash",
+   "reqd": 1
   },
   {
    "fieldname": "color",
@@ -74,7 +75,7 @@
    "link_fieldname": "car_wash"
   }
  ],
- "modified": "2024-10-11 14:33:09.580312",
+ "modified": "2025-01-30 21:42:13.802069",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash box",
