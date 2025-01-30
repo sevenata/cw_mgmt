@@ -13,7 +13,8 @@
   "refresh_token",
   "last_logged_at",
   "is_blocked",
-  "telegram_user"
+  "telegram_user",
+  "manager"
  ],
  "fields": [
   {
@@ -76,6 +77,12 @@
    "fieldtype": "Link",
    "label": "Telegram user",
    "options": "Telegram App User"
+  },
+  {
+   "fieldname": "manager",
+   "fieldtype": "Link",
+   "label": "Manager",
+   "options": "Mobile App Manager"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -85,7 +92,7 @@
    "link_fieldname": "user"
   }
  ],
- "modified": "2025-01-28 02:00:04.558216",
+ "modified": "2025-01-29 22:46:26.322551",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Mobile App User",

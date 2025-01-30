@@ -1,0 +1,84 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:car_wash",
+ "creation": "2025-01-29 23:08:16.257031",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "car_wash",
+  "boxes_count",
+  "cars_in_queue",
+  "cars_in_boxes",
+  "is_working_now",
+  "is_order_acceptance_disabled"
+ ],
+ "fields": [
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "boxes_count",
+   "fieldtype": "Int",
+   "label": "\u041a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e \u0431\u043e\u043a\u0441\u043e\u0432",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cars_in_queue",
+   "fieldtype": "Int",
+   "label": "\u041a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e \u043c\u0430\u0448\u0438\u043d \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u0438",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cars_in_boxes",
+   "fieldtype": "Int",
+   "label": "\u041a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e \u043c\u0430\u0448\u0438\u043d \u0432 \u0431\u043e\u043a\u0441\u0430\u0445",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "description": "\u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u0442\u0441\u044f \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438, \u0432 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0438 \u043e\u0442 \u0432\u0440\u0435\u043c\u0435\u043d\u0438 \u0440\u0430\u0431\u043e\u0442\u044b",
+   "fieldname": "is_working_now",
+   "fieldtype": "Check",
+   "label": "\u0420\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u043b\u0438 \u0441\u0435\u0439\u0447\u0430\u0441"
+  },
+  {
+   "default": "0",
+   "description": "\u0423\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u0442\u0441\u044f \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438, \u0432 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0438 \u043e\u0442 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043a \u043c\u043e\u0439\u043a\u0438",
+   "fieldname": "is_order_acceptance_disabled",
+   "fieldtype": "Check",
+   "label": "\u041e\u0442\u043a\u043b\u044e\u0447\u0435\u043d \u043f\u0440\u0438\u0435\u043c \u0437\u0430\u043a\u0430\u0437\u043e\u0432"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-30 01:29:23.489741",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash availability",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

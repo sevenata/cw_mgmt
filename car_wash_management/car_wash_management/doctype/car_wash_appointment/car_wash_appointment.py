@@ -4,165 +4,60 @@
 # import frappe
 from frappe.model.document import Document
 import frappe
-from frappe.utils import flt, cint, today, add_days, getdate
+from frappe.utils import flt, cint, today, add_days, getdate, now_datetime, add_to_date
 from datetime import datetime, timedelta
 from io import StringIO, BytesIO
+from ..car_wash_booking.car_wash_booking import get_booking_price_and_duration
 import csv
 
-class Carwashappointment(Document):
-    def before_insert(self):
-        if not self.car_wash:
-            frappe.throw("Car Wash is required")
 
-        max_num = frappe.db.sql(
-            """
+class Carwashappointment(Document):
+	def before_insert(self):
+		if not self.car_wash:
+			frappe.throw("Car Wash is required")
+
+		max_num = frappe.db.sql(
+			"""
             SELECT CAST(MAX(num) AS SIGNED) FROM `tabCar wash appointment`
             WHERE DATE(creation) = %s AND car_wash = %s
             """,
-            (today(), self.car_wash),
-        )
+			(today(), self.car_wash),
+		)
 
-        self.num = (max_num[0][0] or 0) + 1
-# 	@property
-# 	def services_json(self):
-# 		return frappe.utils.now_datetime() - self.creation
+		self.num = (max_num[0][0] or 0) + 1
 
-# 	def before_save(self):
-#     		self.services_json = json.dumps(self.as_dict()['services'])
-#     		self.save()
+		if self.booking:
+			booking_doc = frappe.get_doc("Car wash booking", self.booking)
+			if booking_doc.payment_status == "Paid":
+				self.payment_status = "Paid"
+				self.payment_type = booking_doc.payment_type
+				self.payment_received_on = booking_doc.payment_received_on
 
-# http://localhost:8000/api/method/car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_appointment.get_daily_car_wash_statistics
-@frappe.whitelist()
-def get_daily_car_wash_statistics():
-    """
-    Fetch daily car wash statistics.
-    """
-    today_date = today()
+		if not self.payment_status:
+			self.payment_status = "Not paid"
 
-    car_wash = frappe.form_dict.get("car_wash")
+		self.workflow_state = "In progress"
+		self.starts_on = now_datetime()
+		self.work_started_on = self.starts_on
 
-    # Fetch daily appointments
-    daily_appointments = frappe.get_all(
-        "Car wash appointment",
-        filters={"payment_received_on": ["between", [today_date + " 00:00:00", today_date + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
-        fields=["payment_type", "services_total"]
-    )
+	def validate(self):
+		price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services)
+		self.services_total = price_and_duration["total_price"]
+		self.duration_total = price_and_duration["total_duration"]
+		if self.starts_on and not self.ends_on and self.duration_total:
+			self.ends_on = add_to_date(self.starts_on, seconds=self.duration_total)
 
-    daily_stats = {
-        "total_cars": len(daily_appointments),
-        "total_income": 0,
-        "cash_payment": {"count": 0, "total": 0},
-        "card_payment": {"count": 0, "total": 0},
-        "kaspi_payment": {"count": 0, "total": 0},
-        "contract_payment": {"count": 0, "total": 0}
-    }
+		if self.payment_status == "Paid" and self.payment_type and not self.payment_received_on:
+			self.payment_received_on = now_datetime()
 
-    # Aggregate daily statistics
-    for appointment in daily_appointments:
-        daily_stats["total_income"] += flt(appointment["services_total"])
-        if appointment["payment_type"] == "Cash":
-            daily_stats["cash_payment"]["count"] += 1
-            daily_stats["cash_payment"]["total"] += flt(appointment["services_total"])
-        elif appointment["payment_type"] == "Card":
-            daily_stats["card_payment"]["count"] += 1
-            daily_stats["card_payment"]["total"] += flt(appointment["services_total"])
-        elif appointment["payment_type"] == "Kaspi":
-            daily_stats["kaspi_payment"]["count"] += 1
-            daily_stats["kaspi_payment"]["total"] += flt(appointment["services_total"])
-        elif appointment["payment_type"] == "Contract":
-            daily_stats["contract_payment"]["count"] += 1
-            daily_stats["contract_payment"]["total"] += flt(appointment["services_total"])
-
-    return daily_stats
-
-# http://localhost:8000/api/method/car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_appointment.get_monthly_car_wash_statistics
-@frappe.whitelist()
-def get_monthly_car_wash_statistics():
-    """
-    Fetch monthly car wash statistics.
-    """
-
-    # Get the start of the current month
-    current_month_start = datetime.today().replace(day=1)
-
-    # Calculate the end of the current month
-    if current_month_start.month == 12:
-        # If it's December, next month is January of the next year
-        current_month_end = current_month_start.replace(year=current_month_start.year + 1, month=1, day=1) - timedelta(days=1)
-    else:
-        # Get the start of the next month and subtract one day
-        current_month_end = current_month_start.replace(month=current_month_start.month + 1, day=1) - timedelta(days=1)
-
-    # Convert datetime objects to strings for filtering
-    current_month_start_str = current_month_start.strftime('%Y-%m-%d')
-    current_month_end_str = current_month_end.strftime('%Y-%m-%d')
-
-    car_wash = frappe.form_dict.get("car_wash")
-
-    # Fetch monthly appointments
-    monthly_appointments = frappe.get_all(
-        "Car wash appointment",
-        filters={"payment_received_on": ["between", [current_month_start_str + " 00:00:00", current_month_end_str + " 23:59:59"]], "payment_status": "Paid", "car_wash": car_wash},
-        fields=["services_total"]
-    )
-
-    total_income = sum(flt(app["services_total"]) for app in monthly_appointments)
-    total_cars_month = len(monthly_appointments)
-    average_daily_income = total_income / max(datetime.today().day, 1)  # Avoid divide by zero
-    average_cars_per_day = total_cars_month / max(datetime.today().day, 1)
-    average_check = total_income / total_cars_month if total_cars_month > 0 else 0
-
-    return {
-        "total_income": total_income,
-        "average_daily_income": average_daily_income,
-        "total_cars_month": total_cars_month,
-        "average_cars_per_day": average_cars_per_day,
-        "average_check": average_check
-    }
 
 from datetime import datetime, timedelta
 import frappe
 
-@frappe.whitelist()
-def get_last_7_days_car_wash_statistics():
-    """
-    Fetch car wash appointment statistics for each of the last 7 days.
-    """
-    today = datetime.today()
-    stats = {}
-
-    car_wash = frappe.form_dict.get("car_wash")
-
-    for i in range(7):
-        # Calculate the date for the current day in the loop
-        day_date = today - timedelta(days=i)
-        day_start = day_date.strftime('%Y-%m-%d') + " 00:00:00"
-        day_end = day_date.strftime('%Y-%m-%d') + " 23:59:59"
-
-        # Fetch appointments for the current day
-        daily_appointments = frappe.get_all(
-            "Car wash appointment",
-            filters={"payment_received_on": ["between", [day_start, day_end]], "payment_status": "Paid", "car_wash": car_wash},
-            fields=["services_total"]
-        )
-
-        # Calculate stats for the current day
-        total_income = sum(flt(app["services_total"]) for app in daily_appointments)
-        total_cars = len(daily_appointments)
-        average_check = total_income / total_cars if total_cars > 0 else 0
-
-        # Store stats for the day
-        stats[day_date.strftime('%Y-%m-%d')] = {
-            "total_income": total_income,
-            "total_cars": total_cars,
-            "average_check": average_check
-        }
-
-    return stats
 
 @frappe.whitelist()
 def get_appointments_by_date(selected_date=None):
-    """
+	"""
     Extracts Car Wash Appointment records for the selected date.
 
     Args:
@@ -171,92 +66,95 @@ def get_appointments_by_date(selected_date=None):
     Returns:
     list: A list of appointments with the specified fields.
     """
-    if not selected_date:
-        frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+	if not selected_date:
+		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
 
-    # Validate the date format
-    try:
-        getdate(selected_date)
-    except ValueError:
-        frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+	# Validate the date format
+	try:
+		getdate(selected_date)
+	except ValueError:
+		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
 
-    # Define the filters
-    filters = {
-        "payment_received_on": ["between", [f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
-        "is_deleted": 0,
-        "payment_status": "Paid"
-    }
+	# Define the filters
+	filters = {
+		"payment_received_on": ["between",
+								[f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
+		"is_deleted": 0,
+		"payment_status": "Paid"
+	}
 
-    # Fetch the required fields
-    fields = [
-        "name",
-        "num",
-        "box_title",
-        "work_started_on",
-        "car_wash_worker_name",
-        "services_total",
-        "car_make_name",
-        "car_model_name",
-        "car_license_plate",
-        "car_body_type",
-        "payment_type",
-        "payment_status",
-        "payment_received_on"
-    ]
+	# Fetch the required fields
+	fields = [
+		"name",
+		"num",
+		"box_title",
+		"work_started_on",
+		"car_wash_worker_name",
+		"services_total",
+		"car_make_name",
+		"car_model_name",
+		"car_license_plate",
+		"car_body_type",
+		"payment_type",
+		"payment_status",
+		"payment_received_on"
+	]
 
-    # Query the database
-    appointments = frappe.get_all(
-        "Car wash appointment",
-        filters=filters,
-        fields=fields
-    )
+	# Query the database
+	appointments = frappe.get_all(
+		"Car wash appointment",
+		filters=filters,
+		fields=fields
+	)
 
-    return appointments
+	return appointments
+
 
 @frappe.whitelist()
 def export_appointments_to_csv(selected_date=None):
-    """
+	"""
     Extract Car Wash Appointments for a selected date and directly return a CSV file for download.
     """
-    if not selected_date:
-        frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+	if not selected_date:
+		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
 
-    # Validate the date format
-    try:
-        getdate(selected_date)
-    except ValueError:
-        frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+	# Validate the date format
+	try:
+		getdate(selected_date)
+	except ValueError:
+		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
 
-    # Fetch appointments using the get_appointments_by_date logic
-    appointments = get_appointments_by_date(selected_date)
+	# Fetch appointments using the get_appointments_by_date logic
+	appointments = get_appointments_by_date(selected_date)
 
-    if not appointments:
-        frappe.throw(f"No appointments found for the date {selected_date}.")
+	if not appointments:
+		frappe.throw(f"No appointments found for the date {selected_date}.")
 
-    # Use StringIO to generate CSV in memory
-    output = StringIO()
-    writer = csv.writer(output)
+	# Use StringIO to generate CSV in memory
+	output = StringIO()
+	writer = csv.writer(output)
 
-    # Write headers
-    headers = list(appointments[0].keys())
-    writer.writerow(headers)
+	# Write headers
+	headers = list(appointments[0].keys())
+	writer.writerow(headers)
 
-    # Write data rows
-    for appointment in appointments:
-        writer.writerow([appointment.get(header, "") for header in headers])
+	# Write data rows
+	for appointment in appointments:
+		writer.writerow([appointment.get(header, "") for header in headers])
 
-    # Set the response headers to indicate a file download
-    frappe.response["type"] = "binary"
-    frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.csv"
-    frappe.response["filecontent"] = output.getvalue()
-    frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+	# Set the response headers to indicate a file download
+	frappe.response["type"] = "binary"
+	frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.csv"
+	frappe.response["filecontent"] = output.getvalue()
+	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
 
-    # Close the StringIO object
-    output.close()
+	# Close the StringIO object
+	output.close()
+
 
 @frappe.whitelist()
 def get_car_wash_statistics():
-    """
+	"""
     Fetch car wash statistics for today, a specific date, or a date range.
 
     Query parameters:
@@ -264,155 +162,218 @@ def get_car_wash_statistics():
     - `start_date` and `end_date` (optional): Date range in 'YYYY-MM-DD' format.
     - `car_wash` (optional): Filter by car wash name.
     """
-    car_wash = frappe.form_dict.get("car_wash")
-    date = frappe.form_dict.get("date")
-    start_date = frappe.form_dict.get("start_date")
-    end_date = frappe.form_dict.get("end_date")
+	car_wash = frappe.form_dict.get("car_wash")
+	date = frappe.form_dict.get("date")
+	start_date = frappe.form_dict.get("start_date")
+	end_date = frappe.form_dict.get("end_date")
 
-    # Determine the date range
-    if date:
-        # Use a single day (midnight to midnight)
-        try:
-            selected_date = str(getdate(date))
-            start_date = selected_date + " 00:00:00"
-            end_date = selected_date + " 23:59:59"
-        except ValueError:
-            frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
-    elif start_date and end_date:
-        # Use the provided date range
-        try:
-            start_date = str(getdate(start_date)) + " 00:00:00"
-            end_date = str(getdate(end_date)) + " 23:59:59"
-        except ValueError:
-            frappe.throw("Invalid date range format. Please use 'YYYY-MM-DD'.")
-    else:
-        # Default to today's date
-        today_date = today()
-        start_date = today_date + " 00:00:00"
-        end_date = today_date + " 23:59:59"
+	# Determine the date range
+	if date:
+		# Use a single day (midnight to midnight)
+		try:
+			selected_date = str(getdate(date))
+			start_date = selected_date + " 00:00:00"
+			end_date = selected_date + " 23:59:59"
+		except ValueError:
+			frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
+	elif start_date and end_date:
+		# Use the provided date range
+		try:
+			start_date = str(getdate(start_date)) + " 00:00:00"
+			end_date = str(getdate(end_date)) + " 23:59:59"
+		except ValueError:
+			frappe.throw("Invalid date range format. Please use 'YYYY-MM-DD'.")
+	else:
+		# Default to today's date
+		today_date = today()
+		start_date = today_date + " 00:00:00"
+		end_date = today_date + " 23:59:59"
 
-    # Fetch appointments within the specified date range
-    appointments = frappe.get_all(
-        "Car wash appointment",
-        filters={
-            "payment_received_on": ["between", [start_date, end_date]],
-            "payment_status": "Paid",
-            "car_wash": car_wash,
-        },
-        fields=["payment_type", "services_total"],
-    )
+	# Fetch appointments within the specified date range
+	appointments = frappe.get_all(
+		"Car wash appointment",
+		filters={
+			"payment_received_on": ["between", [start_date, end_date]],
+			"payment_status": "Paid",
+			"car_wash": car_wash,
+		},
+		fields=["payment_type", "services_total"],
+	)
 
-    # Initialize stats
-    stats = {
-        "total_cars": len(appointments),
-        "total_income": 0,
-        "cash_payment": {"count": 0, "total": 0},
-        "card_payment": {"count": 0, "total": 0},
-        "kaspi_payment": {"count": 0, "total": 0},
-        "contract_payment": {"count": 0, "total": 0},
-    }
+	# Initialize stats
+	stats = {
+		"total_cars": len(appointments),
+		"total_income": 0,
+		"cash_payment": {"count": 0, "total": 0},
+		"card_payment": {"count": 0, "total": 0},
+		"kaspi_payment": {"count": 0, "total": 0},
+		"contract_payment": {"count": 0, "total": 0},
+	}
 
-    # Aggregate statistics
-    for appointment in appointments:
-        stats["total_income"] += flt(appointment["services_total"])
-        if appointment["payment_type"] == "Cash":
-            stats["cash_payment"]["count"] += 1
-            stats["cash_payment"]["total"] += flt(appointment["services_total"])
-        elif appointment["payment_type"] == "Card":
-            stats["card_payment"]["count"] += 1
-            stats["card_payment"]["total"] += flt(appointment["services_total"])
-        elif appointment["payment_type"] == "Kaspi":
-            stats["kaspi_payment"]["count"] += 1
-            stats["kaspi_payment"]["total"] += flt(appointment["services_total"])
-        elif appointment["payment_type"] == "Contract":
-            stats["contract_payment"]["count"] += 1
-            stats["contract_payment"]["total"] += flt(appointment["services_total"])
+	# Aggregate statistics
+	for appointment in appointments:
+		stats["total_income"] += flt(appointment["services_total"])
+		if appointment["payment_type"] == "Cash":
+			stats["cash_payment"]["count"] += 1
+			stats["cash_payment"]["total"] += flt(appointment["services_total"])
+		elif appointment["payment_type"] == "Card":
+			stats["card_payment"]["count"] += 1
+			stats["card_payment"]["total"] += flt(appointment["services_total"])
+		elif appointment["payment_type"] == "Kaspi":
+			stats["kaspi_payment"]["count"] += 1
+			stats["kaspi_payment"]["total"] += flt(appointment["services_total"])
+		elif appointment["payment_type"] == "Contract":
+			stats["contract_payment"]["count"] += 1
+			stats["contract_payment"]["total"] += flt(appointment["services_total"])
 
-    # Add additional statistics if it's a month-long range
-    try:
-        range_start_date = getdate(start_date.split(" ")[0])
-        range_end_date = getdate(end_date.split(" ")[0])
-        num_days = (range_end_date - range_start_date).days + 1
+	# Add additional statistics if it's a month-long range
+	try:
+		range_start_date = getdate(start_date.split(" ")[0])
+		range_end_date = getdate(end_date.split(" ")[0])
+		num_days = (range_end_date - range_start_date).days + 1
 
-        if num_days > 1:
-            stats["average_daily_income"] = (
-                stats["total_income"] / num_days if num_days > 0 else 0
-            )
-            stats["average_cars_per_day"] = (
-                stats["total_cars"] / num_days if num_days > 0 else 0
-            )
-            stats["average_check"] = (
-                stats["total_income"] / stats["total_cars"]
-                if stats["total_cars"] > 0
-                else 0
-            )
-    except ValueError:
-        # Skip additional stats if the date range is invalid
-        pass
+		if num_days > 1:
+			stats["average_daily_income"] = (
+				stats["total_income"] / num_days if num_days > 0 else 0
+			)
+			stats["average_cars_per_day"] = (
+				stats["total_cars"] / num_days if num_days > 0 else 0
+			)
+			stats["average_check"] = (
+				stats["total_income"] / stats["total_cars"]
+				if stats["total_cars"] > 0
+				else 0
+			)
+	except ValueError:
+		# Skip additional stats if the date range is invalid
+		pass
 
-    return stats
+	return stats
+
 
 @frappe.whitelist()
 def export_appointments_to_excel(selected_date=None):
-    """
+	"""
     Generate an Excel file in SpreadsheetML format for the selected date and return for download.
     """
-    from io import BytesIO
-    from frappe.utils import getdate
+	from io import BytesIO
+	from frappe.utils import getdate
 
-    if not selected_date:
-        frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+	if not selected_date:
+		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
 
-    # Validate the date format
-    try:
-        getdate(selected_date)
-    except ValueError:
-        frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+	# Validate the date format
+	try:
+		getdate(selected_date)
+	except ValueError:
+		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
 
-    # Fetch appointments using the get_appointments_by_date logic
-    appointments = get_appointments_by_date(selected_date)
+	# Fetch appointments using the get_appointments_by_date logic
+	appointments = get_appointments_by_date(selected_date)
 
-    if not appointments:
-        frappe.throw(f"No appointments found for the date {selected_date}.")
+	if not appointments:
+		frappe.throw(f"No appointments found for the date {selected_date}.")
 
-    # Create an in-memory buffer for the Excel file
-    output = BytesIO()
+	# Create an in-memory buffer for the Excel file
+	output = BytesIO()
 
-    # Write SpreadsheetML XML content
-    output.write(b'<?xml version="1.0"?>\n')
-    output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
-                 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
-                 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
-                 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
-    output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
+	# Write SpreadsheetML XML content
+	output.write(b'<?xml version="1.0"?>\n')
+	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
+				 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
+				 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
+				 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+	output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
 
-    # Write headers
-    headers = list(appointments[0].keys())
-    output.write(b"<Row>\n")
-    for header in headers:
-        output.write(f'<Cell><Data ss:Type="String">{header}</Data></Cell>\n'.encode('utf-8'))
-    output.write(b"</Row>\n")
+	# Write headers
+	headers = list(appointments[0].keys())
+	output.write(b"<Row>\n")
+	for header in headers:
+		output.write(f'<Cell><Data ss:Type="String">{header}</Data></Cell>\n'.encode('utf-8'))
+	output.write(b"</Row>\n")
 
-    # Write data rows
-    for appointment in appointments:
-        output.write(b"<Row>\n")
-        for header in headers:
-            value = appointment.get(header, "")
-            if isinstance(value, (int, float)):
-                cell_type = "Number"
-            else:
-                cell_type = "String"
-            output.write(f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
-        output.write(b"</Row>\n")
+	# Write data rows
+	for appointment in appointments:
+		output.write(b"<Row>\n")
+		for header in headers:
+			value = appointment.get(header, "")
+			if isinstance(value, (int, float)):
+				cell_type = "Number"
+			else:
+				cell_type = "String"
+			output.write(
+				f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
+		output.write(b"</Row>\n")
 
-    # Close XML structure
-    output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
+	# Close XML structure
+	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
 
-    # Prepare the response
-    frappe.response["type"] = "binary"
-    frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.xls"
-    frappe.response["filecontent"] = output.getvalue()
-    frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+	# Prepare the response
+	frappe.response["type"] = "binary"
+	frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.xls"
+	frappe.response["filecontent"] = output.getvalue()
+	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
 
-    # Close the output buffer
-    output.close()
+	# Close the output buffer
+	output.close()
+
+
+import frappe
+from frappe import _
+from frappe.utils import getdate, today
+
+
+@frappe.whitelist()
+def get_finished_paid_count_per_day(from_date, to_date):
+	"""
+    Возвращает количество автомобилей со статусом 'Finished' и статусом оплаты 'Paid'
+    по каждому дню в диапазоне дат от `from_date` до `to_date`.
+
+    :param from_date: Начальная дата (в формате 'YYYY-MM-DD')
+    :param to_date: Конечная дата (в формате 'YYYY-MM-DD')
+    :return: Словарь {дата: количество}
+    """
+	try:
+		# Проверка входных параметров
+		if not from_date or not to_date:
+			frappe.throw(_("Both 'from_date' and 'to_date' are required."))
+
+		# Преобразование строк в объекты даты
+		from_date_obj = getdate(from_date)
+		to_date_obj = getdate(to_date)
+
+		if from_date_obj > to_date_obj:
+			frappe.throw(_("`from_date` должна быть меньше или равна `to_date`."))
+
+		# Выполнение запроса с группировкой по дате
+		results = frappe.db.sql("""
+            SELECT DATE(work_ended_on) as date, COUNT(*) as count
+            FROM `tabCar wash appointment`
+            WHERE workflow_state = 'Finished'
+                AND payment_status = 'Paid'
+                AND work_ended_on BETWEEN %(from_datetime)s AND %(to_datetime)s
+            GROUP BY DATE(work_ended_on)
+            ORDER BY DATE(work_ended_on) ASC
+        """, {
+			"from_datetime": from_date + " 00:00:00",
+			"to_datetime": to_date + " 23:59:59"
+		}, as_dict=True)
+
+		# Инициализация словаря с нулями для всех дат в диапазоне
+		date_counts = {}
+		current_date = from_date_obj
+		while current_date <= to_date_obj:
+			date_str = current_date.strftime('%Y-%m-%d')
+			date_counts[date_str] = 0
+			current_date += frappe.utils.timedelta(days=1)
+
+		# Заполнение словаря полученными результатами
+		for row in results:
+			date_counts[row.date.strftime('%Y-%m-%d')] = row.count
+
+		return date_counts
+
+	except Exception as e:
+		frappe.log_error(message=frappe.get_traceback(),
+						 title="Error in get_finished_paid_count_per_day")
+		frappe.throw(_("An error occurred while fetching the counts per day: {0}").format(str(e)))

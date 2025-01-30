@@ -107,7 +107,8 @@
    "fieldname": "workflow_state",
    "fieldtype": "Link",
    "label": "\u0421\u0442\u0430\u0442\u0443\u0441",
-   "options": "Workflow State"
+   "options": "Workflow State",
+   "search_index": 1
   },
   {
    "fieldname": "connections_tab",
@@ -295,7 +296,8 @@
    "fieldtype": "Select",
    "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043e\u043f\u043b\u0430\u0442\u044b",
    "options": "Not paid\nPaid",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "car.color",
@@ -324,7 +326,8 @@
    "fieldname": "work_ended_on",
    "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "\u0424\u0430\u043a\u0442\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f"
+   "label": "\u0424\u0430\u043a\u0442\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f",
+   "search_index": 1
   },
   {
    "fieldname": "car_wash_worker",
@@ -398,7 +401,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2025-01-12 11:50:19.218987",
+ "modified": "2025-01-30 16:00:41.515562",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",

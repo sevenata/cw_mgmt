@@ -5,9 +5,10 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "car_wash",
   "threshold_between_washes",
   "monthly_plan",
-  "car_wash"
+  "disable_order_acceptance"
  ],
  "fields": [
   {
@@ -27,11 +28,17 @@
    "label": "\u041c\u043e\u0439\u043a\u0430",
    "options": "Car wash",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "disable_order_acceptance",
+   "fieldtype": "Check",
+   "label": "\u041e\u0442\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u043f\u0440\u0438\u0451\u043c \u0437\u0430\u043a\u0430\u0437\u043e\u0432"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-14 16:16:45.339957",
+ "modified": "2025-01-29 23:13:09.894638",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash settings",

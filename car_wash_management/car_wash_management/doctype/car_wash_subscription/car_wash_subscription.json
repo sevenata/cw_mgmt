@@ -1,0 +1,77 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-30 12:06:55.056888",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "car_wash",
+  "subscription_plan",
+  "starts_at",
+  "ends_at",
+  "\u0441\u0442\u0430\u0442\u0443\u0441_\u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438"
+ ],
+ "fields": [
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
+  },
+  {
+   "fieldname": "subscription_plan",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041f\u043b\u0430\u043d \u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438",
+   "options": "Car wash subscription plan",
+   "reqd": 1
+  },
+  {
+   "fieldname": "starts_at",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "\u0414\u0430\u0442\u0430 \u043d\u0430\u0447\u0430\u043b\u0430",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ends_at",
+   "fieldtype": "Date",
+   "label": "\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f",
+   "reqd": 1
+  },
+  {
+   "fieldname": "\u0441\u0442\u0430\u0442\u0443\u0441_\u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438",
+   "fieldtype": "Select",
+   "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438",
+   "options": "Active\nInactive\nCancelled\nExpired",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-30 12:12:51.803020",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash subscription",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

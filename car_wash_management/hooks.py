@@ -122,13 +122,16 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	# "Car wash booking": {
+	# 	"on_update": "car_wash_management.car_wash_management.doctype.car_wash_availability.car_wash_availability.update_cars_in_queue"
+	# }
+	# "*": {
+	# 	"on_update": "method",
+	# 	"on_cancel": "method",
+	# 	"on_trash": "method"
+	# }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -229,15 +232,15 @@ override_whitelisted_methods = {
 # }
 
 fixtures = [
-# 	{
-# 		"doctype": "Car make"
-# 	},
-# 	{
-# 		"doctype": "Car model"
-# 	},
-# 	{
-# 		"doctype": "Car model synonym"
-# 	},
+	# 	{
+	# 		"doctype": "Car make"
+	# 	},
+	# 	{
+	# 		"doctype": "Car model"
+	# 	},
+	# 	{
+	# 		"doctype": "Car model synonym"
+	# 	},
 	{
 		"doctype": "City"
 	},
@@ -259,29 +262,29 @@ fixtures = [
 	{
 		"doctype": "Workflow Action"
 	},
-# 	{
-# 		"doctype": "User",
-# "filters": [
-#             # Filter users whose role_profiles include the desired role profile
-#             ["role_profiles", "in", [["role_profile", "in", ["Car Wash Worker Role Profile"]]]]
-#         ]
-# 		# "filters": [
-# 		# 	["role_profile_name", "in",
-# 		# 	 ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
-# 		# 	  "Car Wash Worker Role Profile"]]
-# 		# ]
-# 	},
+	# 	{
+	# 		"doctype": "User",
+	# "filters": [
+	#             # Filter users whose role_profiles include the desired role profile
+	#             ["role_profiles", "in", [["role_profile", "in", ["Car Wash Worker Role Profile"]]]]
+	#         ]
+	# 		# "filters": [
+	# 		# 	["role_profile_name", "in",
+	# 		# 	 ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
+	# 		# 	  "Car Wash Worker Role Profile"]]
+	# 		# ]
+	# 	},
 	{
 		"doctype": "Role",
 		"filters": [
 			["name", "in", ["Car Wash Cashier", "Car Wash Administrator", "Car Wash Worker"]]
 		]
 	}
-# 	{
-# 		"doctype": "Role Profile",
-# 		"filters": [
-# 			["name", "in", ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
-# 							"Car Wash Worker Role Profile"]]
-# 		]
-# 	}
+	# 	{
+	# 		"doctype": "Role Profile",
+	# 		"filters": [
+	# 			["name", "in", ["Car Wash Cashier Role Profile", "Car Wash Administrator Role Profile",
+	# 							"Car Wash Worker Role Profile"]]
+	# 		]
+	# 	}
 ]

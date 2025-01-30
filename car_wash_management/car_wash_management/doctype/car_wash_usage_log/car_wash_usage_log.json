@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-30 12:21:11.804471",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "car_wash",
+  "appointment",
+  "commission_car_wash",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
+  },
+  {
+   "fieldname": "appointment",
+   "fieldtype": "Link",
+   "label": "\u041d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u0438\u0435",
+   "options": "Car wash appointment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "commission_car_wash",
+   "fieldtype": "Currency",
+   "label": "\u041a\u043e\u043c\u0438\u0441\u0441\u0438\u044f",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Car wash usage log",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-30 12:25:30.058158",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash usage log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

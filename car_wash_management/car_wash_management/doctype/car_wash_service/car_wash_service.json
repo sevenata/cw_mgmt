@@ -16,7 +16,12 @@
   "is_disabled",
   "is_deleted",
   "is_quick_entry",
-  "priority"
+  "priority",
+  "price_modifier",
+  "price_modifier_type",
+  "price_modifier_value",
+  "apply_price_modifier_to_order_total",
+  "is_price_modifier_active"
  ],
  "fields": [
   {
@@ -82,6 +87,36 @@
    "fieldname": "priority",
    "fieldtype": "Int",
    "label": "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442"
+  },
+  {
+   "fieldname": "price_modifier",
+   "fieldtype": "Link",
+   "label": "\u041c\u043e\u0434\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0446\u0435\u043d\u044b",
+   "options": "Car wash service price modifier"
+  },
+  {
+   "fetch_from": "price_modifier.modifier_type",
+   "fieldname": "price_modifier_type",
+   "fieldtype": "Data",
+   "label": "\u0422\u0438\u043f \u043c\u043e\u0434\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440\u0430"
+  },
+  {
+   "fetch_from": "price_modifier.modifier_value",
+   "fieldname": "price_modifier_value",
+   "fieldtype": "Data",
+   "label": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435 \u043c\u043e\u0434\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440\u0430"
+  },
+  {
+   "fetch_from": "price_modifier.apply_to_order_total",
+   "fieldname": "apply_price_modifier_to_order_total",
+   "fieldtype": "Data",
+   "label": "\u041f\u0440\u0438\u043c\u0435\u043d\u044f\u0442\u044c \u043a \u043e\u0431\u0449\u0435\u0439 \u0441\u0443\u043c\u043c\u0435 \u0437\u0430\u043a\u0430\u0437\u0430"
+  },
+  {
+   "fetch_from": "price_modifier.apply_to_order_total",
+   "fieldname": "is_price_modifier_active",
+   "fieldtype": "Data",
+   "label": "\u041c\u043e\u0434\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0446\u0435\u043d\u044b \u0430\u043a\u0442\u0438\u0432\u0435\u043d"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -91,7 +126,7 @@
    "link_fieldname": "base_service"
   }
  ],
- "modified": "2025-01-04 17:34:35.958579",
+ "modified": "2025-01-30 14:45:43.063682",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service",
