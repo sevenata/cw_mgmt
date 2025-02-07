@@ -239,6 +239,7 @@ def create_availability(doc):
     availability_doc = frappe.get_doc({
         "doctype": "Car wash availability",
         "name": doc.car_wash,
+        "car_wash": doc.car_wash,
         "boxes_count": boxes_count,
         "cars_in_boxes": 0,
         "cars_in_queue": cars_in_queue,
