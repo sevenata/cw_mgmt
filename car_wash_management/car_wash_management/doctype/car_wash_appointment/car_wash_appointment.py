@@ -194,6 +194,7 @@ def get_car_wash_statistics():
 		"Car wash appointment",
 		filters={
 			"payment_received_on": ["between", [start_date, end_date]],
+			"is_deleted": 0,
 			"payment_status": "Paid",
 			"car_wash": car_wash,
 		},
