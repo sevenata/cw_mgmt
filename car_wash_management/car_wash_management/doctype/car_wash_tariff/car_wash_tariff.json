@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-02-16 01:48:56.710253",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tariff_name",
+  "car_wash",
+  "is_active",
+  "priority",
+  "tariff_filters"
+ ],
+ "fields": [
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tariff_name",
+   "fieldtype": "Data",
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0442\u0430\u0440\u0438\u0444\u0430"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "\u0410\u043a\u0442\u0438\u0432\u0435\u043d"
+  },
+  {
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442"
+  },
+  {
+   "fieldname": "tariff_filters",
+   "fieldtype": "Table",
+   "label": "\u0424\u0438\u043b\u044c\u0442\u0440\u044b",
+   "options": "Car wash tariff filter"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-02-16 02:00:23.822692",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash tariff",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

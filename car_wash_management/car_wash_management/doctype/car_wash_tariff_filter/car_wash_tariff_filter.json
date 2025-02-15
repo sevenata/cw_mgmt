@@ -1,0 +1,64 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-02-16 01:53:28.297372",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "attribute",
+  "operator",
+  "value_from",
+  "value_to",
+  "value_exact"
+ ],
+ "fields": [
+  {
+   "description": " \u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0430\u0442\u0440\u0438\u0431\u0443\u0442\u0430 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044f",
+   "fieldname": "attribute",
+   "fieldtype": "Select",
+   "label": "\u0410\u0442\u0440\u0438\u0431\u0443\u0442",
+   "options": "markId\nmodelId\nbodyType\nengineType\nvolume\nmodelYearFrom\nmodelYearTo",
+   "reqd": 1
+  },
+  {
+   "description": "\u041e\u043f\u0435\u0440\u0430\u0442\u043e\u0440 \u0441\u0440\u0430\u0432\u043d\u0435\u043d\u0438\u044f",
+   "fieldname": "operator",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u041e\u043f\u0435\u0440\u0430\u0442\u043e\u0440",
+   "options": "=\n!=\n>\n<\n>=\n<=\nin\nbetween",
+   "reqd": 1
+  },
+  {
+   "description": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435 \u00ab\u043e\u0442\u00bb (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440, \u043f\u0440\u0438 operator = between \u0438\u043b\u0438 >=).",
+   "fieldname": "value_from",
+   "fieldtype": "Data",
+   "label": "\u041e\u0442"
+  },
+  {
+   "description": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435 \u00ab\u0434\u043e\u00bb (\u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e \u0434\u043b\u044f operator = between \u0438\u043b\u0438 <=).",
+   "fieldname": "value_to",
+   "fieldtype": "Data",
+   "label": "\u0414\u043e"
+  },
+  {
+   "description": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435 \u043f\u0440\u0438 \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u0435 = \u0438\u043b\u0438 in (\u043c\u043e\u0436\u0435\u0442 \u0431\u044b\u0442\u044c \u0441\u0442\u0440\u043e\u043a\u0430 \u0438\u043b\u0438 \u043c\u0430\u0441\u0441\u0438\u0432 \u0441\u0442\u0440\u043e\u043a, \u0435\u0441\u043b\u0438 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u043c JSON).",
+   "fieldname": "value_exact",
+   "fieldtype": "Data",
+   "label": "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-02-16 01:59:33.848905",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash tariff filter",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
