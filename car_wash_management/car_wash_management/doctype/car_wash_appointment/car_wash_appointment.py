@@ -56,7 +56,7 @@ import frappe
 
 
 @frappe.whitelist()
-def get_appointments_by_date(selected_date=None):
+def get_appointments_by_date(selected_date=None, car_wash=None):
 	"""
     Extracts Car Wash Appointment records for the selected date.
 
@@ -80,7 +80,8 @@ def get_appointments_by_date(selected_date=None):
 		"payment_received_on": ["between",
 								[f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
 		"is_deleted": 0,
-		"payment_status": "Paid"
+		"payment_status": "Paid",
+		"car_wash": car_wash
 	}
 
 	# Fetch the required fields
@@ -111,12 +112,15 @@ def get_appointments_by_date(selected_date=None):
 
 
 @frappe.whitelist()
-def export_appointments_to_csv(selected_date=None):
+def export_appointments_to_csv(selected_date=None, car_wash=None):
 	"""
     Extract Car Wash Appointments for a selected date and directly return a CSV file for download.
     """
 	if not selected_date:
 		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+
+	if not car_wash:
+		frappe.throw("Please provide a car_wash.")
 
 	# Validate the date format
 	try:
@@ -125,7 +129,7 @@ def export_appointments_to_csv(selected_date=None):
 		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
 
 	# Fetch appointments using the get_appointments_by_date logic
-	appointments = get_appointments_by_date(selected_date)
+	appointments = get_appointments_by_date(selected_date, car_wash)
 
 	if not appointments:
 		frappe.throw(f"No appointments found for the date {selected_date}.")
