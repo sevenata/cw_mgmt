@@ -28,8 +28,6 @@ class Carwashbooking(Document):
 
     def validate(self):
         price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services)
-        print(price_and_duration)
-        print(type(self.services))
         self.services_total = price_and_duration["total_price"]
         self.duration_total = price_and_duration["total_duration"]
 

@@ -6,6 +6,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "tariff",
   "base_service",
   "body_type",
   "price_segment",
@@ -65,11 +66,17 @@
    "fieldname": "is_deleted",
    "fieldtype": "Check",
    "label": "\u0423\u0434\u0430\u043b\u0435\u043d"
+  },
+  {
+   "fieldname": "tariff",
+   "fieldtype": "Link",
+   "label": "\u0422\u0430\u0440\u0438\u0444",
+   "options": "Car wash tariff"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-07 03:07:16.408340",
+ "modified": "2025-02-17 00:32:57.452297",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service price",

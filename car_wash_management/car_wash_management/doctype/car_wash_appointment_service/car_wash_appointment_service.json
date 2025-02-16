@@ -10,7 +10,8 @@
   "service_name",
   "duration",
   "price",
-  "car_wash"
+  "car_wash",
+  "is_custom_price"
  ],
  "fields": [
   {
@@ -39,6 +40,7 @@
   },
   {
    "fetch_from": "service.duration",
+   "fetch_if_empty": 1,
    "fieldname": "duration",
    "fieldtype": "Duration",
    "hide_days": 1,
@@ -47,6 +49,7 @@
   },
   {
    "fetch_from": "service.price",
+   "fetch_if_empty": 1,
    "fieldname": "price",
    "fieldtype": "Int",
    "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c \u0443\u0441\u043b\u0443\u0433\u0438"
@@ -56,12 +59,18 @@
    "fieldname": "car_wash",
    "fieldtype": "Data",
    "label": "\u041c\u043e\u0439\u043a\u0430"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_custom_price",
+   "fieldtype": "Check",
+   "label": "Is custom price"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-01-30 21:53:25.573227",
+ "modified": "2025-02-16 21:19:30.368745",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment service",
