@@ -257,7 +257,7 @@ def get_car_wash_statistics():
 
 
 @frappe.whitelist()
-def export_appointments_to_excel(selected_date=None):
+def export_appointments_to_excel(selected_date=None, car_wash=None):
 	"""
     Generate an Excel file in SpreadsheetML format for the selected date and return for download.
     """
@@ -274,7 +274,7 @@ def export_appointments_to_excel(selected_date=None):
 		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
 
 	# Fetch appointments using the get_appointments_by_date logic
-	appointments = get_appointments_by_date(selected_date)
+	appointments = get_appointments_by_date(selected_date, car_wash)
 
 	if not appointments:
 		frappe.throw(f"No appointments found for the date {selected_date}.")
