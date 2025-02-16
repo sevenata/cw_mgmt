@@ -11,7 +11,8 @@
   "duration",
   "price",
   "car_wash",
-  "is_custom_price"
+  "is_custom_price",
+  "tariff"
  ],
  "fields": [
   {
@@ -65,12 +66,18 @@
    "fieldname": "is_custom_price",
    "fieldtype": "Check",
    "label": "Is custom price"
+  },
+  {
+   "fieldname": "tariff",
+   "fieldtype": "Link",
+   "label": "\u0422\u0430\u0440\u0438\u0444",
+   "options": "Car wash tariff"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-16 21:19:30.368745",
+ "modified": "2025-02-17 01:27:56.556302",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment service",
