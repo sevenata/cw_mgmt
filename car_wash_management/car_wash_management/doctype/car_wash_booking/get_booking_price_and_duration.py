@@ -32,13 +32,9 @@ def get_booking_price_and_duration(car_wash: str, car: str, services: list) -> D
              }
     """
     try:
-        print(car_wash)
-        print(car)
-        print(services)
         _validate_required_params(car_wash, car, services)
-        print('_validate_and_aggregate_services')
-        service_counter = _validate_and_aggregate_services(services)
-        print(service_counter)
+        services_aggregated = _validate_and_aggregate_services(services)
+        service_counter = _validate_and_aggregate_services_counter(services)
 
         # 1. Check and cache valid services
         valid_service_ids = _get_valid_services(list(service_counter.keys()))
@@ -51,15 +47,16 @@ def get_booking_price_and_duration(car_wash: str, car: str, services: list) -> D
         service_prices = _get_service_prices(valid_service_ids, car_body_type)
 
         # 4. Calculate totals
-        final_total, total_duration, applied_modifiers = _calculate_totals(
-            service_counter, service_docs, service_prices, car_body_type
+        final_total, total_duration, applied_modifiers, applied_custom_prices = _calculate_totals(
+            service_counter, service_docs, service_prices, car_body_type, services_aggregated
         )
 
         return {
             "status": "success",
             "total_price": final_total,
             "total_duration": total_duration,
-            "applied_modifiers": applied_modifiers
+            "applied_modifiers": applied_modifiers,
+            "applied_custom_prices": applied_custom_prices
         }
     except frappe.ValidationError as ve:
         frappe.log_error(message=ve.message, title="Price and Duration Calculation Validation Error")
@@ -87,16 +84,13 @@ def _validate_required_params(car_wash: str, car: str, services: List[Dict[str, 
         frappe.throw(_("At least one service must be provided."))
 
 
-def _validate_and_aggregate_services(services):
+def _validate_and_aggregate_services_counter(services):
     """
     Validate that each service dict has a 'service' key,
     then return a Counter of service IDs (for quantity calculations).
     """
     service_ids = []
     for service in services:
-        print(type(service))  # Ensure it's a dict
-        print(service)
-
         if isinstance(service,
                       dict) and 'service' in service:  # Ensure it's a dictionary and has the key
             service_ids.append(service['service'])
@@ -104,6 +98,23 @@ def _validate_and_aggregate_services(services):
             service_ids.append(service.service)
 
     return Counter(service_ids)
+
+def _validate_and_aggregate_services(services):
+    """
+    Validate that each service dict has a 'service' key,
+    then return a Counter of service IDs (for quantity calculations).
+    """
+    service_ids = {}
+    for service in services:
+        if isinstance(service,
+                      dict) and 'service' in service:  # Ensure it's a dictionary and has the key
+            if 'custom_price' in service and service['custom_price']:
+                service_ids[service['service']] = {"custom_price": service['custom_price']}
+        else:
+            if service.service and service.custom_price:
+                service_ids[service.service] = {"custom_price": service.custom_price}
+
+    return service_ids
 
 
 def _get_valid_services(unique_service_ids: List[str]) -> List[str]:
@@ -208,8 +219,9 @@ def _calculate_totals(
     service_counter: Counter,
     service_docs: Dict[str, Any],
     service_prices: Dict[str, float],
-    car_body_type: str
-) -> (float, float, List[Dict[str, Any]]):
+    car_body_type: str,
+    services_aggregated: Dict[str, Any]
+) -> (float, float, List[Dict[str, Any]], List[Dict[str, Any]]):
     """
     Given the aggregated services (Counter), full service docs, and service prices,
     compute the final total, total duration, and any applied modifiers.
@@ -224,6 +236,7 @@ def _calculate_totals(
         "fixed_price": None
     }
     applied_modifiers = []
+    applied_custom_prices = []
 
     for service_id, quantity in service_counter.items():
         service_doc = service_docs.get(service_id)
@@ -237,6 +250,12 @@ def _calculate_totals(
                 f"Price not defined for service '{service_doc.title}' and Car body type '{car_body_type}', "
                 "and no base price is set."
             ))
+
+        if services_aggregated.get(service_id):
+            custom_price = services_aggregated.get(service_id)['custom_price']
+            if custom_price:
+                base_price = custom_price
+                applied_custom_prices.append({"service": service_id, "price": custom_price})
 
         # Calculate aggregated service price
         service_total_price = base_price * quantity
@@ -269,7 +288,7 @@ def _calculate_totals(
         frappe.logger().warning("Final total was negative, setting to 0")
         final_total = 0.0
 
-    return final_total, total_duration, applied_modifiers
+    return final_total, total_duration, applied_modifiers, applied_custom_prices
 
 
 def _apply_price_modifier(
