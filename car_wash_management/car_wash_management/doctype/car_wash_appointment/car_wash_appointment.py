@@ -1,7 +1,3 @@
-# Copyright (c) 2024, Rifat Dzhumagulov and contributors
-# For license information, please see license.txt
-
-# import frappe
 from frappe.model.document import Document
 import frappe
 from frappe.utils import flt, cint, today, add_days, getdate, now_datetime, add_to_date
@@ -9,7 +5,6 @@ from datetime import datetime, timedelta
 from io import StringIO, BytesIO
 from ..car_wash_booking.car_wash_booking import get_booking_price_and_duration
 import csv
-
 
 class Carwashappointment(Document):
 	def before_insert(self):
@@ -322,66 +317,9 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
 	# Close the output buffer
 	output.close()
 
-
 import frappe
 from frappe import _
 from frappe.utils import getdate, today
-
-
-@frappe.whitelist()
-def get_finished_paid_count_per_day(from_date, to_date):
-	"""
-    Возвращает количество автомобилей со статусом 'Finished' и статусом оплаты 'Paid'
-    по каждому дню в диапазоне дат от `from_date` до `to_date`.
-
-    :param from_date: Начальная дата (в формате 'YYYY-MM-DD')
-    :param to_date: Конечная дата (в формате 'YYYY-MM-DD')
-    :return: Словарь {дата: количество}
-    """
-	try:
-		# Проверка входных параметров
-		if not from_date or not to_date:
-			frappe.throw(_("Both 'from_date' and 'to_date' are required."))
-
-		# Преобразование строк в объекты даты
-		from_date_obj = getdate(from_date)
-		to_date_obj = getdate(to_date)
-
-		if from_date_obj > to_date_obj:
-			frappe.throw(_("`from_date` должна быть меньше или равна `to_date`."))
-
-		# Выполнение запроса с группировкой по дате
-		results = frappe.db.sql("""
-            SELECT DATE(work_ended_on) as date, COUNT(*) as count
-            FROM `tabCar wash appointment`
-            WHERE workflow_state = 'Finished'
-                AND payment_status = 'Paid'
-                AND work_ended_on BETWEEN %(from_datetime)s AND %(to_datetime)s
-            GROUP BY DATE(work_ended_on)
-            ORDER BY DATE(work_ended_on) ASC
-        """, {
-			"from_datetime": from_date + " 00:00:00",
-			"to_datetime": to_date + " 23:59:59"
-		}, as_dict=True)
-
-		# Инициализация словаря с нулями для всех дат в диапазоне
-		date_counts = {}
-		current_date = from_date_obj
-		while current_date <= to_date_obj:
-			date_str = current_date.strftime('%Y-%m-%d')
-			date_counts[date_str] = 0
-			current_date += frappe.utils.timedelta(days=1)
-
-		# Заполнение словаря полученными результатами
-		for row in results:
-			date_counts[row.date.strftime('%Y-%m-%d')] = row.count
-
-		return date_counts
-
-	except Exception as e:
-		frappe.log_error(message=frappe.get_traceback(),
-						 title="Error in get_finished_paid_count_per_day")
-		frappe.throw(_("An error occurred while fetching the counts per day: {0}").format(str(e)))
 
 @frappe.whitelist()
 def get_revenue_by_day():
