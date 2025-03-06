@@ -382,3 +382,56 @@ def get_finished_paid_count_per_day(from_date, to_date):
 		frappe.log_error(message=frappe.get_traceback(),
 						 title="Error in get_finished_paid_count_per_day")
 		frappe.throw(_("An error occurred while fetching the counts per day: {0}").format(str(e)))
+
+@frappe.whitelist()
+def get_revenue_by_day():
+    """
+    Fetch daily revenue breakdown for a selected month or date range.
+
+    Query parameters:
+    - `month` (optional): Specific month in 'YYYY-MM' format.
+    - `start_date` and `end_date` (optional): Date range in 'YYYY-MM-DD' format.
+    - `car_wash` (optional): Filter by car wash name.
+    """
+    car_wash = frappe.form_dict.get("car_wash")
+    month = frappe.form_dict.get("month")
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+
+    if month:
+        try:
+            start_date = f"{month}-01"
+            end_date = frappe.utils.get_last_day(start_date)
+        except ValueError:
+            frappe.throw("Invalid month format. Please use 'YYYY-MM'.")
+    elif start_date and end_date:
+        try:
+            start_date = str(getdate(start_date))
+            end_date = str(getdate(end_date))
+        except ValueError:
+            frappe.throw("Invalid date range format. Please use 'YYYY-MM-DD'.")
+    else:
+        frappe.throw("Please provide either a month or a date range.")
+
+    appointments = frappe.get_all(
+        "Car wash appointment",
+        filters={
+            "payment_received_on": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]],
+            "is_deleted": 0,
+            "payment_status": "Paid",
+            "car_wash": car_wash,
+        },
+        fields=["payment_received_on", "services_total"],
+    )
+
+    revenue_by_day = {}
+
+    for appointment in appointments:
+        day = appointment["payment_received_on"].date().isoformat()
+        revenue_by_day.setdefault(day, 0)
+        revenue_by_day[day] += flt(appointment["services_total"])
+
+    # Sort by date
+    sorted_revenue = sorted(revenue_by_day.items())
+
+    return {"revenue_by_day": sorted_revenue}
