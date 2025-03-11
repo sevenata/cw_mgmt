@@ -279,6 +279,43 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
 	if not appointments:
 		frappe.throw(f"No appointments found for the date {selected_date}.")
 
+	# Column translations
+	COLUMN_TRANSLATIONS = {
+        "name": "Номер заявки",
+        "num": "Номер",
+        "box_title": "Бокс",
+        "work_started_on": "Начало работы",
+        "car_wash_worker_name": "Работник автомойки",
+        "services_total": "Сумма услуг",
+        "car_make_name": "Марка автомобиля",
+        "car_model_name": "Модель автомобиля",
+        "car_license_plate": "Номер автомобиля",
+        "car_body_type": "Тип кузова",
+        "payment_type": "Тип оплаты",
+        "payment_status": "Статус оплаты",
+        "payment_received_on": "Дата оплаты"
+    }
+
+    # Value translations
+	PAYMENT_TYPE_TRANSLATIONS = {
+        "Paid": "Оплачено",
+        "Not paid": "Не оплачено",
+        "Cash": "Наличные",
+        "Card": "Карта",
+        "Kaspi": "Каспи",
+        "Contract": "Договор"
+    }
+
+	CAR_BODY_TYPE_TRANSLATIONS = {
+        "Passenger": "Пассажир",
+        "Minbus": "Микроавтобус",
+        "LargeSUV": "Большой внедорожник",
+        "Jeep": "Джип",
+        "Minivan": "Минивэн",
+        "CompactSUV": "Компактный внедорожник",
+        "Sedan": "Седан"
+    }
+
 	# Create an in-memory buffer for the Excel file
 	output = BytesIO()
 
@@ -294,7 +331,8 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
 	headers = list(appointments[0].keys())
 	output.write(b"<Row>\n")
 	for header in headers:
-		output.write(f'<Cell><Data ss:Type="String">{header}</Data></Cell>\n'.encode('utf-8'))
+		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
+		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
 	output.write(b"</Row>\n")
 
 	# Write data rows
@@ -302,10 +340,22 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
 		output.write(b"<Row>\n")
 		for header in headers:
 			value = appointment.get(header, "")
+
+			if value is None:
+				value = "-"
+			
+			if header == "payment_type":
+				value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
+			elif header == "payment_status":
+				value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
+			elif header == "car_body_type":
+				value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
+
 			if isinstance(value, (int, float)):
 				cell_type = "Number"
 			else:
 				cell_type = "String"
+			
 			output.write(
 				f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
 		output.write(b"</Row>\n")
