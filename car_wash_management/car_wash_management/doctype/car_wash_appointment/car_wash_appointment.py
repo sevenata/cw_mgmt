@@ -302,13 +302,13 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
     }
 
 	CAR_BODY_TYPE_TRANSLATIONS = {
-        "Passenger": "Пассажир",
+        "Passenger": "Седан",
         "Minbus": "Микроавтобус",
-        "LargeSUV": "Большой внедорожник",
+        "LargeSUV": "Большой джип",
         "Jeep": "Джип",
         "Minivan": "Минивэн",
-        "CompactSUV": "Компактный внедорожник",
-        "Sedan": "Седан"
+        "CompactSUV": "Кроссовер",
+        "Sedan": "Представительский класс"
     }
 
 	# Create an in-memory buffer for the Excel file
