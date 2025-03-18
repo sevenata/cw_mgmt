@@ -252,30 +252,45 @@ def get_car_wash_statistics():
 
 
 @frappe.whitelist()
-def export_appointments_to_excel(selected_date=None, car_wash=None):
-	"""
-    Generate an Excel file in SpreadsheetML format for the selected date and return for download.
+def export_appointments_to_excel(selected_date=None, start_date=None, end_date=None, car_wash=None):
     """
-	from io import BytesIO
-	from frappe.utils import getdate
+    Generate an Excel file in SpreadsheetML format for a given date or a time period and return it for download.
 
-	if not selected_date:
-		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+    Args:
+        selected_date (str, optional): The date in "YYYY-MM-DD" format to filter appointments (used if time period not provided).
+        start_date (str, optional): The start date in "YYYY-MM-DD" format for the time period.
+        end_date (str, optional): The end date in "YYYY-MM-DD" format for the time period.
+        car_wash (str, optional): Filter appointments by a specific car wash.
+    """
+    from io import BytesIO
+    from frappe.utils import getdate
 
-	# Validate the date format
-	try:
-		getdate(selected_date)
-	except ValueError:
-		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+    # Determine whether to use a time period or a single selected date.
+    if start_date and end_date:
+        # Validate the provided time period dates.
+        try:
+            getdate(start_date)
+            getdate(end_date)
+        except ValueError:
+            frappe.throw("Invalid date format for start_date or end_date. Please provide valid 'YYYY-MM-DD' dates.")
+        appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
+        date_info = f"{start_date}_to_{end_date}"
+    elif selected_date:
+        # Validate the provided selected_date.
+        try:
+            getdate(selected_date)
+        except ValueError:
+            frappe.throw("Invalid date format for selected_date. Please provide a valid 'YYYY-MM-DD' format.")
+        appointments = get_appointments_by_date(selected_date, car_wash)
+        date_info = selected_date
+    else:
+        frappe.throw("Please provide either selected_date or both start_date and end_date in 'YYYY-MM-DD' format.")
 
-	# Fetch appointments using the get_appointments_by_date logic
-	appointments = get_appointments_by_date(selected_date, car_wash)
+    if not appointments:
+        frappe.throw(f"No appointments found for the given period ({date_info}).")
 
-	if not appointments:
-		frappe.throw(f"No appointments found for the date {selected_date}.")
-
-	# Column translations
-	COLUMN_TRANSLATIONS = {
+    # Column translations
+    COLUMN_TRANSLATIONS = {
         "name": "Номер заявки",
         "num": "Номер",
         "box_title": "Бокс",
@@ -292,7 +307,7 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
     }
 
     # Value translations
-	PAYMENT_TYPE_TRANSLATIONS = {
+    PAYMENT_TYPE_TRANSLATIONS = {
         "Paid": "Оплачено",
         "Not paid": "Не оплачено",
         "Cash": "Наличные",
@@ -301,7 +316,7 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
         "Contract": "Договор"
     }
 
-	CAR_BODY_TYPE_TRANSLATIONS = {
+    CAR_BODY_TYPE_TRANSLATIONS = {
         "Passenger": "Пассажир",
         "Minbus": "Микроавтобус",
         "LargeSUV": "Большой внедорожник",
@@ -311,61 +326,55 @@ def export_appointments_to_excel(selected_date=None, car_wash=None):
         "Sedan": "Седан"
     }
 
-	# Create an in-memory buffer for the Excel file
-	output = BytesIO()
+    # Create an in-memory buffer for the Excel file
+    output = BytesIO()
 
-	# Write SpreadsheetML XML content
-	output.write(b'<?xml version="1.0"?>\n')
-	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
-				 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
-				 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
-				 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
-	output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
+    # Write SpreadsheetML XML content
+    output.write(b'<?xml version="1.0"?>\n')
+    output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
+                 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
+                 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
+                 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+    output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
 
-	# Write headers
-	headers = list(appointments[0].keys())
-	output.write(b"<Row>\n")
-	for header in headers:
-		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
-		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
-	output.write(b"</Row>\n")
+    # Write headers
+    headers = list(appointments[0].keys())
+    output.write(b"<Row>\n")
+    for header in headers:
+        translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
+        output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
+    output.write(b"</Row>\n")
 
-	# Write data rows
-	for appointment in appointments:
-		output.write(b"<Row>\n")
-		for header in headers:
-			value = appointment.get(header, "")
+    # Write data rows
+    for appointment in appointments:
+        output.write(b"<Row>\n")
+        for header in headers:
+            value = appointment.get(header, "")
+            if value is None:
+                value = "-"
 
-			if value is None:
-				value = "-"
-			
-			if header == "payment_type":
-				value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
-			elif header == "payment_status":
-				value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
-			elif header == "car_body_type":
-				value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
+            if header == "payment_type":
+                value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
+            elif header == "payment_status":
+                value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
+            elif header == "car_body_type":
+                value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
 
-			if isinstance(value, (int, float)):
-				cell_type = "Number"
-			else:
-				cell_type = "String"
-			
-			output.write(
-				f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
-		output.write(b"</Row>\n")
+            cell_type = "Number" if isinstance(value, (int, float)) else "String"
+            output.write(f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
+        output.write(b"</Row>\n")
 
-	# Close XML structure
-	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
+    # Close XML structure
+    output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
 
-	# Prepare the response
-	frappe.response["type"] = "binary"
-	frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.xls"
-	frappe.response["filecontent"] = output.getvalue()
-	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+    # Prepare the response
+    frappe.response["type"] = "binary"
+    frappe.response["filename"] = f"Car_Wash_Appointments_{date_info}.xls"
+    frappe.response["filecontent"] = output.getvalue()
+    frappe.response["doctype"] = None  # No need to attach to Frappe's file system
 
-	# Close the output buffer
-	output.close()
+    # Close the output buffer
+    output.close()
 
 import frappe
 from frappe import _
@@ -423,3 +432,65 @@ def get_revenue_by_day():
     sorted_revenue = sorted(revenue_by_day.items())
 
     return {"revenue_by_day": sorted_revenue}
+
+
+
+@frappe.whitelist()
+def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=None):
+    """
+    Extracts Car Wash Appointment records between the given start and end dates.
+
+    Args:
+        start_date (str): The start date in "YYYY-MM-DD" format.
+        end_date (str): The end date in "YYYY-MM-DD" format.
+        car_wash (str, optional): Filter appointments by a specific car wash.
+
+    Returns:
+        list: A list of appointments with the specified fields.
+    """
+    from frappe.utils import getdate
+
+    if not start_date or not end_date:
+        frappe.throw("Please provide both start_date and end_date in 'YYYY-MM-DD' format.")
+
+    # Validate the date formats
+    try:
+        getdate(start_date)
+        getdate(end_date)
+    except ValueError:
+        frappe.throw("Invalid date format. Please provide valid 'YYYY-MM-DD' dates for both start_date and end_date.")
+
+    # Define the filters. Include car_wash filter only if provided.
+    filters = {
+        "payment_received_on": ["between", [f"{start_date} 00:00:00", f"{end_date} 23:59:59"]],
+        "is_deleted": 0,
+        "payment_status": "Paid"
+    }
+    if car_wash:
+        filters["car_wash"] = car_wash
+
+    # List of fields to fetch
+    fields = [
+        "name",
+        "num",
+        "box_title",
+        "work_started_on",
+        "car_wash_worker_name",
+        "services_total",
+        "car_make_name",
+        "car_model_name",
+        "car_license_plate",
+        "car_body_type",
+        "payment_type",
+        "payment_status",
+        "payment_received_on"
+    ]
+
+    # Query the database for appointments in the given time period
+    appointments = frappe.get_all(
+        "Car wash appointment",
+        filters=filters,
+        fields=fields
+    )
+
+    return appointments
