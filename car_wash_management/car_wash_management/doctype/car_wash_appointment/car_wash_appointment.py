@@ -7,33 +7,30 @@ from ..car_wash_booking.car_wash_booking import get_booking_price_and_duration
 import csv
 
 class Carwashappointment(Document):
-	def before_insert(self):
-		if not self.car_wash:
-			frappe.throw("Car Wash is required")
+    def before_insert(self):
+        if not self.car_wash:
+            frappe.throw("Car Wash is required")
 
-		max_num = frappe.db.sql(
-			"""
-            SELECT CAST(MAX(num) AS SIGNED) FROM `tabCar wash appointment`
+        max_num = frappe.db.sql("""
+            SELECT MAX(CAST(num AS UNSIGNED)) FROM `tabCar wash appointment`
             WHERE DATE(creation) = %s AND car_wash = %s
-            """,
-			(today(), self.car_wash),
-		)
+        """, (today(), self.car_wash))
 
-		self.num = (max_num[0][0] or 0) + 1
+        self.num = (max_num[0][0] or 0) + 1
 
-		if self.booking:
-			booking_doc = frappe.get_doc("Car wash booking", self.booking)
-			if booking_doc.payment_status == "Paid":
-				self.payment_status = "Paid"
-				self.payment_type = booking_doc.payment_type
-				self.payment_received_on = booking_doc.payment_received_on
+        if self.booking:
+            booking_doc = frappe.get_doc("Car wash booking", self.booking)
+            if booking_doc.payment_status == "Paid":
+                self.payment_status = "Paid"
+                self.payment_type = booking_doc.payment_type
+                self.payment_received_on = booking_doc.payment_received_on
 
-		if not self.payment_status:
-			self.payment_status = "Not paid"
+        if not self.payment_status:
+            self.payment_status = "Not paid"
 
-		self.workflow_state = "In progress"
-		self.starts_on = now_datetime()
-		self.work_started_on = self.starts_on
+        self.workflow_state = "In progress"
+        self.starts_on = now_datetime()
+        self.work_started_on = self.starts_on
 
 	def validate(self):
 		price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services)

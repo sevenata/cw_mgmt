@@ -10,7 +10,7 @@ class Carwashbooking(Document):
 
         max_num = frappe.db.sql(
             """
-            SELECT CAST(MAX(num) AS SIGNED) FROM `tabCar wash booking`
+            SELECT MAX(CAST(num AS UNSIGNED)) FROM `tabCar wash appointment`
             WHERE DATE(creation) = %s AND car_wash = %s
             """,
             (today(), self.car_wash),
