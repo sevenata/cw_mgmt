@@ -83,7 +83,7 @@
    "fieldname": "body_type",
    "fieldtype": "Select",
    "label": "\u0422\u0438\u043f \u043a\u0443\u0437\u043e\u0432\u0430",
-   "options": "Passenger\nMinivan\nSedan\nCompactSUV\nJeep\nLargeSUV\nMinibus",
+   "options": "Passenger\nMinivan\nSedan\nCompactSUV\nJeep\nLargeSUV\nMinibus\nBusiness\nSmallCrossover\nMidCrossover",
    "reqd": 1
   }
  ],
