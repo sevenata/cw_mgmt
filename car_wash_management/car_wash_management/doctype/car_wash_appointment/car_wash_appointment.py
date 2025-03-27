@@ -432,3 +432,106 @@ def get_finished_paid_count_per_day(from_date, to_date):
 		frappe.log_error(message=frappe.get_traceback(),
 						 title="Error in get_finished_paid_count_per_day")
 		frappe.throw(_("An error occurred while fetching the counts per day: {0}").format(str(e)))
+
+@frappe.whitelist()
+def export_workers_to_excel(selected_date=None, car_wash=None):
+	"""
+    Generate an Excel file that contains the workers' provided services in SpreadsheetML format for the selected date and return for download.
+    """
+	from io import BytesIO
+	from frappe.utils import getdate
+
+	if not selected_date:
+		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+
+	# Validate the date format
+	try:
+		getdate(selected_date)
+	except ValueError:
+		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+
+	# Fetch appointments using the get_appointments_by_date logic
+	appointments = get_appointments_by_date(selected_date, car_wash)
+
+	# Filter out rows where box_title is "Магазин"
+	appointments = [appt for appt in appointments if appt.get("box_title") != "Магазин"]
+
+	if not appointments:
+		frappe.throw(f"No appointments found for the date {selected_date}.")
+
+	# Column translations
+	COLUMN_TRANSLATIONS = {
+        "car_wash_worker_name": "Работник автомойки",
+        "name": "Номер заявки",
+        "num": "Номер",
+        "box_title": "Бокс",
+        "work_started_on": "Начало работы",
+        "services_total": "Сумма услуг",
+        "car_make_name": "Марка автомобиля",
+        "car_license_plate": "Номер автомобиля",
+        "car_body_type": "Тип кузова"
+    }
+
+	CAR_BODY_TYPE_TRANSLATIONS = {
+        "Passenger": "Седан",
+        "Minbus": "Микроавтобус",
+        "LargeSUV": "Большой джип",
+        "Jeep": "Джип",
+        "Minivan": "Минивэн",
+        "CompactSUV": "Кроссовер",
+        "Sedan": "Представительский класс"
+    }
+
+	# Create an in-memory buffer for the Excel file
+	output = BytesIO()
+
+	# Write SpreadsheetML XML content
+	output.write(b'<?xml version="1.0"?>\n')
+	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
+				 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
+				 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
+				 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+	output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
+
+	# Write headers
+	headers = list(appointments[0].keys())
+	output.write(b"<Row>\n")
+	for header in headers:
+		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
+		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
+	output.write(b"</Row>\n")
+
+	# Write data rows
+	for appointment in appointments:
+		output.write(b"<Row>\n")
+		for header in headers:
+			value = appointment.get(header, "")
+
+			if value is None:
+				value = "-"
+			
+			if header ==  "car_body_type":
+				value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
+
+			if header == "work_started_on":
+				cell_type = "Time"
+			elif isinstance(value, (int, float)):
+				cell_type = "Number"
+			else:
+				cell_type = "String"
+			
+			output.write(
+				f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
+		output.write(b"</Row>\n")
+
+	# Close XML structure
+	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
+
+	# Prepare the response
+	frappe.response["type"] = "binary"
+	frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.xls"
+	frappe.response["filecontent"] = output.getvalue()
+	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+
+	# Close the output buffer
+	output.close()
