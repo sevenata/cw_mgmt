@@ -25,6 +25,7 @@
   "custom_payment_method",
   "user_confirmation_status",
   "car_wash_confirmation_status",
+  "mixed_payment",
   "\u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c_tab",
   "car",
   "car_license_plate",
@@ -201,7 +202,7 @@
    "fieldname": "payment_type",
    "fieldtype": "Select",
    "label": "\u0422\u0438\u043f \u043e\u043f\u043b\u0430\u0442\u044b",
-   "options": "Cash\nCard\nKaspi\nContract\nCustom"
+   "options": "Cash\nCard\nKaspi\nContract\nCustom\nMixed"
   },
   {
    "fieldname": "payment_received_on",
@@ -287,11 +288,17 @@
    "fieldtype": "Link",
    "label": "\u0421\u0432\u043e\u0439 \u0442\u0438\u043f \u043e\u043f\u043b\u0430\u0442\u044b",
    "options": "Car wash custom payment method"
+  },
+  {
+   "fieldname": "mixed_payment",
+   "fieldtype": "Table",
+   "label": "\u0421\u043c\u0435\u0448\u0430\u043d\u043d\u0430\u044f \u043e\u043f\u043b\u0430\u0442\u0430",
+   "options": "Car wash mixed payment"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-22 00:58:50.339615",
+ "modified": "2025-03-29 15:16:27.798291",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash booking",

@@ -20,6 +20,7 @@
   "custom_payment_method",
   "payment_received_on",
   "num",
+  "mixed_payment",
   "column_break_betd",
   "box",
   "box_title",
@@ -359,7 +360,7 @@
    "fieldname": "payment_type",
    "fieldtype": "Select",
    "label": "\u0422\u0438\u043f \u043e\u043f\u043b\u0430\u0442\u044b",
-   "options": "Cash\nCard\nKaspi\nContract\nCustom"
+   "options": "Cash\nCard\nKaspi\nContract\nCustom\nMixed"
   },
   {
    "fieldname": "out_of_turn_reason",
@@ -400,6 +401,12 @@
    "fieldtype": "Link",
    "label": "\u0421\u0432\u043e\u0439 \u0442\u0438\u043f \u043e\u043f\u043b\u0430\u0442\u044b",
    "options": "Car wash custom payment method"
+  },
+  {
+   "fieldname": "mixed_payment",
+   "fieldtype": "Table",
+   "label": "\u0421\u043c\u0435\u0448\u0430\u043d\u043d\u0430\u044f \u043e\u043f\u043b\u0430\u0442\u0430",
+   "options": "Car wash mixed payment"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -409,7 +416,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2025-02-22 00:58:12.875910",
+ "modified": "2025-03-29 15:16:25.919323",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",
