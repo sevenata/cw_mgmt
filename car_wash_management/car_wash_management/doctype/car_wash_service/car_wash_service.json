@@ -20,6 +20,7 @@
   "priority",
   "limit",
   "is_dynamic_price",
+  "color",
   "\u043c\u043e\u0434\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440_\u0446\u0435\u043d\u044b_tab",
   "price_modifier",
   "price_modifier_type",
@@ -147,6 +148,11 @@
    "fieldname": "\u043c\u043e\u0434\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440_\u0446\u0435\u043d\u044b_tab",
    "fieldtype": "Tab Break",
    "label": "\u041c\u043e\u0434\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0446\u0435\u043d\u044b"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "label": "\u0426\u0432\u0435\u0442"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -156,7 +162,7 @@
    "link_fieldname": "base_service"
   }
  ],
- "modified": "2025-02-16 18:05:13.100113",
+ "modified": "2025-03-29 20:31:20.460835",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service",

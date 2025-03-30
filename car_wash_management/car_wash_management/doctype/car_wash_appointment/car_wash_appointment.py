@@ -168,7 +168,6 @@ def get_car_wash_statistics():
 
 	# Determine the date range
 	if date:
-		# Use a single day (midnight to midnight)
 		try:
 			selected_date = str(getdate(date))
 			start_date = selected_date + " 00:00:00"
@@ -176,19 +175,18 @@ def get_car_wash_statistics():
 		except ValueError:
 			frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
 	elif start_date and end_date:
-		# Use the provided date range
 		try:
 			start_date = str(getdate(start_date)) + " 00:00:00"
 			end_date = str(getdate(end_date)) + " 23:59:59"
 		except ValueError:
 			frappe.throw("Invalid date range format. Please use 'YYYY-MM-DD'.")
 	else:
-		# Default to today's date
 		today_date = today()
 		start_date = today_date + " 00:00:00"
 		end_date = today_date + " 23:59:59"
 
-	# Fetch appointments within the specified date range
+	# Fetch appointments within the specified date range.
+	# Also fetch "custom_payment_method" if available.
 	appointments = frappe.get_all(
 		"Car wash appointment",
 		filters={
@@ -197,10 +195,10 @@ def get_car_wash_statistics():
 			"payment_status": "Paid",
 			"car_wash": car_wash,
 		},
-		fields=["payment_type", "services_total"],
+		fields=["name", "payment_type", "services_total", "custom_payment_method"],
 	)
 
-	# Initialize stats
+	# Initialize stats with standard payment types and container for custom payments.
 	stats = {
 		"total_cars": len(appointments),
 		"total_income": 0,
@@ -208,44 +206,88 @@ def get_car_wash_statistics():
 		"card_payment": {"count": 0, "total": 0},
 		"kaspi_payment": {"count": 0, "total": 0},
 		"contract_payment": {"count": 0, "total": 0},
+		"custom_payments": {}  # Custom payments keyed by custom payment method "name"
 	}
 
-	# Aggregate statistics
+	# Pre-load available custom payment methods for the given car wash (if any) using "name" as key.
+	custom_payment_filters = {"is_deleted": 0, "is_disabled": 0}
+	if car_wash:
+		custom_payment_filters["car_wash"] = car_wash
+
+	custom_payment_methods = frappe.get_all(
+		"Car wash custom payment method",
+		filters=custom_payment_filters,
+		fields=["name"]
+	)
+	for custom in custom_payment_methods:
+		stats["custom_payments"][custom["name"]] = {"count": 0, "total": 0}
+
+	standard_payments = ["Cash", "Card", "Kaspi", "Contract"]
+
+	# Aggregate statistics.
 	for appointment in appointments:
 		stats["total_income"] += flt(appointment["services_total"])
-		if appointment["payment_type"] == "Cash":
-			stats["cash_payment"]["count"] += 1
-			stats["cash_payment"]["total"] += flt(appointment["services_total"])
-		elif appointment["payment_type"] == "Card":
-			stats["card_payment"]["count"] += 1
-			stats["card_payment"]["total"] += flt(appointment["services_total"])
-		elif appointment["payment_type"] == "Kaspi":
-			stats["kaspi_payment"]["count"] += 1
-			stats["kaspi_payment"]["total"] += flt(appointment["services_total"])
-		elif appointment["payment_type"] == "Contract":
-			stats["contract_payment"]["count"] += 1
-			stats["contract_payment"]["total"] += flt(appointment["services_total"])
+		if appointment["payment_type"] == "Mixed":
+			# Fetch child records for mixed payments; also include "custom_payment_method" if provided.
+			mixed_payments = frappe.get_all(
+				"Car wash mixed payment",
+				filters={"parent": appointment["name"]},
+				fields=["payment_type", "amount", "custom_payment_method"]
+			)
+			for payment in mixed_payments:
+				if payment["payment_type"] in standard_payments:
+					if payment["payment_type"] == "Cash":
+						stats["cash_payment"]["count"] += 1
+						stats["cash_payment"]["total"] += flt(payment["amount"])
+					elif payment["payment_type"] == "Card":
+						stats["card_payment"]["count"] += 1
+						stats["card_payment"]["total"] += flt(payment["amount"])
+					elif payment["payment_type"] == "Kaspi":
+						stats["kaspi_payment"]["count"] += 1
+						stats["kaspi_payment"]["total"] += flt(payment["amount"])
+					elif payment["payment_type"] == "Contract":
+						stats["contract_payment"]["count"] += 1
+						stats["contract_payment"]["total"] += flt(payment["amount"])
+				else:
+					# Use the custom_payment_method field if available; fallback to payment_type.
+					custom_method = payment.get("custom_payment_method") or payment["payment_type"]
+					if custom_method not in stats["custom_payments"]:
+						stats["custom_payments"][custom_method] = {"count": 0, "total": 0}
+					stats["custom_payments"][custom_method]["count"] += 1
+					stats["custom_payments"][custom_method]["total"] += flt(payment["amount"])
+		else:
+			if appointment["payment_type"] in standard_payments:
+				if appointment["payment_type"] == "Cash":
+					stats["cash_payment"]["count"] += 1
+					stats["cash_payment"]["total"] += flt(appointment["services_total"])
+				elif appointment["payment_type"] == "Card":
+					stats["card_payment"]["count"] += 1
+					stats["card_payment"]["total"] += flt(appointment["services_total"])
+				elif appointment["payment_type"] == "Kaspi":
+					stats["kaspi_payment"]["count"] += 1
+					stats["kaspi_payment"]["total"] += flt(appointment["services_total"])
+				elif appointment["payment_type"] == "Contract":
+					stats["contract_payment"]["count"] += 1
+					stats["contract_payment"]["total"] += flt(appointment["services_total"])
+			else:
+				# For non-mixed custom payments, use the custom_payment_method field if available.
+				custom_method = appointment.get("custom_payment_method") or appointment["payment_type"]
+				if custom_method not in stats["custom_payments"]:
+					stats["custom_payments"][custom_method] = {"count": 0, "total": 0}
+				stats["custom_payments"][custom_method]["count"] += 1
+				stats["custom_payments"][custom_method]["total"] += flt(appointment["services_total"])
 
-	# Add additional statistics if it's a month-long range
+	# Additional statistics for multi-day ranges.
 	try:
 		range_start_date = getdate(start_date.split(" ")[0])
 		range_end_date = getdate(end_date.split(" ")[0])
 		num_days = (range_end_date - range_start_date).days + 1
 
 		if num_days > 1:
-			stats["average_daily_income"] = (
-				stats["total_income"] / num_days if num_days > 0 else 0
-			)
-			stats["average_cars_per_day"] = (
-				stats["total_cars"] / num_days if num_days > 0 else 0
-			)
-			stats["average_check"] = (
-				stats["total_income"] / stats["total_cars"]
-				if stats["total_cars"] > 0
-				else 0
-			)
+			stats["average_daily_income"] = stats["total_income"] / num_days if num_days > 0 else 0
+			stats["average_cars_per_day"] = stats["total_cars"] / num_days if num_days > 0 else 0
+			stats["average_check"] = stats["total_income"] / stats["total_cars"] if stats["total_cars"] > 0 else 0
 	except ValueError:
-		# Skip additional stats if the date range is invalid
 		pass
 
 	return stats

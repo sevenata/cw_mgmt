@@ -13,7 +13,8 @@
   "car_wash",
   "is_custom_price",
   "tariff",
-  "custom_price"
+  "custom_price",
+  "color"
  ],
  "fields": [
   {
@@ -78,12 +79,18 @@
    "fieldname": "custom_price",
    "fieldtype": "Int",
    "label": "Custom pirce"
+  },
+  {
+   "fetch_from": "service.color",
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "label": "\u0426\u0432\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0438"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-18 02:38:56.620996",
+ "modified": "2025-03-29 20:36:56.092571",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment service",
