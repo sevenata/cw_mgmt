@@ -40,7 +40,7 @@ def get_booking_price_and_duration(car_wash: str, car: str, services: list) -> D
         valid_service_ids = _get_valid_services(list(service_counter.keys()))
 
         # 2. Get Car body type (with caching)
-        car_body_type = _get_car_body_type(car)
+        car_body_type = _get_car_body_type_no_cache(car)
 
         # 3. Fetch service docs and prices
         service_docs = _get_service_docs(valid_service_ids)
@@ -162,6 +162,17 @@ def _get_car_body_type(car: str) -> str:
 
     return car_body_type
 
+def _get_car_body_type_no_cache(car: str) -> str:
+    """
+    Retrieve Car's Body Type from the 'Car wash car' DocType, without caching.
+    """
+    car_doc = frappe.get_doc("Car wash car", car)
+    car_body_type = car_doc.body_type
+
+    if not car_body_type:
+        frappe.throw(_("The selected car does not have a 'Car Body Type' specified."))
+
+    return car_body_type
 
 def _get_service_docs(service_ids: List[str]) -> Dict[str, Any]:
     """
