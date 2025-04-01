@@ -529,7 +529,8 @@ def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=Non
         "car_body_type",
         "payment_type",
         "payment_status",
-        "payment_received_on"
+        "out_of_turn",
+        "out_of_turn_reason"
     ]
 
     # Query the database for appointments in the given time period
