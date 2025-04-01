@@ -347,8 +347,8 @@ def export_appointments_to_excel(selected_date=None, start_date=None, end_date=N
         "car_body_type": "Тип кузова",
         "payment_type": "Тип оплаты",
         "payment_status": "Статус оплаты",
-        "payment_received_on": "Дата оплаты"
-        "out_of_turn": "Без очереди"
+        "payment_received_on": "Дата оплаты",
+        "out_of_turn": "Без очереди",
         "out_of_turn_reason": "Почему без очереди"
     }
 
