@@ -94,6 +94,8 @@ def get_appointments_by_date(selected_date=None, car_wash=None):
 		"payment_type",
 		"payment_status",
 		"payment_received_on"
+		"out_of_turn"
+		"out_of_turn_reason"
 	]
 
 	# Query the database
@@ -346,6 +348,8 @@ def export_appointments_to_excel(selected_date=None, start_date=None, end_date=N
         "payment_type": "Тип оплаты",
         "payment_status": "Статус оплаты",
         "payment_received_on": "Дата оплаты"
+        "out_of_turn": "Без очереди"
+        "out_of_turn_reason": "Почему без очереди"
     }
 
     # Value translations
