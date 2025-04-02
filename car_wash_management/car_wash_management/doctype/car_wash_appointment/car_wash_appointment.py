@@ -541,3 +541,212 @@ def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=Non
     )
 
     return appointments
+
+@frappe.whitelist()
+def export_workers_to_excel(selected_date=None, car_wash=None):
+	"""
+    Generate an Excel file that contains the workers' provided services in SpreadsheetML format for the selected date and return for download.
+    """
+	from io import BytesIO
+	from frappe.utils import getdate
+
+	if not selected_date:
+		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+
+	# Validate the date format
+	try:
+		getdate(selected_date)
+	except ValueError:
+		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+
+	# Fetch appointments using the get_appointments_by_date logic
+	appointments = get_appointments_by_date(selected_date, car_wash)
+
+	# Filter out rows where box_title is "Магазин"
+	appointments = [appt for appt in appointments if appt.get("box_title") != "Магазин"]
+
+	if not appointments:
+		frappe.throw(f"No appointments found for the date {selected_date}.")
+
+	# Column translations
+	COLUMN_TRANSLATIONS = {
+        "car_wash_worker_name": "Работник автомойки",
+        "name": "Номер заявки",
+        "num": "Номер",
+        "box_title": "Бокс",
+        "work_started_on": "Начало работы",
+        "services_total": "Сумма услуг",
+        "car_make_name": "Марка автомобиля",
+        "car_license_plate": "Номер автомобиля",
+        "car_body_type": "Тип кузова"
+    }
+
+	CAR_BODY_TYPE_TRANSLATIONS = {
+        "Passenger": "Седан",
+        "Minbus": "Микроавтобус",
+        "LargeSUV": "Большой джип",
+        "Jeep": "Джип",
+        "Minivan": "Минивэн",
+        "CompactSUV": "Кроссовер",
+        "Sedan": "Представительский класс"
+    }
+
+	# Create an in-memory buffer for the Excel file
+	output = BytesIO()
+
+	# Write SpreadsheetML XML content
+	output.write(b'<?xml version="1.0"?>\n')
+	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
+				 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
+				 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
+				 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+	output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
+
+	# Write headers
+	headers = list(appointments[0].keys())
+	output.write(b"<Row>\n")
+	for header in headers:
+		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
+		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
+	output.write(b"</Row>\n")
+
+	# Write data rows
+	for appointment in appointments:
+		output.write(b"<Row>\n")
+		for header in headers:
+			value = appointment.get(header, "")
+
+			if value is None:
+				value = "-"
+
+			if header ==  "car_body_type":
+				value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
+
+			if header == "work_started_on":
+				cell_type = "Time"
+			elif isinstance(value, (int, float)):
+				cell_type = "Number"
+			else:
+				cell_type = "String"
+
+			output.write(
+				f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
+		output.write(b"</Row>\n")
+
+	# Close XML structure
+	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
+
+	# Prepare the response
+	frappe.response["type"] = "binary"
+	frappe.response["filename"] = f"Car_Wash_Workers_{selected_date}.xls"
+	frappe.response["filecontent"] = output.getvalue()
+	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+
+	# Close the output buffer
+	output.close()
+
+@frappe.whitelist()
+def export_total_services_to_xls(from_date, to_date, car_wash):
+	"""
+	Generate an Excel report summarizing worker earnings over a specified date range.
+	"""
+	from io import BytesIO
+	from frappe.utils import getdate, add_days
+
+	if not from_date or not to_date:
+		frappe.throw("Please provide both from_date and to_date in 'YYYY-MM-DD' format.")
+
+	# Validate date format
+	try:
+		from_date = getdate(from_date)
+		to_date = getdate(to_date)
+	except ValueError:
+		frappe.throw("Invalid date format. Please provide valid 'YYYY-MM-DD' values.")
+
+	if from_date > to_date:
+		frappe.throw("from_date cannot be later than to_date.")
+
+	# Prepare worker earnings data
+	worker_earnings = {}
+	date_list = []
+
+	current_date = from_date
+	while current_date <= to_date:
+		date_str = str(current_date)
+		date_list.append(date_str)
+		appointments = get_appointments_by_date(date_str, car_wash)
+
+		for appt in appointments:
+			worker = appt.get("car_wash_worker_name", "Unknown")
+			earnings = appt.get("services_total", 0)
+
+			if worker not in worker_earnings:
+				worker_earnings[worker] = {date: 0 for date in date_list}
+
+			worker_earnings[worker][date_str] += earnings
+
+		current_date = add_days(current_date, 1)
+
+	# Create an in-memory Excel file
+	output = BytesIO()
+	output.write(b'<?xml version="1.0"?>\n')
+	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
+				b'xmlns:o="urn:schemas-microsoft-com:office:office" '
+				b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
+				b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+	output.write(b'<Worksheet ss:Name="Worker Earning">\n<Table>\n')
+
+	# Write title row
+	output.write(b"<Row>\n")
+	output.write(b'<Cell/>')
+	output.write(f'<Cell ss:MergeAcross="5">Расчёт зарплаты за период {str(from_date)}-{str(to_date)}<Data ss:Type="String"></Data></Cell>\n'.encode('utf-8'))
+	output.write(b"</Row>\n")
+
+	# Write header row
+	headers = ["#", "Работник"] + date_list + ["ИТОГО ОБОРОТ ОМУ", "% за период", "Подпись"]
+	output.write(b"<Row>\n")
+	for header in headers:
+		output.write(f'<Cell><Data ss:Type="String">{header}</Data></Cell>\n'.encode('utf-8'))
+	output.write(b"</Row>\n")
+
+	current_row = 3  # Initializing and starting row count
+	current_col = 1  # Initializing column count
+	for worker, earnings in worker_earnings.items():
+		output.write(b"<Row>\n")
+		output.write(f'<Cell><Data ss:Type="Number">{current_row - 2}</Data></Cell>\n'.encode('utf-8'))
+		output.write(f'<Cell><Data ss:Type="String">{worker}</Data></Cell>\n'.encode('utf-8'))
+
+		current_col = 3  # Starting column count
+		for date in date_list:
+			value = earnings.get(date, 0)
+			output.write(f'<Cell><Data ss:Type="Number">{value}</Data></Cell>\n'.encode('utf-8'))
+			current_col += 1
+
+		output.write(f'<Cell ss:Formula="=SUM(R{current_row}C3:R{current_row}C{current_col-1})"><Data ss:Type="Number">0</Data></Cell>\n')
+		output.write(f'<Cell><Data ss:Type="Number"></Data></Cell>\n')  # Empty Percentage cell
+		output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')  # Empty Signature cell
+		output.write(b"</Row>\n")
+		current_row += 1
+
+	output.write(b"<Row>\n")
+	output.write(b'<Cell/>')
+	output.write(f'<Cell><Data ss:Type="String">ИТОГО</Data></Cell>\n'.encode('utf-8'))
+
+	current_col = 3  # Starting column count
+	for i in range(len(date_list) + 1):
+		output.write(f'<Cell ss:Formula="=SUM(R3C{current_col}:R{current_row-1}C{current_col})"><Data ss:Type="Number">0</Data></Cell>\n')
+		current_col += 1
+
+	output.write(b"</Row>\n")
+
+	# Close XML structure
+	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
+
+	# Prepare the response
+	frappe.response["type"] = "binary"
+	frappe.response["filename"] = f"Периодный_Расчет_{from_date}_-_{to_date}.xls"
+	frappe.response["filecontent"] = output.getvalue()
+	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+
+	# Close the output buffer
+	output.close()

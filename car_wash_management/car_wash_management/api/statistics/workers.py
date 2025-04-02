@@ -118,6 +118,7 @@ from frappe.query_builder import DocType
 from frappe.query_builder.functions import Count, Date
 
 # Количество заказов на каждого работника по сменам/дням.
+# Пока не используется в боте
 @frappe.whitelist()
 def get_worker_appointments_by_day_sql(start_date, end_date, car_wash_id=None):
     """
