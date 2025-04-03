@@ -1,6 +1,6 @@
 import frappe
 from frappe.query_builder.functions import Count
-from frappe.query_builder import DocType Criterion, Case, Field
+from frappe.query_builder import DocType, Criterion, Case, Field
 from frappe.query_builder.functions import Count, Sum
 from pypika.terms import Case
 from datetime import datetime
