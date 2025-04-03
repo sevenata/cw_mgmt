@@ -5,6 +5,32 @@ from frappe.query_builder.functions import Count, Sum
 from pypika.terms import Case
 from datetime import datetime
 
+def get_date_filter(date_field, start_date, end_date, date_format="%Y-%m-%d"):
+    """
+    Creates a filter condition for a given date field covering the period from start_date to end_date.
+
+    If start_date equals end_date, the filter includes the entire day.
+
+    Parameters:
+      date_field (Field): The date field to filter on (e.g., Appointment.creation).
+      start_date (str): The start date as a string (e.g., "2023-04-01").
+      end_date (str): The end date as a string (e.g., "2023-04-01").
+      date_format (str): The format in which the dates are provided (default is "%Y-%m-%d").
+
+    Returns:
+      Filter: A filter condition suitable for use in Frappe Query Builder's .where() clause.
+    """
+    start_dt = datetime.datetime.strptime(start_date, date_format)
+    end_dt = datetime.datetime.strptime(end_date, date_format)
+
+    if start_date == end_date:
+        # For the same day, include the entire day by filtering from the start of the day
+        # until the start of the next day.
+        return (date_field >= start_dt) & (date_field < start_dt + datetime.timedelta(days=1))
+    else:
+        # For different dates, assume an inclusive filter by extending the end date to cover the full day.
+        return (date_field >= start_dt) & (date_field < end_dt + datetime.timedelta(days=1))
+
 # Самые часто заказываемые услуги за период.
 @frappe.whitelist()
 def get_service_statistics(start_date, end_date, car_wash_id=None, limit=10):
@@ -25,7 +51,7 @@ def get_service_statistics(start_date, end_date, car_wash_id=None, limit=10):
             Count("*").as_("service_count")
         )
         .where(
-            (Appointment.creation[start_date:end_date]) &
+            get_date_filter(Appointment.creation, start_date, end_date) &
             (Appointment.is_deleted == 0)
         )
         .groupby(Service.title)
@@ -74,7 +100,7 @@ def get_top_revenue_service(start_date, end_date, car_wash_id=None):
                 .else_(AppointmentService.price)
             ).as_("total_revenue")
         )
-        .where(Appointment.creation.between(start_date, end_date))
+        .where(get_date_filter(Appointment.creation, start_date, end_date))
         .where(Appointment.is_deleted == 0)
         .groupby(Service.title)
         .orderby(Sum(
@@ -97,7 +123,7 @@ def get_top_revenue_service(start_date, end_date, car_wash_id=None):
 
 # Анализ распределения услуг по длительности (duration).
 @frappe.whitelist()
-def get_service_statistics(start_date, end_date, car_wash_id=None):
+def get_service_durations(start_date, end_date, car_wash_id=None):
     # Define DocType references
     appointment = DocType("Car wash appointment")
     appointment_service = DocType("Car wash appointment service")
@@ -116,7 +142,7 @@ def get_service_statistics(start_date, end_date, car_wash_id=None):
             Count(appointment_service.name).as_("service_count")
         )
         .where(
-            (appointment.creation.between(start_date, end_date)) &
+            get_date_filter(Appointment.creation, start_date, end_date) &
             (appointment.is_deleted == 0)
         )
         .groupby(
@@ -218,7 +244,7 @@ def get_appointments_with_services(start_date, end_date, car_wash_id=None):
             Appointment.name.as_("appointment_id"),
             GroupConcat(Service.title, ', ').as_("services_list")
         )
-        .where(Appointment.creation.between(start_date, end_date))
+        .where(get_date_filter(Appointment.creation, start_date, end_date))
         .where(Appointment.is_deleted == 0)
         .groupby(Appointment.name)
     )
@@ -267,7 +293,7 @@ def get_underused_services(start_date, end_date, car_wash_id=None, threshold=5):
             # Use Criterion.any to handle the OR condition
             Criterion.any([
                 Criterion.all([
-                    appointment.creation.between(start_date, end_date),
+                    get_date_filter(Appointment.creation, start_date, end_date),
                     appointment.is_deleted == 0
                 ]),
                 appointment.name.isnull()
