@@ -20,8 +20,8 @@ def get_date_filter(date_field, start_date, end_date, date_format="%Y-%m-%d"):
     Returns:
       Filter: A filter condition suitable for use in Frappe Query Builder's .where() clause.
     """
-    start_dt = datetime.datetime.strptime(start_date, date_format)
-    end_dt = datetime.datetime.strptime(end_date, date_format)
+    start_dt = datetime.strptime(start_date, date_format)
+    end_dt = datetime.strptime(end_date, date_format)
 
     if start_date == end_date:
         # For the same day, include the entire day by filtering from the start of the day
