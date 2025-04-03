@@ -142,7 +142,7 @@ def get_service_durations(start_date, end_date, car_wash_id=None):
             Count(appointment_service.name).as_("service_count")
         )
         .where(
-            get_date_filter(Appointment.creation, start_date, end_date) &
+            get_date_filter(appointment.creation, start_date, end_date) &
             (appointment.is_deleted == 0)
         )
         .groupby(
@@ -293,7 +293,7 @@ def get_underused_services(start_date, end_date, car_wash_id=None, threshold=5):
             # Use Criterion.any to handle the OR condition
             Criterion.any([
                 Criterion.all([
-                    get_date_filter(Appointment.creation, start_date, end_date),
+                    get_date_filter(appointment.creation, start_date, end_date),
                     appointment.is_deleted == 0
                 ]),
                 appointment.name.isnull()
