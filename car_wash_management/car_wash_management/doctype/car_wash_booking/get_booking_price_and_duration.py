@@ -71,6 +71,70 @@ def get_booking_price_and_duration(car_wash: str, car: str, services: list) -> D
             "message": str(e)
         }
 
+@frappe.whitelist(allow_guest=True)
+def get_booking_services_prices(car_wash: str, car: str, services: list) -> Dict[str, Any]:
+    """
+    Calculates the total price and total duration for a Car Wash Booking based on selected services and car body type.
+
+    :param car_wash: Name (ID) of the Car Wash (Link to Car wash DocType).
+    :param car: Name (ID) of the Car (Link to Car wash car DocType).
+    :param services: List of services with details. Example:
+                     [
+                       {"service": "Service ID 1"},
+                       {"service": "Service ID 2"},
+                       {"service": "Service ID 1"},
+                       ...
+                     ]
+    :return: Dictionary with:
+             {
+                 "status": "success",
+                 "total_price": float,
+                 "total_duration": float,
+                 "applied_modifiers": list
+             }
+             or in case of an error:
+             {
+                 "status": "error",
+                 "message": "Error details..."
+             }
+    """
+    try:
+        _validate_required_params(car_wash, car, services)
+        services_aggregated = _validate_and_aggregate_services(services)
+        service_counter = _validate_and_aggregate_services_counter(services)
+
+        # 1. Check and cache valid services
+        valid_service_ids = _get_valid_services(list(service_counter.keys()))
+
+        # 2. Get Car body type (with caching)
+        car_body_type = _get_car_body_type_no_cache(car)
+
+        # 3. Fetch service docs and prices
+        service_docs = _get_service_docs(valid_service_ids)
+        service_prices = _get_service_prices(valid_service_ids, car_body_type)
+
+        # 4. Calculate totals
+        totals = get_services_with_prices(
+            service_counter, service_docs, service_prices, car_body_type, services_aggregated
+        )
+
+        return {
+            "status": "success",
+            "services": totals
+        }
+    except frappe.ValidationError as ve:
+        frappe.log_error(message=ve.message, title="Price and Duration Calculation Validation Error")
+        return {
+            "status": "error",
+            "message": ve.message
+        }
+    except Exception as e:
+        frappe.log_error(message=str(e), title="Price and Duration Calculation Error")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
 
 def _validate_required_params(car_wash: str, car: str, services: List[Dict[str, Any]]) -> None:
     """Validate presence of required parameters."""
@@ -348,3 +412,74 @@ def _apply_price_modifier(
         # Overrides everything else
         total_order_modifiers["fixed_price"] = modifier_value
         applied_modifiers.append({"type": modifier_type, "value": modifier_value})
+
+def get_services_with_prices(
+    service_counter: Counter,
+    service_docs: Dict[str, Any],
+    service_prices: Dict[str, float],
+    car_body_type: str,
+    services_aggregated: Dict[str, Any]
+) -> List[Dict[str, Any]]:
+    """
+    Returns a list of services along with their detailed pricing information.
+
+    Each entry in the returned list is a dictionary with the following keys:
+      - service_id: Identifier of the service.
+      - title: Title of the service.
+      - quantity: The number of times the service has been requested.
+      - unit_price: Price per individual service (this will use a custom price if one is provided).
+      - total_price: The total price for that service (calculated as unit_price * quantity).
+      - duration: Total duration (duration per unit multiplied by quantity).
+      - is_price_modifier: Boolean flag indicating whether the service is configured to act as a price modifier.
+      - custom_price_applied (optional): Flag indicating if a custom price was applied.
+
+    The method validates the existence of service details and ensures that a valid price is available,
+    throwing exceptions similarly to _calculate_totals() when data is missing.
+    """
+    services_with_prices = []
+
+    for service_id, quantity in service_counter.items():
+        service_doc = service_docs.get(service_id)
+        if not service_doc:
+            frappe.throw(_(f"Service '{service_id}' details could not be retrieved."))
+
+        # Determine the base price: use the provided price mapping or fall back to the service_doc attribute
+        base_price = service_prices.get(service_id, getattr(service_doc, "price", None))
+        if base_price is None:
+            frappe.throw(_(
+                f"Price not defined for service '{getattr(service_doc, 'title', service_id)}' and Car body type '{car_body_type}', "
+                "and no base price is set."
+            ))
+
+        custom_price_applied = False
+        # Check if a custom price is defined in services_aggregated data
+        aggregated_entry = services_aggregated.get(service_id)
+        if aggregated_entry and aggregated_entry.get('custom_price'):
+            base_price = aggregated_entry['custom_price']
+            custom_price_applied = True
+
+        total_price_for_service = base_price * quantity
+        duration_per_unit = getattr(service_doc, "duration", 0) or 0
+        total_duration = duration_per_unit * quantity
+
+        # Determine if the service is used as a price modifier
+        is_price_modifier = bool(
+            getattr(service_doc, "is_price_modifier_active", False) and getattr(service_doc, "price_modifier_type", None)
+        )
+
+        service_detail = {
+            "service_id": service_id,
+            "title": getattr(service_doc, "title", service_id),
+            "quantity": quantity,
+            "unit_price": base_price,
+            "total_price": total_price_for_service,
+            "duration": total_duration,
+            "is_price_modifier": is_price_modifier,
+        }
+
+        if custom_price_applied:
+            service_detail["custom_price_applied"] = True
+
+        services_with_prices.append(service_detail)
+
+    return services_with_prices
