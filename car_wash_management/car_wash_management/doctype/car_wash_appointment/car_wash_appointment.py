@@ -85,7 +85,9 @@ def get_appointments_by_date(selected_date=None, car_wash=None):
 		"num",
 		"box_title",
 		"work_started_on",
+		"work_ended_on",
 		"car_wash_worker_name",
+		"services",
 		"services_total",
 		"car_make_name",
 		"car_model_name",
@@ -339,6 +341,7 @@ def export_appointments_to_excel(selected_date=None, start_date=None, end_date=N
 		"num": "Номер",
 		"box_title": "Бокс",
 		"work_started_on": "Начало работы",
+		"work_ended_on": "Конец работы",
 		"car_wash_worker_name": "Работник автомойки",
 		"services_total": "Сумма услуг",
 		"car_make_name": "Марка автомобиля",
@@ -387,8 +390,9 @@ def export_appointments_to_excel(selected_date=None, start_date=None, end_date=N
 	headers = list(appointments[0].keys())
 	output.write(b"<Row>\n")
 	for header in headers:
-		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
-		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
+		translated_header = COLUMN_TRANSLATIONS.get(header)  # Use Russian names
+		if translated_header:
+			output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
 	output.write(b"</Row>\n")
 
 	# Write data rows
@@ -521,7 +525,9 @@ def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=Non
 		"num",
 		"box_title",
 		"work_started_on",
+		"work_ended_on",
 		"car_wash_worker_name",
+		"services",
 		"services_total",
 		"car_make_name",
 		"car_model_name",
@@ -575,10 +581,12 @@ def export_workers_to_excel(selected_date=None, car_wash=None):
 		"num": "Номер",
 		"box_title": "Бокс",
 		"work_started_on": "Начало работы",
-		"services_total": "Сумма услуг",
+		"work_ended_on": "Конец работы",
 		"car_make_name": "Марка автомобиля",
 		"car_license_plate": "Номер автомобиля",
-		"car_body_type": "Тип кузова"
+		"car_body_type": "Тип кузова",
+		"service_title": "Услуга",
+		"service_price": "Цена услуги"
 	}
 
 	CAR_BODY_TYPE_TRANSLATIONS = {
@@ -591,10 +599,8 @@ def export_workers_to_excel(selected_date=None, car_wash=None):
 		"Sedan": "Представительский класс"
 	}
 
-	# Create an in-memory buffer for the Excel file
 	output = BytesIO()
 
-	# Write SpreadsheetML XML content
 	output.write(b'<?xml version="1.0"?>\n')
 	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
 				 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
@@ -603,46 +609,68 @@ def export_workers_to_excel(selected_date=None, car_wash=None):
 	output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
 
 	# Write headers
-	headers = list(appointments[0].keys())
+	headers = list(appointments[0].keys()) + ["service_title", "service_price"]
+	# Remove duplicates from headers
+	headers = list(dict.fromkeys(headers))
 	output.write(b"<Row>\n")
 	for header in headers:
-		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
-		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
+		translated_header = COLUMN_TRANSLATIONS.get(header)  # Use Russian names
+		if translated_header:
+			output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
 	output.write(b"</Row>\n")
 
-	# Write data rows
+	# Write appointment rows with detailed services
 	for appointment in appointments:
-		output.write(b"<Row>\n")
-		for header in headers:
-			value = appointment.get(header, "")
+		services = frappe.get_all(
+			"Car wash appointment service",
+			filters={"parent": appointment["name"]},
+			fields=["service", "price"]
+		)
 
-			if value is None:
-				value = "-"
+		for service_entry in services:
+			service_title = ""
+			service_price = service_entry["price"]
 
-			if header ==  "car_body_type":
-				value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
+			# Fetch title and worker_price from Car wash service if linked
+			if service_entry["service"]:
+				service_doc = frappe.get_value("Car wash service", service_entry["service"], ["title", "worker_price"], as_dict=True)
+				if service_doc:
+					service_title = service_doc.title
+					if service_doc.worker_price:
+						service_price = service_doc.worker_price
 
-			if header == "work_started_on":
-				cell_type = "Time"
-			elif isinstance(value, (int, float)):
-				cell_type = "Number"
-			else:
-				cell_type = "String"
+			output.write(b"<Row>\n")
+			for header in headers:
+				if header == "service_title":
+					value = service_title
+				elif header == "service_price":
+					value = service_price
+				else:
+					value = appointment.get(header, "")
 
-			output.write(
-				f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
-		output.write(b"</Row>\n")
+				if value is None:
+					value = "-"
 
-	# Close XML structure
+				if header == "car_body_type":
+					value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
+
+				if header in ["work_started_on", "work_ended_on"]:
+					cell_type = "Time"
+				elif isinstance(value, (int, float)):
+					cell_type = "Number"
+				else:
+					cell_type = "String"
+
+				output.write(f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
+			output.write(b"</Row>\n")
+
 	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
 
-	# Prepare the response
 	frappe.response["type"] = "binary"
 	frappe.response["filename"] = f"Car_Wash_Workers_{selected_date}.xls"
 	frappe.response["filecontent"] = output.getvalue()
-	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+	frappe.response["doctype"] = None
 
-	# Close the output buffer
 	output.close()
 
 @frappe.whitelist()
@@ -651,7 +679,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 	Generate an Excel report summarizing worker earnings over a specified date range.
 	"""
 	from io import BytesIO
-	from frappe.utils import getdate, add_days
+	from frappe.utils import getdate, add_days, flt
 
 	if not from_date or not to_date:
 		frappe.throw("Please provide both from_date and to_date in 'YYYY-MM-DD' format.")
@@ -679,17 +707,34 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 	# Step 3: Loop through each date and fill earnings
 	for date_str in date_list:
-		appointments = get_appointments_by_date(date_str, car_wash)
+		appointments = frappe.get_all(
+			"Car wash appointment",
+			filters={
+				"payment_received_on": ["between", [f"{date_str} 00:00:00", f"{date_str} 23:59:59"]],
+				"is_deleted": 0,
+				"payment_status": "Paid",
+				"car_wash": car_wash,
+			},
+			fields=["name", "car_wash_worker_name"]
+		)
 
 		for appt in appointments:
 			worker = appt.get("car_wash_worker_name", "Unknown")
-			earnings = appt.get("services_total", 0)
 
-			if worker not in worker_earnings:
-				# Ensure we initialize with all dates
-				worker_earnings[worker] = {date: 0 for date in date_list}
+			services = frappe.get_all(
+				"Car wash appointment service",
+				filters={"parent": appt["name"]},
+				fields=["price", "service"]
+			)
 
-			worker_earnings[worker][date_str] += earnings
+			for service in services:
+				service_doc = frappe.get_value("Car wash service", service["service"], ["worker_price"], as_dict=True)
+				price = flt(service_doc.worker_price) if service_doc and service_doc.worker_price else flt(service["price"])
+
+				if worker not in worker_earnings:
+					worker_earnings[worker] = {date: 0 for date in date_list}
+
+				worker_earnings[worker][date_str] += price
 
 	# Create an in-memory Excel file
 	output = BytesIO()
@@ -703,7 +748,8 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 	# Write title row
 	output.write(b"<Row>\n")
 	output.write(b'<Cell/>')
-	output.write(f'<Cell ss:MergeAcross="5">Расчёт зарплаты за период {str(from_date)}-{str(to_date)}<Data ss:Type="String"></Data></Cell>\n'.encode('utf-8'))
+	title = f"Расчёт зарплаты за период {str(from_date)} - {str(to_date)}"
+	output.write(f'<Cell ss:MergeAcross="{len(date_list) + 3}"><Data ss:Type="String">{title}</Data></Cell>\n'.encode('utf-8'))
 	output.write(b"</Row>\n")
 
 	# Write header row
@@ -713,44 +759,41 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		output.write(f'<Cell><Data ss:Type="String">{header}</Data></Cell>\n'.encode('utf-8'))
 	output.write(b"</Row>\n")
 
-	current_row = 3  # Initializing and starting row count
-	current_col = 1  # Initializing column count
-	for worker, earnings in worker_earnings.items():
+	current_row = 3
+	for idx, (worker, earnings) in enumerate(worker_earnings.items(), start=1):
 		output.write(b"<Row>\n")
-		output.write(f'<Cell><Data ss:Type="Number">{current_row - 2}</Data></Cell>\n'.encode('utf-8'))
+		output.write(f'<Cell><Data ss:Type="Number">{idx}</Data></Cell>\n'.encode('utf-8'))
 		output.write(f'<Cell><Data ss:Type="String">{worker}</Data></Cell>\n'.encode('utf-8'))
 
-		current_col = 3  # Starting column count
 		for date in date_list:
 			value = earnings.get(date, 0)
 			output.write(f'<Cell><Data ss:Type="Number">{value}</Data></Cell>\n'.encode('utf-8'))
-			current_col += 1
 
-		output.write(f'<Cell ss:Formula="=SUM(R{current_row}C3:R{current_row}C{current_col-1})"><Data ss:Type="Number">0</Data></Cell>\n'.encode('utf-8'))
-		output.write(f'<Cell><Data ss:Type="Number"></Data></Cell>\n'.encode('utf-8'))  # Empty Percentage cell
-		output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')  # Empty Signature cell
+		# Sum formula for worker's total
+		sum_col_start = 3
+		sum_col_end = sum_col_start + len(date_list) - 1
+		output.write(f'<Cell ss:Formula="=SUM(R{current_row}C{sum_col_start}:R{current_row}C{sum_col_end})">'
+					 f'<Data ss:Type="Number">0</Data></Cell>\n'.encode('utf-8'))
+		output.write(f'<Cell><Data ss:Type="Number"></Data></Cell>\n'.encode('utf-8'))  # % cell
+		output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')  # Signature
 		output.write(b"</Row>\n")
 		current_row += 1
 
+	# Totals row
 	output.write(b"<Row>\n")
-	output.write(b'<Cell/>')
-	output.write(f'<Cell><Data ss:Type="String">ИТОГО</Data></Cell>\n'.encode('utf-8'))
-
-	current_col = 3  # Starting column count
+	output.write(f'<Cell/><Cell><Data ss:Type="String">ИТОГО</Data></Cell>\n'.encode('utf-8'))
 	for i in range(len(date_list) + 1):
-		output.write(f'<Cell ss:Formula="=SUM(R3C{current_col}:R{current_row-1}C{current_col})"><Data ss:Type="Number">0</Data></Cell>\n'.encode('utf-8'))
-		current_col += 1
-
+		output.write(f'<Cell ss:Formula="=SUM(R3C{3+i}:R{current_row-1}C{3+i})">'
+					 f'<Data ss:Type="Number">0</Data></Cell>\n'.encode('utf-8'))
 	output.write(b"</Row>\n")
 
-	# Close XML structure
+	# Close XML
 	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
 
-	# Prepare the response
 	frappe.response["type"] = "binary"
 	frappe.response["filename"] = f"Периодный_Расчет_{from_date}_-_{to_date}.xls"
 	frappe.response["filecontent"] = output.getvalue()
-	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
+	frappe.response["doctype"] = None
 
-	# Close the output buffer
 	output.close()
+
