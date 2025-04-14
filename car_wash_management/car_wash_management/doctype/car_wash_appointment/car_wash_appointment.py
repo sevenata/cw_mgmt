@@ -570,6 +570,16 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 				cashier_earnings[cashier] = {date: 0 for date in date_list}
 			cashier_earnings[cashier][date_str] += earnings
 
+	# Get percentage values from Car wash settings
+	try:
+		car_wash_settings = frappe.get_doc("Car wash settings", {"car_wash": car_wash})
+		washer_percent = car_wash_settings.get("washer_default_percent_from_service", 30) / 100
+		cashier_percent = car_wash_settings.get("cashier_default_percent_from_service", 10) / 100
+	except frappe.DoesNotExistError:
+		# Use default values if settings don't exist
+		washer_percent = 0.3  # 30%
+		cashier_percent = 0.1  # 10%
+
 	# Create an in-memory Excel file
 	output = BytesIO()
 	output.write(b'<?xml version="1.0"?>\n')
@@ -622,9 +632,9 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		# Calculate total for this row
 		row_total = sum(earnings.get(date, 0) for date in date_list)
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(row_total)).encode('utf-8'))
-		output.write(b'<Cell><Data ss:Type="String">30%</Data></Cell>\n')
-		# Calculate 30% of total earnings
-		earned = row_total * 0.3
+		output.write(('<Cell><Data ss:Type="String">{}%</Data></Cell>\n'.format(int(washer_percent * 100))).encode('utf-8'))
+		# Calculate washer's percentage of total earnings
+		earned = row_total * washer_percent
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(earned)).encode('utf-8'))
 		output.write(b"</Row>\n")
 		current_row += 1
@@ -654,9 +664,9 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		# Calculate total for this row
 		row_total = sum(earnings.get(date, 0) for date in date_list)
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(row_total)).encode('utf-8'))
-		output.write(b'<Cell><Data ss:Type="String">10%</Data></Cell>\n')
-		# Calculate 10% of total earnings
-		earned = row_total * 0.1
+		output.write(('<Cell><Data ss:Type="String">{}%</Data></Cell>\n'.format(int(cashier_percent * 100))).encode('utf-8'))
+		# Calculate cashier's percentage of total earnings
+		earned = row_total * cashier_percent
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(earned)).encode('utf-8'))
 		output.write(b"</Row>\n")
 		current_row += 1
