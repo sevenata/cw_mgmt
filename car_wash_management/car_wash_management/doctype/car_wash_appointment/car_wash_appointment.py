@@ -550,6 +550,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 	# Step 2: Initialize empty earnings dict
 	worker_earnings = {}
+	cashier_earnings = {}
 
 	# Step 3: Loop through each date and fill earnings
 	for date_str in date_list:
@@ -557,13 +558,17 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 		for appt in appointments:
 			worker = appt.get("car_wash_worker_name", "Unknown")
+			cashier = appt.get("owner", "Unknown")
 			earnings = appt.get("services_total", 0)
 
 			if worker not in worker_earnings:
 				# Ensure we initialize with all dates
 				worker_earnings[worker] = {date: 0 for date in date_list}
-
 			worker_earnings[worker][date_str] += earnings
+
+			if cashier not in cashier_earnings:
+				cashier_earnings[cashier] = {date: 0 for date in date_list}
+			cashier_earnings[cashier][date_str] += earnings
 
 	# Create an in-memory Excel file
 	output = BytesIO()
@@ -591,11 +596,16 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		output.write(cell_content.encode('utf-8'))
 	output.write(b"</Row>\n")
 
-	current_row = 3  # Initializing and starting row count
+	# Write washers section
+	output.write(b"<Row>\n")
+	output.write(b'<Cell><Data ss:Type="String">\xd0\x9c\xd0\xbe\xd0\xb9\xd1\x89\xd0\xb8\xd0\xba\xd0\xb8</Data></Cell>\n')
+	output.write(b"</Row>\n")
+
+	current_row = 4  # Initializing and starting row count
 	current_col = 1  # Initializing column count
 	for worker, earnings in worker_earnings.items():
 		output.write(b"<Row>\n")
-		cell_content = '<Cell><Data ss:Type="Number">' + str(current_row - 2) + '</Data></Cell>\n'
+		cell_content = '<Cell><Data ss:Type="Number">' + str(current_row - 3) + '</Data></Cell>\n'
 		output.write(cell_content.encode('utf-8'))
 		cell_content = '<Cell><Data ss:Type="String">' + worker + '</Data></Cell>\n'
 		output.write(cell_content.encode('utf-8'))
@@ -617,6 +627,36 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		output.write(b"</Row>\n")
 		current_row += 1
 
+	# Write cashiers section
+	output.write(b"<Row>\n")
+	output.write(b'<Cell><Data ss:Type="String">\xd0\x9a\xd0\xb0\xd1\x81\xd1\x81\xd0\xb8\xd1\x80\xd1\x8b</Data></Cell>\n')
+	output.write(b"</Row>\n")
+
+	cashier_start_row = current_row
+	for cashier, earnings in cashier_earnings.items():
+		output.write(b"<Row>\n")
+		cell_content = '<Cell><Data ss:Type="Number">' + str(current_row - cashier_start_row + 1) + '</Data></Cell>\n'
+		output.write(cell_content.encode('utf-8'))
+		cell_content = '<Cell><Data ss:Type="String">' + cashier + '</Data></Cell>\n'
+		output.write(cell_content.encode('utf-8'))
+
+		current_col = 3  # Starting column count
+		for date in date_list:
+			value = str(earnings.get(date, 0))
+			cell_content = '<Cell><Data ss:Type="Number">' + value + '</Data></Cell>\n'
+			output.write(cell_content.encode('utf-8'))
+			current_col += 1
+
+		# Calculate total for this row
+		row_total = sum(earnings.get(date, 0) for date in date_list)
+		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(row_total)).encode('utf-8'))
+		output.write(b'<Cell><Data ss:Type="String">10%</Data></Cell>\n')
+		# Calculate 10% of total earnings
+		earned = row_total * 0.1
+		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(earned)).encode('utf-8'))
+		output.write(b"</Row>\n")
+		current_row += 1
+
 	# Write total row
 	output.write(b"<Row>\n")
 	output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')
@@ -624,12 +664,15 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 	current_col = 3  # Starting column count
 	for i in range(len(date_list) + 1):
-		output.write(('<Cell ss:Formula="=SUM(R3C{}:R{}C{})"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_col, current_row-1, current_col)).encode('utf-8'))
+		output.write(('<Cell ss:Formula="=SUM(R4C{}:R{}C{})"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_col, current_row-1, current_col)).encode('utf-8'))
 		current_col += 1
 	# Add total for earnings column
-	output.write(('<Cell ss:Formula="=SUM(R3C{}:R{}C{})"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_col-2, current_row-1, current_col-2)).encode('utf-8'))
-	# Calculate 30% of total earnings
-	output.write(('<Cell ss:Formula="=R{}C{}*0.3"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_row, current_col-1)).encode('utf-8'))
+	output.write(('<Cell ss:Formula="=SUM(R4C{}:R{}C{})"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_col-2, current_row-1, current_col-2)).encode('utf-8'))
+	# Calculate total earnings (30% for washers + 10% for cashiers)
+	output.write(('<Cell ss:Formula="=SUM(R4C{}:R{}C{})*0.3+SUM(R{}C{}:R{}C{})*0.1"><Data ss:Type="Number">0</Data></Cell>\n'.format(
+		current_col-2, cashier_start_row-1, current_col-2,
+		cashier_start_row+1, current_col-2, current_row-1, current_col-2
+	)).encode('utf-8'))
 	output.write(b"</Row>\n")
 
 	# Close XML structure
