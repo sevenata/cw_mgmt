@@ -576,45 +576,60 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 	# Write title row
 	output.write(b"<Row>\n")
-	output.write(b'<Cell/>')
-	output.write(f'<Cell ss:MergeAcross="5">Расчёт зарплаты за период {str(from_date)}-{str(to_date)}<Data ss:Type="String"></Data></Cell>\n'.encode('utf-8'))
+	output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')
+	merge_across = str(len(date_list) + 3)
+	title = "Расчёт зарплаты за период " + str(from_date) + "-" + str(to_date)
+	cell_content = '<Cell ss:MergeAcross="' + merge_across + '"><Data ss:Type="String">' + title + '</Data></Cell>\n'
+	output.write(cell_content.encode('utf-8'))
 	output.write(b"</Row>\n")
 
 	# Write header row
-	headers = ["#", "Работник"] + date_list + ["ИТОГО ОБОРОТ ОМУ", "% за период", "Подпись"]
+	headers = ["#", "Работник"] + date_list + ["ИТОГО ОБОРОТ ОМУ", "% за период", "Заработано"]
 	output.write(b"<Row>\n")
 	for header in headers:
-		output.write(f'<Cell><Data ss:Type="String">{header}</Data></Cell>\n'.encode('utf-8'))
+		cell_content = '<Cell><Data ss:Type="String">' + header + '</Data></Cell>\n'
+		output.write(cell_content.encode('utf-8'))
 	output.write(b"</Row>\n")
 
 	current_row = 3  # Initializing and starting row count
 	current_col = 1  # Initializing column count
 	for worker, earnings in worker_earnings.items():
 		output.write(b"<Row>\n")
-		output.write(f'<Cell><Data ss:Type="Number">{current_row - 2}</Data></Cell>\n'.encode('utf-8'))
-		output.write(f'<Cell><Data ss:Type="String">{worker}</Data></Cell>\n'.encode('utf-8'))
+		cell_content = '<Cell><Data ss:Type="Number">' + str(current_row - 2) + '</Data></Cell>\n'
+		output.write(cell_content.encode('utf-8'))
+		cell_content = '<Cell><Data ss:Type="String">' + worker + '</Data></Cell>\n'
+		output.write(cell_content.encode('utf-8'))
 
 		current_col = 3  # Starting column count
 		for date in date_list:
-			value = earnings.get(date, 0)
-			output.write(f'<Cell><Data ss:Type="Number">{value}</Data></Cell>\n'.encode('utf-8'))
+			value = str(earnings.get(date, 0))
+			cell_content = '<Cell><Data ss:Type="Number">' + value + '</Data></Cell>\n'
+			output.write(cell_content.encode('utf-8'))
 			current_col += 1
 
-		output.write(f'<Cell ss:Formula="=SUM(R{current_row}C3:R{current_row}C{current_col-1})"><Data ss:Type="Number">0</Data></Cell>\n'.encode('utf-8'))
-		output.write(f'<Cell><Data ss:Type="Number"></Data></Cell>\n'.encode('utf-8'))  # Empty Percentage cell
-		output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')  # Empty Signature cell
+		# Calculate total for this row
+		row_total = sum(earnings.get(date, 0) for date in date_list)
+		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(row_total)).encode('utf-8'))
+		output.write(b'<Cell><Data ss:Type="String">30%</Data></Cell>\n')
+		# Calculate 30% of total earnings
+		earned = row_total * 0.3
+		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(earned)).encode('utf-8'))
 		output.write(b"</Row>\n")
 		current_row += 1
 
+	# Write total row
 	output.write(b"<Row>\n")
-	output.write(b'<Cell/>')
-	output.write(f'<Cell><Data ss:Type="String">ИТОГО</Data></Cell>\n'.encode('utf-8'))
+	output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')
+	output.write(b'<Cell><Data ss:Type="String">\xd0\x98\xd0\xa2\xd0\x9e\xd0\x93\xd0\x9e</Data></Cell>\n')
 
 	current_col = 3  # Starting column count
 	for i in range(len(date_list) + 1):
-		output.write(f'<Cell ss:Formula="=SUM(R3C{current_col}:R{current_row-1}C{current_col})"><Data ss:Type="Number">0</Data></Cell>\n'.encode('utf-8'))
+		output.write(('<Cell ss:Formula="=SUM(R3C{}:R{}C{})"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_col, current_row-1, current_col)).encode('utf-8'))
 		current_col += 1
-
+	# Add total for earnings column
+	output.write(('<Cell ss:Formula="=SUM(R3C{}:R{}C{})"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_col-2, current_row-1, current_col-2)).encode('utf-8'))
+	# Calculate 30% of total earnings
+	output.write(('<Cell ss:Formula="=R{}C{}*0.3"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_row, current_col-1)).encode('utf-8'))
 	output.write(b"</Row>\n")
 
 	# Close XML structure
@@ -628,6 +643,9 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 	# Close the output buffer
 	output.close()
+
+
+	
 import frappe
 from io import BytesIO
 from frappe.utils import getdate
