@@ -607,7 +607,9 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		output.write(b"<Row>\n")
 		cell_content = '<Cell><Data ss:Type="Number">' + str(current_row - 3) + '</Data></Cell>\n'
 		output.write(cell_content.encode('utf-8'))
-		cell_content = '<Cell><Data ss:Type="String">' + worker + '</Data></Cell>\n'
+		# Handle None values for worker name
+		worker_name = worker if worker is not None else "Неизвестный мойщик"
+		cell_content = '<Cell><Data ss:Type="String">' + worker_name + '</Data></Cell>\n'
 		output.write(cell_content.encode('utf-8'))
 
 		current_col = 3  # Starting column count
@@ -637,7 +639,9 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		output.write(b"<Row>\n")
 		cell_content = '<Cell><Data ss:Type="Number">' + str(current_row - cashier_start_row + 1) + '</Data></Cell>\n'
 		output.write(cell_content.encode('utf-8'))
-		cell_content = '<Cell><Data ss:Type="String">' + cashier + '</Data></Cell>\n'
+		# Handle None values for cashier name
+		cashier_name = cashier if cashier is not None else "Неизвестный кассир"
+		cell_content = '<Cell><Data ss:Type="String">' + cashier_name + '</Data></Cell>\n'
 		output.write(cell_content.encode('utf-8'))
 
 		current_col = 3  # Starting column count
