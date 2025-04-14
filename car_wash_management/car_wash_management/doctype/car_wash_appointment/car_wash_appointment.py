@@ -95,7 +95,8 @@ def get_appointments_by_date(selected_date=None, car_wash=None):
 		"payment_status",
 		"payment_received_on",
 		"out_of_turn",
-		"out_of_turn_reason"
+		"out_of_turn_reason",
+		"owner",
 	]
 
 	# Query the database
@@ -294,134 +295,6 @@ def get_car_wash_statistics():
 
 	return stats
 
-
-@frappe.whitelist()
-def export_appointments_to_excel(selected_date=None, start_date=None, end_date=None, car_wash=None):
-	"""
-	Generate an Excel file in SpreadsheetML format for a given date or a time period and return it for download.
-
-	Args:
-		selected_date (str, optional): The date in "YYYY-MM-DD" format to filter appointments (used if time period not provided).
-		start_date (str, optional): The start date in "YYYY-MM-DD" format for the time period.
-		end_date (str, optional): The end date in "YYYY-MM-DD" format for the time period.
-		car_wash (str, optional): Filter appointments by a specific car wash.
-	"""
-	from io import BytesIO
-	from frappe.utils import getdate
-
-	# Determine whether to use a time period or a single selected date.
-	if start_date and end_date:
-		# Validate the provided time period dates.
-		try:
-			getdate(start_date)
-			getdate(end_date)
-		except ValueError:
-			frappe.throw("Invalid date format for start_date or end_date. Please provide valid 'YYYY-MM-DD' dates.")
-		appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
-		date_info = f"{start_date}_to_{end_date}"
-	elif selected_date:
-		# Validate the provided selected_date.
-		try:
-			getdate(selected_date)
-		except ValueError:
-			frappe.throw("Invalid date format for selected_date. Please provide a valid 'YYYY-MM-DD' format.")
-		appointments = get_appointments_by_date(selected_date, car_wash)
-		date_info = selected_date
-	else:
-		frappe.throw("Please provide either selected_date or both start_date and end_date in 'YYYY-MM-DD' format.")
-
-	if not appointments:
-		frappe.throw(f"No appointments found for the given period ({date_info}).")
-
-	# Column translations
-	COLUMN_TRANSLATIONS = {
-		"name": "Номер заявки",
-		"num": "Номер",
-		"box_title": "Бокс",
-		"work_started_on": "Начало работы",
-		"car_wash_worker_name": "Работник автомойки",
-		"services_total": "Сумма услуг",
-		"car_make_name": "Марка автомобиля",
-		"car_model_name": "Модель автомобиля",
-		"car_license_plate": "Номер автомобиля",
-		"car_body_type": "Тип кузова",
-		"payment_type": "Тип оплаты",
-		"payment_status": "Статус оплаты",
-		"payment_received_on": "Дата оплаты",
-		"out_of_turn": "Без очереди",
-		"out_of_turn_reason": "Почему без очереди"
-	}
-
-	# Value translations
-	PAYMENT_TYPE_TRANSLATIONS = {
-		"Paid": "Оплачено",
-		"Not paid": "Не оплачено",
-		"Cash": "Наличные",
-		"Card": "Карта",
-		"Kaspi": "Каспи",
-		"Contract": "Договор"
-	}
-
-	CAR_BODY_TYPE_TRANSLATIONS = {
-		"Passenger": "Пассажир",
-		"Minbus": "Микроавтобус",
-		"LargeSUV": "Большой внедорожник",
-		"Jeep": "Джип",
-		"Minivan": "Минивэн",
-		"CompactSUV": "Компактный внедорожник",
-		"Sedan": "Седан"
-	}
-
-	# Create an in-memory buffer for the Excel file
-	output = BytesIO()
-
-	# Write SpreadsheetML XML content
-	output.write(b'<?xml version="1.0"?>\n')
-	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
-				 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
-				 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
-				 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
-	output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
-
-	# Write headers
-	headers = list(appointments[0].keys())
-	output.write(b"<Row>\n")
-	for header in headers:
-		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
-		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
-	output.write(b"</Row>\n")
-
-	# Write data rows
-	for appointment in appointments:
-		output.write(b"<Row>\n")
-		for header in headers:
-			value = appointment.get(header, "")
-			if value is None:
-				value = "-"
-
-			if header == "payment_type":
-				value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
-			elif header == "payment_status":
-				value = PAYMENT_TYPE_TRANSLATIONS.get(value, value)
-			elif header == "car_body_type":
-				value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
-
-			cell_type = "Number" if isinstance(value, (int, float)) else "String"
-			output.write(f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
-		output.write(b"</Row>\n")
-
-	# Close XML structure
-	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
-
-	# Prepare the response
-	frappe.response["type"] = "binary"
-	frappe.response["filename"] = f"Car_Wash_Appointments_{date_info}.xls"
-	frappe.response["filecontent"] = output.getvalue()
-	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
-
-	# Close the output buffer
-	output.close()
-
 import frappe
 from frappe import _
 from frappe.utils import getdate, today
@@ -530,7 +403,8 @@ def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=Non
 		"payment_type",
 		"payment_status",
 		"out_of_turn",
-		"out_of_turn_reason"
+		"out_of_turn_reason",
+		"owner",
 	]
 
 	# Query the database for appointments in the given time period
@@ -754,3 +628,195 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 	# Close the output buffer
 	output.close()
+import frappe
+from io import BytesIO
+from frappe.utils import getdate
+
+def _get_appointments(selected_date, start_date, end_date, car_wash):
+	"""
+	Fetch appointments based on a selected date or a date range.
+	Returns a tuple (appointments, date_info) where date_info is used for naming the file.
+	"""
+	if start_date and end_date:
+		try:
+			getdate(start_date)
+			getdate(end_date)
+		except ValueError:
+			frappe.throw("Invalid date format for start_date or end_date. Please provide valid 'YYYY-MM-DD' dates.")
+		appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
+		date_info = f"{start_date}_to_{end_date}"
+	elif selected_date:
+		try:
+			getdate(selected_date)
+		except ValueError:
+			frappe.throw("Invalid date format for selected_date. Please provide a valid 'YYYY-MM-DD' format.")
+		appointments = get_appointments_by_date(selected_date, car_wash)
+		date_info = selected_date
+	else:
+		frappe.throw("Please provide either selected_date or both start_date and end_date in 'YYYY-MM-DD' format.")
+
+	if not appointments:
+		frappe.throw(f"No appointments found for the given period ({date_info}).")
+	return appointments, date_info
+
+def _get_appointment_column_translations():
+	"""
+	Returns a dictionary mapping appointment column keys to Russian translations.
+	"""
+	return {
+		"name": "Номер заявки",
+		"num": "Номер",
+		"box_title": "Бокс",
+		"work_started_on": "Начало работы",
+		"car_wash_worker_name": "Работник автомойки",
+		"services_total": "Сумма услуг",
+		"car_make_name": "Марка автомобиля",
+		"car_model_name": "Модель автомобиля",
+		"car_license_plate": "Номер автомобиля",
+		"car_body_type": "Тип кузова",
+		"payment_type": "Тип оплаты",
+		"payment_status": "Статус оплаты",
+		"payment_received_on": "Дата оплаты",
+		"out_of_turn": "Без очереди",
+		"out_of_turn_reason": "Почему без очереди",
+		"owner": "Добавил"
+	}
+
+def _translate_value(field, value):
+	"""
+	Translates values for specific fields such as payment types or car body types.
+	"""
+	PAYMENT_TYPE_TRANSLATIONS = {
+		"Paid": "Оплачено",
+		"Not paid": "Не оплачено",
+		"Cash": "Наличные",
+		"Card": "Карта",
+		"Kaspi": "Каспи",
+		"Contract": "Договор"
+	}
+	CAR_BODY_TYPE_TRANSLATIONS = {
+		"Passenger": "Пассажир",
+		"Minbus": "Микроавтобус",
+		"LargeSUV": "Большой внедорожник",
+		"Jeep": "Джип",
+		"Minivan": "Минивэн",
+		"CompactSUV": "Компактный внедорожник",
+		"Sedan": "Седан"
+	}
+
+	if field in ["payment_type", "payment_status"]:
+		return PAYMENT_TYPE_TRANSLATIONS.get(value, value)
+	elif field == "car_body_type":
+		return CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
+	return value
+
+def _generate_multi_sheet_excel(sheets_data):
+	"""
+	Generates a multi-sheet Excel file in SpreadsheetML XML format.
+
+	Args:
+		sheets_data (dict): Keys are sheet names and values are tuples (headers, rows, translations).
+
+	Returns:
+		Binary Excel content.
+	"""
+	output = BytesIO()
+	output.write(b'<?xml version="1.0"?>\n')
+	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ')
+	output.write(b'xmlns:o="urn:schemas-microsoft-com:office:office" ')
+	output.write(b'xmlns:x="urn:schemas-microsoft-com:office:excel" ')
+	output.write(b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+
+	for sheet_name, (headers, rows, translations) in sheets_data.items():
+		output.write(f'<Worksheet ss:Name="{sheet_name}">\n'.encode("utf-8"))
+		output.write(b'<Table>\n')
+		# Write header row with translated column names
+		output.write(b"<Row>\n")
+		for header in headers:
+			translated = translations.get(header, header)
+			output.write(f'<Cell><Data ss:Type="String">{translated}</Data></Cell>\n'.encode("utf-8"))
+		output.write(b"</Row>\n")
+		# Write data rows
+		for row in rows:
+			output.write(b"<Row>\n")
+			for header in headers:
+				value = row.get(header, "-")
+				if value is None:
+					value = "-"
+				# Apply translations where needed
+				if header in ["payment_type", "payment_status", "car_body_type"]:
+					value = _translate_value(header, value)
+				cell_type = "Number" if isinstance(value, (int, float)) else "String"
+				output.write(f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode("utf-8"))
+			output.write(b"</Row>\n")
+		output.write(b"</Table>\n</Worksheet>\n")
+	output.write(b"</Workbook>\n")
+	return output.getvalue()
+
+def _get_merged_appointments_services_rows(appointments):
+	"""
+	Builds a row set that merges each appointment with its child service records.
+	If an appointment has multiple services, multiple rows are produced;
+	if none, a row with empty service fields is added.
+	"""
+	rows = []
+	for appt in appointments:
+		services = frappe.get_all(
+			"Car wash appointment service",
+			filters={"parent": appt["name"]},
+			fields=["service_name", "duration", "price"]
+		)
+		if services:
+			for svc in services:
+				merged = appt.copy()
+				merged.update(svc)
+				rows.append(merged)
+		else:
+			row = appt.copy()
+			row["service_name"] = "-"
+			row["duration"] = "-"
+			row["price"] = "-"
+			rows.append(row)
+	return rows
+
+@frappe.whitelist()
+def export_appointments_and_services_to_excel(selected_date=None, start_date=None, end_date=None, car_wash=None):
+	"""
+	Exports appointments into a multi‑sheet Excel file.
+
+	Sheet "Appointments" contains only the appointment records.
+	Sheet "Услуги" contains the merged appointment and service records —
+	the data is the same as in the export_appointments_with_services_to_excel method.
+	"""
+	# Fetch appointments and date information.
+	appointments, date_info = _get_appointments(selected_date, start_date, end_date, car_wash)
+
+	# Build data for the "Appointments" sheet (appointment rows and their headers).
+	appointment_rows = appointments
+	appt_headers = list(appointments[0].keys())
+	appt_translations = _get_appointment_column_translations()
+
+	# Build merged appointment and service rows (same as export_appointments_with_services_to_excel).
+	merged_rows = _get_merged_appointments_services_rows(appointments)
+	# Use the union of appointment keys plus service details.
+	service_headers = list(merged_rows[0].keys())
+	# Start with the basic appointment translations then add service-specific ones.
+	services_translations = _get_appointment_column_translations()
+	services_translations.update({
+		"service_name": "Услуга",
+		"duration": "Длительность",
+		"price": "Цена услуги",
+	})
+
+	# Prepare sheet data: two sheets – one for appointments and one for services.
+	sheets = {
+		"Бронирования": (appt_headers, appointment_rows, appt_translations),
+		"Услуги": (service_headers, merged_rows, services_translations)
+	}
+
+	filecontent = _generate_multi_sheet_excel(sheets)
+
+	frappe.response["type"] = "binary"
+	frappe.response["filename"] = f"Car_Wash_Appointments_and_Services_{date_info}.xls"
+	frappe.response["filecontent"] = filecontent
+	frappe.response["doctype"] = None
