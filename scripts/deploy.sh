@@ -28,6 +28,8 @@ docker exec \$CONTAINER_NAME sh -c "cd apps/car_wash_management &&
     git pull origin main --no-rebase &&
     bench --site beta.jyy.kz migrate"
 
+#bench --site erpdev.juu.kz migrate
+
 # Перезапускаем контейнер
 docker restart \$CONTAINER_NAME
 echo "Container \$CONTAINER_NAME has been updated and restarted successfully."

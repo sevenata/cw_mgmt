@@ -3,7 +3,7 @@ import frappe
 from frappe.utils import flt, cint, today, add_days, getdate, now_datetime, add_to_date
 from datetime import datetime, timedelta
 from io import StringIO, BytesIO
-from ..car_wash_booking.car_wash_booking import get_booking_price_and_duration
+from ..car_wash_booking.booking_price_and_duration import get_booking_price_and_duration
 import csv
 
 class Carwashappointment(Document):
@@ -39,6 +39,8 @@ class Carwashappointment(Document):
 		price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services)
 		self.services_total = price_and_duration["total_price"]
 		self.duration_total = price_and_duration["total_duration"]
+		self.staff_reward_total = price_and_duration["staff_reward_total"]
+
 		if self.starts_on and not self.ends_on and self.duration_total:
 			self.ends_on = add_to_date(self.starts_on, seconds=self.duration_total)
 
@@ -87,6 +89,7 @@ def get_appointments_by_date(selected_date=None, car_wash=None):
 		"work_started_on",
 		"car_wash_worker_name",
 		"services_total",
+		"staff_reward_total",
 		"car_make_name",
 		"car_model_name",
 		"car_license_plate",
@@ -198,7 +201,7 @@ def get_car_wash_statistics():
 			"payment_status": "Paid",
 			"car_wash": car_wash,
 		},
-		fields=["name", "payment_type", "services_total", "custom_payment_method"],
+		fields=["name", "payment_type", "services_total", "custom_payment_method", "staff_reward_total"],
 	)
 
 	# Initialize stats with standard payment types and container for custom payments.
@@ -230,6 +233,7 @@ def get_car_wash_statistics():
 	# Aggregate statistics.
 	for appointment in appointments:
 		stats["total_income"] += flt(appointment["services_total"])
+		stats["total_staff_reward"] += flt(appointment["staff_reward_total"])
 		if appointment["payment_type"] == "Mixed":
 			# Fetch child records for mixed payments; also include "custom_payment_method" if provided.
 			mixed_payments = frappe.get_all(
@@ -337,7 +341,7 @@ def get_revenue_by_day():
 			"payment_status": "Paid",
 			"car_wash": car_wash,
 		},
-		fields=["payment_received_on", "services_total"],
+		fields=["payment_received_on", "services_total", "staff_reward_total"],
 	)
 
 	revenue_by_day = {}
@@ -396,6 +400,7 @@ def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=Non
 		"work_started_on",
 		"car_wash_worker_name",
 		"services_total",
+		"staff_reward_total",
 		"car_make_name",
 		"car_model_name",
 		"car_license_plate",
@@ -450,6 +455,7 @@ def export_workers_to_excel(selected_date=None, car_wash=None):
 		"box_title": "Бокс",
 		"work_started_on": "Начало работы",
 		"services_total": "Сумма услуг",
+		"staff_reward_total": "Сумма заработка работника",
 		"car_make_name": "Марка автомобиля",
 		"car_license_plate": "Номер автомобиля",
 		"car_body_type": "Тип кузова"
@@ -560,15 +566,16 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 			worker = appt.get("car_wash_worker_name", "Unknown")
 			cashier = appt.get("owner", "Unknown")
 			earnings = appt.get("services_total", 0)
+			staff_reward = appt.get("staff_reward_total", earnings)
 
 			if worker not in worker_earnings:
 				# Ensure we initialize with all dates
 				worker_earnings[worker] = {date: 0 for date in date_list}
-			worker_earnings[worker][date_str] += earnings
+			worker_earnings[worker][date_str] += staff_reward
 
 			if cashier not in cashier_earnings:
 				cashier_earnings[cashier] = {date: 0 for date in date_list}
-			cashier_earnings[cashier][date_str] += earnings
+			cashier_earnings[cashier][date_str] += staff_reward
 
 	# Get percentage values from Car wash settings
 	try:
@@ -702,7 +709,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 	output.close()
 
 
-	
+
 import frappe
 from io import BytesIO
 from frappe.utils import getdate
@@ -745,6 +752,7 @@ def _get_appointment_column_translations():
 		"work_started_on": "Начало работы",
 		"car_wash_worker_name": "Работник автомойки",
 		"services_total": "Сумма услуг",
+		"staff_reward_total": "Сумма заработка работника",
 		"car_make_name": "Марка автомобиля",
 		"car_model_name": "Модель автомобиля",
 		"car_license_plate": "Номер автомобиля",

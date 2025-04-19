@@ -1,7 +1,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe.utils import today, now_datetime
-from .get_booking_price_and_duration import get_booking_price_and_duration
+from booking_price_and_duration import get_booking_price_and_duration
 
 class Carwashbooking(Document):
     def before_insert(self):
@@ -30,6 +30,7 @@ class Carwashbooking(Document):
         price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services)
         self.services_total = price_and_duration["total_price"]
         self.duration_total = price_and_duration["total_duration"]
+        self.staff_reward_total = price_and_duration["staff_reward_total"]
 
         if self.payment_status == "Paid" and self.payment_type and not self.payment_received_on:
             self.payment_received_on = now_datetime()
