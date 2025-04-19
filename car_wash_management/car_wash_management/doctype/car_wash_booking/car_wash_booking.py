@@ -1,7 +1,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe.utils import today, now_datetime
-from booking_price_and_duration import get_booking_price_and_duration
+from .booking_price_and_duration.booking import get_booking_price_and_duration
 
 class Carwashbooking(Document):
     def before_insert(self):

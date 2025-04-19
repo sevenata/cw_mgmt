@@ -22,7 +22,7 @@ from .calculation import (
 
 @frappe.whitelist(allow_guest=True)
 def get_booking_price_and_duration(
-    car_wash: str, car: str, services: List[Dict[str, Any]]
+    car_wash: str, car: str, services: list
 ) -> Dict[str, Any]:
     """
     Compute total price & duration for the given car wash booking.

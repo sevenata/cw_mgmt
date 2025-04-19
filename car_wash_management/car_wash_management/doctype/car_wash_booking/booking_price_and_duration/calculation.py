@@ -2,7 +2,7 @@
 
 import frappe
 from frappe import _
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Union, Optional
 from collections import Counter
 
 
@@ -12,7 +12,9 @@ def calculate_totals(
     prices: Dict[str, Any],
     body_type: str,
     custom_map: Dict[str, float],
-) -> Tuple[float, float, float, List[Dict[str, Any]], List[Dict[str, Any]]]:
+) -> tuple[
+    Union[Optional[float], Any], Union[float, Any], list[dict[str, Any]], list[dict[str, Any]],
+    Union[float, Any]]:
     total_price = 0.0
     total_duration = 0.0
     staff_reward_total = 0.0
@@ -24,12 +26,11 @@ def calculate_totals(
         doc = docs.get(svc_id) or frappe.throw(_(f"Service '{svc_id}' not found."))
         price_info = prices.get(svc_id, {})
         base = price_info.get("price", doc.price)
-        # reward: take price‐record override if present, else doc.staff_reward; default to 0.0 if still None
+
         raw = price_info.get("staff_reward")
         if raw is None:
-            # doc.staff_reward might itself be None
             raw = getattr(doc, "staff_reward", base) or base
-        reward_per_unit = raw
+        reward_per_unit = raw or base
 
         # now it's safe to multiply
         staff_reward_total += reward_per_unit * qty
