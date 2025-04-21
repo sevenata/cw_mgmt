@@ -30,6 +30,7 @@ def get_services_with_prices():
     services = frappe.get_all(
         "Car wash service",
         fields=["*"],  # Fetch all fields
+        limit=1000,
         filters=filters  # Include the dynamic filter
     )
 
