@@ -18,6 +18,8 @@
   "lat",
   "lon",
   "address",
+  "street",
+  "house",
   "connections_tab",
   "settings_tab",
   "working_hours"
@@ -108,6 +110,16 @@
    "label": "\u041c\u043e\u0434\u0435\u043b\u044c \u043e\u043f\u043b\u0430\u0442\u044b",
    "options": "Commission\nSubscription",
    "reqd": 1
+  },
+  {
+   "fieldname": "street",
+   "fieldtype": "Data",
+   "label": "\u0423\u043b\u0438\u0446\u0430"
+  },
+  {
+   "fieldname": "house",
+   "fieldtype": "Data",
+   "label": "\u0414\u043e\u043c"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -143,7 +155,7 @@
    "link_fieldname": "car_wash"
   }
  ],
- "modified": "2025-01-30 12:06:38.718950",
+ "modified": "2025-04-26 17:04:07.794976",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash",
