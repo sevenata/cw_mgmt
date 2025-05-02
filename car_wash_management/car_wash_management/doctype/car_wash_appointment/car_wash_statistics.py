@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils import getdate, today, flt
+from frappe.utils import getdate, today, flt, add_days
 
 def get_statistics(car_wash=None, date=None, start_date=None, end_date=None):
     """
@@ -87,3 +87,40 @@ def get_car_wash_statistics():
         start_date=start_date,
         end_date=end_date
     )
+
+@frappe.whitelist()
+def get_hourly_distribution(car_wash=None):
+    """
+    Returns the distribution of car washes per hour over the last 7 days.
+    
+    Parameters:
+    - car_wash (str): name of the car wash (optional)
+    
+    Returns:
+    - dict: Dictionary with hours (0-23) as keys and number of washes as values
+    """
+    # Calculate date range (last 7 days)
+    end_date = today()
+    start_date = add_days(end_date, -6)  # 7 days including today
+    
+    # Initialize hourly distribution dictionary
+    hourly_distribution = {hour: 0 for hour in range(24)}
+    
+    # Get all appointments in the date range
+    appointments = frappe.get_all(
+        "Car wash appointment",
+        filters={
+            "payment_received_on": ["between", [start_date, end_date]],
+            "is_deleted": 0,
+            "payment_status": "Paid",
+            "car_wash": car_wash,
+        },
+        fields=["payment_received_on"]
+    )
+    
+    # Count appointments per hour
+    for appointment in appointments:
+        hour = appointment.payment_received_on.hour
+        hourly_distribution[hour] += 1
+    
+    return hourly_distribution

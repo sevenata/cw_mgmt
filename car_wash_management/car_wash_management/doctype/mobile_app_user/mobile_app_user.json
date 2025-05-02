@@ -5,6 +5,7 @@
  "engine": "InnoDB",
  "field_order": [
   "phone",
+  "full_name",
   "email",
   "city",
   "current_car",
@@ -83,6 +84,11 @@
    "fieldtype": "Link",
    "label": "Manager",
    "options": "Mobile App Manager"
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "\u0418\u043c\u044f"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -92,7 +98,7 @@
    "link_fieldname": "user"
   }
  ],
- "modified": "2025-01-29 22:46:26.322551",
+ "modified": "2025-05-02 17:24:34.143055",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Mobile App User",
