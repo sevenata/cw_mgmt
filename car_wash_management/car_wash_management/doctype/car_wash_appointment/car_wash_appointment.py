@@ -47,6 +47,15 @@ class Carwashappointment(Document):
 		if self.payment_status == "Paid" and self.payment_type and not self.payment_received_on:
 			self.payment_received_on = now_datetime()
 
+		# Automatically update booking fields if appointment is updated
+		if self.booking:
+			booking_doc = frappe.get_doc("Car wash booking", self.booking)
+			booking_doc.update({
+				'appointment_status': self.workflow_state,
+				'appointment_payment_status': self.payment_status,
+			})
+			booking_doc.save()
+
 
 from datetime import datetime, timedelta
 import frappe
