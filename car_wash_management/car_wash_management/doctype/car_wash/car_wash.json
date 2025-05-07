@@ -37,7 +37,7 @@
   },
   {
    "fieldname": "description",
-   "fieldtype": "Small Text",
+   "fieldtype": "Markdown Editor",
    "label": "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435"
   },
   {
@@ -155,7 +155,7 @@
    "link_fieldname": "car_wash"
   }
  ],
- "modified": "2025-04-26 17:04:07.794976",
+ "modified": "2025-05-07 22:13:32.095609",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash",
