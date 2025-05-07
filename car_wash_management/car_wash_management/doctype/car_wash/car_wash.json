@@ -10,6 +10,7 @@
   "general",
   "title",
   "description",
+  "announcement",
   "company",
   "payment_model",
   "contacts_tab",
@@ -120,6 +121,11 @@
    "fieldname": "house",
    "fieldtype": "Data",
    "label": "\u0414\u043e\u043c"
+  },
+  {
+   "fieldname": "announcement",
+   "fieldtype": "Markdown Editor",
+   "label": "\u041e\u0431\u044a\u0432\u043b\u0435\u043d\u0438\u0435"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -155,7 +161,7 @@
    "link_fieldname": "car_wash"
   }
  ],
- "modified": "2025-05-07 22:13:32.095609",
+ "modified": "2025-05-07 22:27:34.292294",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash",
