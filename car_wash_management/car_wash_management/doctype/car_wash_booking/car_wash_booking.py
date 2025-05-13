@@ -223,7 +223,7 @@ def update_cars_in_queue(doc):
             return  # If the document doesn't exist, safely exit
 
 def get_cars_in_queue(doc):
-    return frappe.db.count("Car wash booking", {"has_appointment": False,"car_wash": doc.car_wash})
+    return frappe.db.count("Car wash booking", {"has_appointment": False,"is_cancelled":False,"is_deleted":False,"car_wash": doc.car_wash})
 
 def update_queue_num(doc):
     availability_doc = frappe.get_doc("Car wash availability", doc.car_wash)
