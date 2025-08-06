@@ -1,0 +1,68 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-17 03:43:09.257077",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "service",
+  "service_price",
+  "consumable",
+  "quantity"
+ ],
+ "fields": [
+  {
+   "fieldname": "service",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0423\u0441\u043b\u0443\u0433\u0430",
+   "options": "Car wash service",
+   "reqd": 1
+  },
+  {
+   "fieldname": "consumable",
+   "fieldtype": "Link",
+   "label": "\u041f\u043e\u0442\u0440\u0435\u0431\u043b\u044f\u0435\u043c\u044b\u0439 \u043f\u0440\u043e\u0434\u0443\u043a\u0442",
+   "options": "Product",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "\u041f\u043e\u0442\u0440\u0435\u0431\u043b\u0435\u043d\u0438\u0435, \u0435\u0434.",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "service_price",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0422\u0430\u0440\u0438\u0444 \u043d\u0430 \u0443\u0441\u043b\u0443\u0433\u0443",
+   "options": "Car wash service price"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-05-17 03:49:37.270643",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash service consumable",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-17 03:37:25.095395",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "car_wash",
+  "category",
+  "is_consumable",
+  "is_deleted",
+  "selling_price"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435",
+   "reqd": 1
+  },
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "label": "\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f",
+   "options": "Product category",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_consumable",
+   "fieldtype": "Check",
+   "label": "\u041f\u043e\u0442\u0440\u0435\u0431\u043b\u044f\u0435\u043c\u044b\u0439"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_deleted",
+   "fieldtype": "Check",
+   "label": "\u0423\u0434\u0430\u043b\u0435\u043d"
+  },
+  {
+   "fieldname": "selling_price",
+   "fieldtype": "Currency",
+   "label": "\u0426\u0435\u043d\u0430",
+   "non_negative": 1,
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-05-17 03:41:31.660468",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Product",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
