@@ -10,7 +10,8 @@
   "card_first_six",
   "card_last_six",
   "card_type",
-  "card_exp_date"
+  "card_exp_date",
+  "card_token"
  ],
  "fields": [
   {
@@ -50,11 +51,17 @@
    "fieldtype": "Data",
    "label": "Card exp date",
    "reqd": 1
+  },
+  {
+   "fieldname": "card_token",
+   "fieldtype": "Data",
+   "label": "Card token",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-06 20:45:23.868516",
+ "modified": "2025-08-06 23:16:09.125903",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Mobile App User Saved Card",
