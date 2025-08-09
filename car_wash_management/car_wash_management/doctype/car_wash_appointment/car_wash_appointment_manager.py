@@ -82,7 +82,7 @@ class CarWashAppointmentManager:
 		current_time = start_of_day
 
 		while current_time < end_of_day:
-			next_time = current_time + timedelta(hours=1)
+			next_time = current_time + timedelta(minutes=15)
 			is_free = True
 
 			for appointment in appointments:

@@ -10,7 +10,11 @@ import jwt
 import secrets
 import datetime
 
+from datetime import datetime, timedelta, time
+from typing import List, Dict, Optional
+
 from car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_appointment_manager import CarWashAppointmentManager
+from car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_scheduler import CarWashScheduler
 
 # http://localhost:8001/api/method/car_wash_management.api.get_working_hours?wash_id=8213lrjkg7
 @frappe.whitelist()
@@ -50,14 +54,30 @@ def get_appointments(wash_id):
 
 # http://localhost:8001/api/method/car_wash_management.api.get_free_slots?wash_id=8213lrjkg7
 @frappe.whitelist()
-def get_free_slots(wash_id):
-	if not wash_id:
-		frappe.throw(_("Doc ID is required"))
+def get_free_slots(
+    car_wash: str,
+    date_str: Optional[str] = None,
+    step_minutes: int = 15,
+    max_results: Optional[int] = None,
+    include_capacity: int = 0,
+    respect_queue: int = 1,
+):
+    """
+    HTTP-friendly wrapper. Example:
+      frappe.call('path.to.get_free_slots', { car_wash: 'CW-0001', date_str: '2025-08-09', step_minutes: 15 })
 
-	manager = CarWashAppointmentManager(wash_id)
-	items = manager.get_free_slots()
-
-	return items
+    - If date_str is None, uses today.
+    """
+    date_ = datetime.strptime(date_str, "%Y-%m-%d") if date_str else datetime.today()
+    scheduler = CarWashScheduler(car_wash)
+    free = scheduler.get_free_slots_for_date(
+        date_=date_,
+        step_minutes=int(step_minutes),
+        max_results=int(max_results) if max_results else None,
+        include_capacity=bool(int(include_capacity)),
+        respect_queue=bool(int(respect_queue)),
+    )
+    return free
 
 @frappe.whitelist()
 def get_car_wash_services_with_prices():
