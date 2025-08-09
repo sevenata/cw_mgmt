@@ -3,14 +3,13 @@
 import frappe
 import json
 import requests
-from datetime import datetime, timedelta
+import datetime
 from frappe import _
 import frappe
 import jwt
 import secrets
-import datetime
 
-from datetime import datetime, timedelta, time
+# from datetime import datetime, timedelta, time
 from typing import List, Dict, Optional
 
 from car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_appointment_manager import CarWashAppointmentManager
@@ -62,6 +61,7 @@ def get_free_slots(
     include_capacity: int = 0,
     respect_queue: int = 1,
 ):
+    from datetime import datetime, timedelta, time
     """
     HTTP-friendly wrapper. Example:
       frappe.call('path.to.get_free_slots', { car_wash: 'CW-0001', date_str: '2025-08-09', step_minutes: 15 })
