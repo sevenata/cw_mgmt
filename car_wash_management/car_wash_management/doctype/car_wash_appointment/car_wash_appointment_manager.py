@@ -39,6 +39,7 @@ class CarWashAppointmentManager:
 		appointments = frappe.get_list('Car wash appointment',
 									   fields=['name', 'starts_on', 'ends_on', 'worker', 'car'],
 									   order_by='starts_on asc',
+									   limit=5,
 									   filters=filters)
 		return appointments
 
