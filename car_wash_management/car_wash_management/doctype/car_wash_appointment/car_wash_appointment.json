@@ -361,7 +361,7 @@
    "fieldname": "payment_type",
    "fieldtype": "Select",
    "label": "\u0422\u0438\u043f \u043e\u043f\u043b\u0430\u0442\u044b",
-   "options": "Cash\nCard\nKaspi\nContract\nCustom\nMixed"
+   "options": "Cash\nCard\nKaspi\nContract\nCustom\nMixed\nMobileApp"
   },
   {
    "fieldname": "out_of_turn_reason",
@@ -423,7 +423,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2025-04-19 13:28:38.226011",
+ "modified": "2025-08-09 17:17:04.463531",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",
