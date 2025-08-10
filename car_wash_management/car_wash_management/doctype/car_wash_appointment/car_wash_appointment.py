@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from io import StringIO, BytesIO
 from ..car_wash_booking.booking_price_and_duration import get_booking_price_and_duration
 import csv
+from car_wash_management.api import push_to_nest
 
 class Carwashappointment(Document):
 	def before_insert(self):
@@ -70,11 +71,17 @@ class Carwashappointment(Document):
 		# какие поля считаем «значимыми» для пуша
 		interesting_fields = ("workflow_state")
 
-		changed = created or any(self.has_value_changed(f) for f in interesting_fields)
+		changed = self.has_value_changed("workflow_state")
+
+		print('check if changed')
+		print(changed)
 
 		# доп. фильтры, если нужно: не слать для удалённых и т.п.
 		if not changed or getattr(self, "is_deleted", 0):
+			print('skip this')
 			return
+
+		print('now here')
 
 		payload = {
 			"event": "appointment.status_changed" if not created else "appointment.created",
@@ -92,13 +99,11 @@ class Carwashappointment(Document):
 
 		# вызываем ТОЛЬКО после успешного коммита транзакции
 		def _after_commit():
-			frappe.enqueue(
-				"car_wash_management.api.push_to_nest",
-				# <-- поменяй на путь к своей функции (см. ниже)
-				queue="short",
-				payload=payload,
-				job_name=f"push-appointment-{self.name}"
-			)
+			frappe.db.after_commit(lambda: frappe.enqueue(
+                "car_wash_management.api.push_to_nest",
+                now=True,                # важно: выполнить синхронно, без RQ
+                payload=payload
+            ))
 
 		frappe.db.after_commit(_after_commit)
 
