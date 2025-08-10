@@ -15,6 +15,25 @@ from typing import List, Dict, Optional
 from car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_appointment_manager import CarWashAppointmentManager
 from car_wash_management.car_wash_management.doctype.car_wash_appointment.car_wash_scheduler import CarWashScheduler
 
+import json, hmac, hashlib, requests
+import frappe
+
+def push_to_nest(payload: dict):
+    try:
+        body = json.dumps(payload, default=str).encode("utf-8")
+        url = frappe.conf.get("nest_webhook_url") or "https://juu-mobile-api.vercel.app/data-streaming/appointments"
+        secret = (frappe.conf.get("nest_webhook_secret") or "").encode("utf-8")
+
+        headers = {"Content-Type": "application/json"}
+        if secret:
+            sig = hmac.new(secret, body, hashlib.sha256).hexdigest()
+            headers["X-Signature"] = sig
+
+        # короткий таймаут, без ретраев (чтобы очередь не висла)
+        requests.post(url, data=body, headers=headers, timeout=5)
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "push_to_nest")
+
 # http://localhost:8001/api/method/car_wash_management.api.get_working_hours?wash_id=8213lrjkg7
 @frappe.whitelist()
 def get_working_hours(wash_id):

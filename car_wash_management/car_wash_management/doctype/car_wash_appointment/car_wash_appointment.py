@@ -56,6 +56,52 @@ class Carwashappointment(Document):
 			})
 			booking_doc.save()
 
+	# ---- ДОБАВЬ ЭТИ ДВА ХУКА ----
+	def after_insert(self):
+		# На создание тоже шлём (например, старт работ)
+		self._schedule_push_if_changed(created=True)
+
+	def on_update(self):
+		# На любое сохранение шлём только если важные поля реально изменились
+		self._schedule_push_if_changed()
+
+	# ---- ВНУТРЕННЕЕ: планирование фоновой отправки после коммита ----
+	def _schedule_push_if_changed(self, created: bool = False):
+		# какие поля считаем «значимыми» для пуша
+		interesting_fields = ("workflow_state")
+
+		changed = created or any(self.has_value_changed(f) for f in interesting_fields)
+
+		# доп. фильтры, если нужно: не слать для удалённых и т.п.
+		if not changed or getattr(self, "is_deleted", 0):
+			return
+
+		payload = {
+			"event": "appointment.status_changed" if not created else "appointment.created",
+			"id": self.name,
+			"car_wash": self.car_wash,
+			"customer": self.customer,
+			"status": self.workflow_state,
+			"starts_on": self.starts_on,
+			"ends_on": self.ends_on,
+			"booking": self.booking,
+			"box": self.box,
+			"payment_status": self.payment_status,
+			"ts": str(now_datetime()),
+		}
+
+		# вызываем ТОЛЬКО после успешного коммита транзакции
+		def _after_commit():
+			frappe.enqueue(
+				"car_wash_management.api.push_to_nest",
+				# <-- поменяй на путь к своей функции (см. ниже)
+				queue="short",
+				payload=payload,
+				job_name=f"push-appointment-{self.name}"
+			)
+
+		frappe.db.after_commit(_after_commit)
+
 
 from datetime import datetime, timedelta
 import frappe
