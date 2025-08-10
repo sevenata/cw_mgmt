@@ -25,7 +25,7 @@ class CarWashScheduler:
 	FIELD_APPT_START = "starts_on"
 	FIELD_APPT_END = "ends_on"  # для справки
 	FIELD_APPT_BOX = "box"
-	# FIELD_APPT_DURATION = "duration_minutes"  # опциональное поле для длительности
+	FIELD_APPT_DURATION = "duration_minutes"  # опциональное поле для длительности
 
 	FIELD_BOOKING_DESIRED_TIME = "desired_time"  # опционально
 
@@ -47,6 +47,7 @@ class CarWashScheduler:
 		max_results: Optional[int] = None,
 		include_capacity: bool = False,
 		respect_queue: bool = True,
+		debug: bool = False,
 	) -> List[Dict]:
 		try:
 			from frappe.utils import now_datetime
@@ -70,8 +71,16 @@ class CarWashScheduler:
 		appointments = self._get_appointments(min_slot_start, day_end)
 		self._apply_appointments(capacity_timeline, appointments, step_minutes)
 
+		if debug:
+			print(f"Boxes count: {self._get_boxes_count()}")
+			print(f"Timeline slots: {len(capacity_timeline)}")
+			print(f"Appointments: {len(appointments)}")
+
 		if respect_queue:
 			queue_items = self._get_queue_items(min_slot_start, day_end, step_minutes)
+			if debug:
+				print(f"Queue items: {len(queue_items)}")
+				print(f"Default wash duration: {self.default_wash_duration} minutes")
 			self._apply_queue(capacity_timeline, queue_items, step_minutes)
 
 		free = []
@@ -212,7 +221,8 @@ class CarWashScheduler:
 				[self.FIELD_APPT_START, ">=", earliest_dt],
 				[self.FIELD_APPT_START, "<", day_end],
 			],
-			fields=["name", self.FIELD_APPT_START, self.FIELD_APPT_END, self.FIELD_APPT_BOX],
+			fields=["name", self.FIELD_APPT_START, self.FIELD_APPT_END, self.FIELD_APPT_BOX,
+					self.FIELD_APPT_DURATION],
 			order_by=f"{self.FIELD_APPT_START} asc",
 		)
 
@@ -279,7 +289,7 @@ class CarWashScheduler:
 				continue
 
 			# Определяем длительность мойки
-			duration = self.default_wash_duration
+			duration = appt.get(self.FIELD_APPT_DURATION) or self.default_wash_duration
 
 			# Находим начальный слот
 			slot_start = self._floor_dt(ap_s, step_minutes)

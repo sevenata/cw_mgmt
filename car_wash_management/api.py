@@ -101,6 +101,7 @@ def get_free_slots(
 		max_results=int(max_results) if max_results else None,
 		include_capacity=bool(int(include_capacity)),
 		respect_queue=bool(int(respect_queue)),
+		debug=True
 	)
 	return free
 
