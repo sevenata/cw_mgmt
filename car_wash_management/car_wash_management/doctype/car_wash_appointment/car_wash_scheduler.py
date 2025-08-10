@@ -25,7 +25,6 @@ class CarWashScheduler:
 	FIELD_APPT_START = "starts_on"
 	FIELD_APPT_END = "ends_on"  # для справки
 	FIELD_APPT_BOX = "box"
-	FIELD_APPT_DURATION = "duration_minutes"  # опциональное поле для длительности
 
 	FIELD_BOOKING_DESIRED_TIME = "desired_time"  # опционально
 
@@ -221,8 +220,7 @@ class CarWashScheduler:
 				[self.FIELD_APPT_START, ">=", earliest_dt],
 				[self.FIELD_APPT_START, "<", day_end],
 			],
-			fields=["name", self.FIELD_APPT_START, self.FIELD_APPT_END, self.FIELD_APPT_BOX,
-					self.FIELD_APPT_DURATION],
+			fields=["name", self.FIELD_APPT_START, self.FIELD_APPT_END, self.FIELD_APPT_BOX],
 			order_by=f"{self.FIELD_APPT_START} asc",
 		)
 
@@ -289,7 +287,7 @@ class CarWashScheduler:
 				continue
 
 			# Определяем длительность мойки
-			duration = appt.get(self.FIELD_APPT_DURATION) or self.default_wash_duration
+			duration = self.default_wash_duration
 
 			# Находим начальный слот
 			slot_start = self._floor_dt(ap_s, step_minutes)
