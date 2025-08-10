@@ -8,9 +8,9 @@ class CarWashScheduler:
 	Считает свободные слоты:
 	  - Нет рабочих часов -> 24/7
 	  - Вместимость = число доступных боксов
-	  - Записи (appointments) занимают ТОЛЬКО стартовый слот
+	  - Записи (appointments) занимают слоты на время мойки (по умолчанию 45 минут)
 	  - Очередь (Car wash booking):
-		  * Каждая машина = 1 списание слота
+		  * Каждая машина = 1 списание слота на время мойки
 		  * Если есть desired_time (на строке или родителе), нельзя раньше него
 	"""
 
@@ -25,15 +25,18 @@ class CarWashScheduler:
 	FIELD_APPT_START = "starts_on"
 	FIELD_APPT_END = "ends_on"  # для справки
 	FIELD_APPT_BOX = "box"
+	# FIELD_APPT_DURATION = "duration_minutes"  # опциональное поле для длительности
 
 	FIELD_BOOKING_DESIRED_TIME = "desired_time"  # опционально
 
 	BOX_COUNT_FALLBACK = 1
+	DEFAULT_WASH_DURATION_MINUTES = 45  # время мойки по умолчанию
 
-	def __init__(self, car_wash_name: str):
+	def __init__(self, car_wash_name: str, default_wash_duration: int = None):
 		if not car_wash_name:
 			raise ValueError("car_wash_name is required")
 		self.car_wash_name = car_wash_name
+		self.default_wash_duration = default_wash_duration or self.DEFAULT_WASH_DURATION_MINUTES
 
 	# ---------- Public API ----------
 
@@ -267,27 +270,84 @@ class CarWashScheduler:
 		return {"car_wash": self.car_wash_name}
 
 	def _apply_appointments(self, timeline, appointments, step_minutes: int):
+		"""
+		Применяет записи к таймлайну. Каждая запись блокирует слоты на время мойки.
+		"""
 		for appt in appointments:
 			ap_s = appt.get(self.FIELD_APPT_START)
 			if not isinstance(ap_s, datetime):
 				continue
-			slot_time = self._floor_dt(ap_s, step_minutes)
-			idx = self._find_slot_index(timeline, slot_time, timedelta(minutes=step_minutes))
-			if idx < len(timeline) and timeline[idx][0] == slot_time:
-				slot_start, cap = timeline[idx]
-				timeline[idx] = (slot_start, max(0, cap - 1))
+
+			# Определяем длительность мойки
+			duration = self.default_wash_duration
+
+			# Находим начальный слот
+			slot_start = self._floor_dt(ap_s, step_minutes)
+
+			# Блокируем все слоты на время мойки
+			current_time = slot_start
+			end_time = ap_s + timedelta(minutes=duration)
+
+			while current_time < end_time:
+				idx = self._find_slot_index(timeline, current_time,
+											timedelta(minutes=step_minutes))
+				if idx < len(timeline) and timeline[idx][0] == current_time:
+					slot_time, cap = timeline[idx]
+					timeline[idx] = (slot_time, max(0, cap - 1))
+				current_time += timedelta(minutes=step_minutes)
 
 	def _apply_queue(self, timeline, queue_items, step_minutes: int):
+		"""
+		Применяет очередь к таймлайну. Каждый элемент очереди ищет первое свободное время
+		и блокирует слоты на время мойки.
+		"""
 		queue_items.sort(key=lambda x: x["earliest_dt"])
+
 		for q in queue_items:
 			earliest = q["earliest_dt"]
+
+			# Ищем первый доступный слот начиная с earliest
 			idx = self._find_slot_index(timeline, earliest, timedelta(minutes=step_minutes))
+
+			# Проверяем, хватает ли места для полной мойки
 			while idx < len(timeline):
 				slot_start, cap = timeline[idx]
+
 				if cap > 0:
-					timeline[idx] = (slot_start, cap - 1)
-					break
+					# Проверяем, можно ли разместить полную мойку начиная с этого слота
+					if self._can_place_wash_at_slot(timeline, idx, step_minutes):
+						# Размещаем мойку
+						self._place_wash_at_slot(timeline, idx, step_minutes)
+						break
+
 				idx += 1
+
+	def _can_place_wash_at_slot(self, timeline, start_idx: int, step_minutes: int) -> bool:
+		"""
+		Проверяет, можно ли разместить мойку начиная с указанного слота.
+		"""
+		wash_slots_needed = (self.default_wash_duration + step_minutes - 1) // step_minutes
+
+		for i in range(wash_slots_needed):
+			slot_idx = start_idx + i
+			if slot_idx >= len(timeline):
+				return False
+			if timeline[slot_idx][1] <= 0:  # нет свободной емкости
+				return False
+
+		return True
+
+	def _place_wash_at_slot(self, timeline, start_idx: int, step_minutes: int):
+		"""
+		Размещает мойку начиная с указанного слота.
+		"""
+		wash_slots_needed = (self.default_wash_duration + step_minutes - 1) // step_minutes
+
+		for i in range(wash_slots_needed):
+			slot_idx = start_idx + i
+			if slot_idx < len(timeline):
+				slot_time, cap = timeline[slot_idx]
+				timeline[slot_idx] = (slot_time, max(0, cap - 1))
 
 	# ---------- Helpers ----------
 
