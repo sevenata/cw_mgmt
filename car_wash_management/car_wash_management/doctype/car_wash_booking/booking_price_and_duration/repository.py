@@ -82,3 +82,35 @@ def get_service_prices(service_ids: List[str], body_type: str) -> Dict[str, floa
         cache.set_value(key, prices, expires_in_sec=3600)
 
     return prices
+
+def get_service_prices_by_tariff(service_ids: list[str], tariff_id: str) -> dict[str, dict]:
+    if not service_ids:
+        return {}
+
+    cache = frappe.cache()
+    key = f"service_prices:tariff:{tariff_id}:{','.join(sorted(service_ids))}"
+    prices = cache.get_value(key)
+
+    if prices is None:
+        recs = frappe.get_all(
+            "Car wash service price",
+            filters={
+                "base_service": ["in", service_ids],
+                "tariff": tariff_id,
+                "is_disabled": False,
+                "is_deleted": False,
+            },
+            fields=["base_service", "price", "staff_reward", "duration"],
+        )
+        prices = {
+            r.base_service: {
+                "price": r.price,
+                "staff_reward": (r.staff_reward or 0.0),
+                # duration из прайс-строки (если задана) переопределяет duration сервиса
+                "duration": r.duration if "duration" in r and r.duration is not None else None,
+            }
+            for r in recs
+        }
+        cache.set_value(key, prices, expires_in_sec=3600)
+
+    return prices

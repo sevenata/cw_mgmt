@@ -38,7 +38,7 @@ def get_services_with_prices():
         # Fetch related prices from Car wash service price
         prices = frappe.get_all(
             "Car wash service price",
-            fields=["price", "body_type", "name", "staff_reward"],
+            fields=["price", "body_type", "tariff", "name", "staff_reward"],
             filters={"base_service": service["name"]}
         )
         # Add prices field to each service

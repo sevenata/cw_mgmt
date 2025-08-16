@@ -20,6 +20,7 @@
   "\u043e\u043f\u043b\u0430\u0442\u0430_tab",
   "payment_status",
   "services_total",
+  "tariff",
   "staff_reward_total",
   "payment_received_on",
   "commission_user",
@@ -307,11 +308,17 @@
    "fieldname": "desired_time",
    "fieldtype": "Datetime",
    "label": "\u0416\u0435\u043b\u0430\u0435\u043c\u043e\u0435 \u0432\u0440\u0435\u043c\u044f \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435"
+  },
+  {
+   "fieldname": "tariff",
+   "fieldtype": "Link",
+   "label": "\u0422\u0430\u0440\u0438\u0444",
+   "options": "Car wash tariff"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-09 17:16:30.746579",
+ "modified": "2025-08-16 19:20:42.120820",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash booking",

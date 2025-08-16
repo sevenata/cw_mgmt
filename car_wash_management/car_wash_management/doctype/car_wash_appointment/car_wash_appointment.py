@@ -37,7 +37,7 @@ class Carwashappointment(Document):
 		self.work_started_on = self.starts_on
 
 	def validate(self):
-		price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services)
+		price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff)
 		self.services_total = price_and_duration["total_price"]
 		self.duration_total = price_and_duration["total_duration"]
 		self.staff_reward_total = price_and_duration["staff_reward_total"]
