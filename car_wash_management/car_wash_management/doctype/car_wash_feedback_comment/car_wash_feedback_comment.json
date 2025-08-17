@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-17 20:52:28.388552",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "feedback",
+  "content",
+  "car_wash"
+ ],
+ "fields": [
+  {
+   "fieldname": "feedback",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u041e\u0442\u0437\u044b\u0432",
+   "options": "Car wash feedback",
+   "reqd": 1
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "\u041e\u0442\u0432\u0435\u0442 \u043d\u0430 \u043e\u0442\u0437\u044b\u0432",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "feedback.car_wash",
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u0410\u0432\u0442\u043e\u043c\u043e\u0439\u043a\u0430",
+   "options": "Car wash",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-17 21:02:20.720871",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash feedback comment",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -14,7 +14,6 @@
   "column_break_hylh",
   "car_wash",
   "car_wash_name",
-  "worker",
   "duration_total",
   "price_total"
  ],
@@ -49,14 +48,6 @@
    "fieldtype": "Link",
    "label": "\u041a\u043b\u0438\u0435\u043d\u0442",
    "options": "Car wash client",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "appointment.worker",
-   "fieldname": "worker",
-   "fieldtype": "Link",
-   "label": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
-   "options": "Car wash worker",
    "read_only": 1
   },
   {
@@ -95,7 +86,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-05-09 23:34:24.537936",
+ "modified": "2025-08-17 20:58:19.668012",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash feedback",
