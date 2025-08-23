@@ -143,6 +143,7 @@ def get_appointments_by_date(selected_date=None, car_wash=None):
 		"num",
 		"box_title",
 		"work_started_on",
+		"car_wash_worker",
 		"car_wash_worker_name",
 		"services_total",
 		"staff_reward_total",
@@ -687,25 +688,81 @@ def try_sync_worker_earning(doc):
 		and not getattr(doc, "is_deleted", 0)
 	)
 
-	# Рассчитываем начисления по настройкам автомойки: проценты от оборота
+	# Рассчитываем начисления по настройкам автомойки: процент/фикс
 	washer_percent = 30
 	cashier_percent = 10
+	washer_fixed = 0
+	cashier_fixed = 0
 	try:
 		settings = frappe.db.get_value(
 			"Car wash settings",
 			{"car_wash": doc.car_wash},
-			["washer_default_percent_from_service", "cashier_default_percent_from_service"],
+			[
+				"washer_earning_mode",
+				"washer_earning_value",
+				"washer_default_percent_from_service",
+				"cashier_earning_mode",
+				"cashier_earning_value",
+				"cashier_default_percent_from_service",
+			],
 			as_dict=True,
 		)
-		if settings and settings.get("washer_default_percent_from_service") is not None:
-			washer_percent = int(settings.get("washer_default_percent_from_service") or 0)
-		if settings and settings.get("cashier_default_percent_from_service") is not None:
-			cashier_percent = int(settings.get("cashier_default_percent_from_service") or 0)
+		if settings:
+			if settings.get("washer_earning_mode") == "Fixed":
+				washer_percent = None
+				washer_fixed = cint(settings.get("washer_earning_value") or 0)
+			else:
+				washer_percent = int(settings.get("washer_default_percent_from_service") or 0)
+			if settings.get("cashier_earning_mode") == "Fixed":
+				cashier_percent = None
+				cashier_fixed = cint(settings.get("cashier_earning_value") or 0)
+			else:
+				cashier_percent = int(settings.get("cashier_default_percent_from_service") or 0)
 	except Exception:
 		pass
 
-	washer_total = cint(round(flt(doc.services_total or 0) * washer_percent / 100.0))
-	cashier_total = cint(round(flt(doc.services_total or 0) * cashier_percent / 100.0))
+	# Применяем персональные переопределения для мойщика/кассира
+	if washer_percent is not None:
+		washer_total = cint(round(flt(doc.services_total or 0) * washer_percent / 100.0))
+	else:
+		washer_total = cint(washer_fixed)
+	try:
+		worker_override = frappe.db.get_value(
+			"Car wash worker",
+			{"name": doc.car_wash_worker},
+			["earning_override_mode", "earning_override_value"],
+			as_dict=True,
+		)
+		if worker_override:
+			mode = (worker_override.get("earning_override_mode") or "Default").strip()
+			val = cint(worker_override.get("earning_override_value") or 0)
+			if mode == "Percent":
+				washer_total = cint(round(flt(doc.services_total or 0) * (val / 100.0)))
+			elif mode == "Fixed":
+				washer_total = cint(val)
+	except Exception:
+		pass
+
+	if cashier_percent is not None:
+		cashier_total = cint(round(flt(doc.services_total or 0) * cashier_percent / 100.0))
+	else:
+		cashier_total = cint(cashier_fixed)
+	try:
+		cashier_worker = frappe.db.get_value(
+			"Car wash worker",
+			{"user": doc.owner, "car_wash": doc.car_wash, "is_deleted": 0, "is_disabled": 0},
+			["name", "earning_override_mode", "earning_override_value"],
+			as_dict=True,
+		)
+		if cashier_worker and cashier_worker.get("name"):
+			mode = (cashier_worker.get("earning_override_mode") or "Default").strip()
+			val = cint(cashier_worker.get("earning_override_value") or 0)
+			if mode == "Percent":
+				cashier_total = cint(round(flt(doc.services_total or 0) * (val / 100.0)))
+			elif mode == "Fixed":
+				cashier_total = cint(val)
+	except Exception:
+		pass
 
 	# Начисление для мойщика (основной worker из документа)
 	existing_name = frappe.db.get_value(

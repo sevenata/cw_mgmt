@@ -17,7 +17,9 @@
   "car_wash",
   "car_wash_title",
   "is_disabled",
-  "is_deleted"
+  "is_deleted",
+  "earning_override_mode",
+  "earning_override_value"
  ],
  "fields": [
   {
@@ -96,6 +98,18 @@
    "label": "\u041f\u043e\u043b\u043d\u043e\u0435 \u0438\u043c\u044f"
   },
   {
+   "description": "\u041f\u0435\u0440\u0435\u043a\u0440\u044b\u0432\u0430\u0435\u0442 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u043c\u043e\u0439\u043a\u0438: Default \u2013 \u043f\u043e \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u043c, Percent \u2013 \u0441\u0432\u043e\u0439 %, Fixed \u2013 \u0444\u0438\u043a\u0441. \u0441\u0443\u043c\u043c\u0430",
+   "fieldname": "earning_override_mode",
+   "fieldtype": "Select",
+   "label": "\u0420\u0435\u0436\u0438\u043c \u043d\u0430\u0447\u0438\u0441\u043b\u0435\u043d\u0438\u044f"
+  },
+  {
+   "description": "\u0415\u0441\u043b\u0438 Percent \u2013 % (0..100), \u0435\u0441\u043b\u0438 Fixed \u2013 \u0441\u0443\u043c\u043c\u0430",
+   "fieldname": "earning_override_value",
+   "fieldtype": "Int",
+   "label": "earning_override_value"
+  },
+  {
    "default": "0",
    "fieldname": "is_disabled",
    "fieldtype": "Check",
@@ -113,13 +127,9 @@
   {
    "link_doctype": "Car wash appointment",
    "link_fieldname": "car_wash_worker"
-  },
-  {
-   "link_doctype": "Worker Ledger Entry",
-   "link_fieldname": "worker"
   }
  ],
- "modified": "2024-12-17 02:50:24.100910",
+ "modified": "2025-08-24 00:45:25.170590",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash worker",
