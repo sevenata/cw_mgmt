@@ -113,6 +113,10 @@
   {
    "link_doctype": "Car wash appointment",
    "link_fieldname": "car_wash_worker"
+  },
+  {
+   "link_doctype": "Worker Ledger Entry",
+   "link_fieldname": "worker"
   }
  ],
  "modified": "2024-12-17 02:50:24.100910",

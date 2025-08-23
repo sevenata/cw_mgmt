@@ -1,11 +1,9 @@
 from frappe.model.document import Document
 import frappe
 from frappe.utils import flt, cint, today, add_days, getdate, now_datetime, add_to_date
-from datetime import datetime, timedelta
 from io import StringIO, BytesIO
 from ..car_wash_booking.booking_price_and_duration import get_booking_price_and_duration
 import csv
-from car_wash_management.api import push_to_nest
 
 class Carwashappointment(Document):
 	def before_insert(self):
@@ -65,6 +63,7 @@ class Carwashappointment(Document):
 	def on_update(self):
 		# На любое сохранение шлём только если важные поля реально изменились
 		self._schedule_push_if_changed()
+		try_sync_worker_earning(self)
 
 	# ---- ВНУТРЕННЕЕ: планирование фоновой отправки после коммита ----
 	def _schedule_push_if_changed(self, created: bool = False):
@@ -107,9 +106,6 @@ class Carwashappointment(Document):
 
 		frappe.db.after_commit(_after_commit)
 
-
-from datetime import datetime, timedelta
-import frappe
 
 
 @frappe.whitelist()
@@ -170,198 +166,6 @@ def get_appointments_by_date(selected_date=None, car_wash=None):
 	)
 
 	return appointments
-
-
-@frappe.whitelist()
-def export_appointments_to_csv(selected_date=None, car_wash=None):
-	"""
-	Extract Car Wash Appointments for a selected date and directly return a CSV file for download.
-	"""
-	if not selected_date:
-		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
-
-	if not car_wash:
-		frappe.throw("Please provide a car_wash.")
-
-	# Validate the date format
-	try:
-		getdate(selected_date)
-	except ValueError:
-		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
-
-	# Fetch appointments using the get_appointments_by_date logic
-	appointments = get_appointments_by_date(selected_date, car_wash)
-
-	if not appointments:
-		frappe.throw(f"No appointments found for the date {selected_date}.")
-
-	# Use StringIO to generate CSV in memory
-	output = StringIO()
-	writer = csv.writer(output)
-
-	# Write headers
-	headers = list(appointments[0].keys())
-	writer.writerow(headers)
-
-	# Write data rows
-	for appointment in appointments:
-		writer.writerow([appointment.get(header, "") for header in headers])
-
-	# Set the response headers to indicate a file download
-	frappe.response["type"] = "binary"
-	frappe.response["filename"] = f"Car_Wash_Appointments_{selected_date}.csv"
-	frappe.response["filecontent"] = output.getvalue()
-	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
-
-	# Close the StringIO object
-	output.close()
-
-
-@frappe.whitelist()
-def get_car_wash_statistics():
-	"""
-	Fetch car wash statistics for today, a specific date, or a date range.
-
-	Query parameters:
-	- `date` (optional): Specific date in 'YYYY-MM-DD' format.
-	- `start_date` and `end_date` (optional): Date range in 'YYYY-MM-DD' format.
-	- `car_wash` (optional): Filter by car wash name.
-	"""
-	car_wash = frappe.form_dict.get("car_wash")
-	date = frappe.form_dict.get("date")
-	start_date = frappe.form_dict.get("start_date")
-	end_date = frappe.form_dict.get("end_date")
-
-	# Determine the date range
-	if date:
-		try:
-			selected_date = str(getdate(date))
-			start_date = selected_date + " 00:00:00"
-			end_date = selected_date + " 23:59:59"
-		except ValueError:
-			frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
-	elif start_date and end_date:
-		try:
-			start_date = str(getdate(start_date)) + " 00:00:00"
-			end_date = str(getdate(end_date)) + " 23:59:59"
-		except ValueError:
-			frappe.throw("Invalid date range format. Please use 'YYYY-MM-DD'.")
-	else:
-		today_date = today()
-		start_date = today_date + " 00:00:00"
-		end_date = today_date + " 23:59:59"
-
-	# Fetch appointments within the specified date range.
-	# Also fetch "custom_payment_method" if available.
-	appointments = frappe.get_all(
-		"Car wash appointment",
-		filters={
-			"payment_received_on": ["between", [start_date, end_date]],
-			"is_deleted": 0,
-			"payment_status": "Paid",
-			"car_wash": car_wash,
-		},
-		fields=["name", "payment_type", "services_total", "custom_payment_method", "staff_reward_total"],
-	)
-
-	# Initialize stats with standard payment types and container for custom payments.
-	stats = {
-		"total_cars": len(appointments),
-		"total_income": 0,
-		"cash_payment": {"count": 0, "total": 0},
-		"card_payment": {"count": 0, "total": 0},
-		"kaspi_payment": {"count": 0, "total": 0},
-		"contract_payment": {"count": 0, "total": 0},
-		"custom_payments": {}  # Custom payments keyed by custom payment method "name"
-	}
-
-	# Pre-load available custom payment methods for the given car wash (if any) using "name" as key.
-	custom_payment_filters = {"is_deleted": 0, "is_disabled": 0}
-	if car_wash:
-		custom_payment_filters["car_wash"] = car_wash
-
-	custom_payment_methods = frappe.get_all(
-		"Car wash custom payment method",
-		filters=custom_payment_filters,
-		fields=["name"]
-	)
-	for custom in custom_payment_methods:
-		stats["custom_payments"][custom["name"]] = {"count": 0, "total": 0}
-
-	standard_payments = ["Cash", "Card", "Kaspi", "Contract"]
-
-	# Aggregate statistics.
-	for appointment in appointments:
-		stats["total_income"] += flt(appointment["services_total"])
-		stats["total_staff_reward"] += flt(appointment["staff_reward_total"])
-		if appointment["payment_type"] == "Mixed":
-			# Fetch child records for mixed payments; also include "custom_payment_method" if provided.
-			mixed_payments = frappe.get_all(
-				"Car wash mixed payment",
-				filters={"parent": appointment["name"]},
-				fields=["payment_type", "amount", "custom_payment_method"]
-			)
-			for payment in mixed_payments:
-				if payment["payment_type"] in standard_payments:
-					if payment["payment_type"] == "Cash":
-						stats["cash_payment"]["count"] += 1
-						stats["cash_payment"]["total"] += flt(payment["amount"])
-					elif payment["payment_type"] == "Card":
-						stats["card_payment"]["count"] += 1
-						stats["card_payment"]["total"] += flt(payment["amount"])
-					elif payment["payment_type"] == "Kaspi":
-						stats["kaspi_payment"]["count"] += 1
-						stats["kaspi_payment"]["total"] += flt(payment["amount"])
-					elif payment["payment_type"] == "Contract":
-						stats["contract_payment"]["count"] += 1
-						stats["contract_payment"]["total"] += flt(payment["amount"])
-				else:
-					# Use the custom_payment_method field if available; fallback to payment_type.
-					custom_method = payment.get("custom_payment_method") or payment["payment_type"]
-					if custom_method not in stats["custom_payments"]:
-						stats["custom_payments"][custom_method] = {"count": 0, "total": 0}
-					stats["custom_payments"][custom_method]["count"] += 1
-					stats["custom_payments"][custom_method]["total"] += flt(payment["amount"])
-		else:
-			if appointment["payment_type"] in standard_payments:
-				if appointment["payment_type"] == "Cash":
-					stats["cash_payment"]["count"] += 1
-					stats["cash_payment"]["total"] += flt(appointment["services_total"])
-				elif appointment["payment_type"] == "Card":
-					stats["card_payment"]["count"] += 1
-					stats["card_payment"]["total"] += flt(appointment["services_total"])
-				elif appointment["payment_type"] == "Kaspi":
-					stats["kaspi_payment"]["count"] += 1
-					stats["kaspi_payment"]["total"] += flt(appointment["services_total"])
-				elif appointment["payment_type"] == "Contract":
-					stats["contract_payment"]["count"] += 1
-					stats["contract_payment"]["total"] += flt(appointment["services_total"])
-			else:
-				# For non-mixed custom payments, use the custom_payment_method field if available.
-				custom_method = appointment.get("custom_payment_method") or appointment["payment_type"]
-				if custom_method not in stats["custom_payments"]:
-					stats["custom_payments"][custom_method] = {"count": 0, "total": 0}
-				stats["custom_payments"][custom_method]["count"] += 1
-				stats["custom_payments"][custom_method]["total"] += flt(appointment["services_total"])
-
-	# Additional statistics for multi-day ranges.
-	try:
-		range_start_date = getdate(start_date.split(" ")[0])
-		range_end_date = getdate(end_date.split(" ")[0])
-		num_days = (range_end_date - range_start_date).days + 1
-
-		if num_days > 1:
-			stats["average_daily_income"] = stats["total_income"] / num_days if num_days > 0 else 0
-			stats["average_cars_per_day"] = stats["total_cars"] / num_days if num_days > 0 else 0
-			stats["average_check"] = stats["total_income"] / stats["total_cars"] if stats["total_cars"] > 0 else 0
-	except ValueError:
-		pass
-
-	return stats
-
-import frappe
-from frappe import _
-from frappe.utils import getdate, today
 
 @frappe.whitelist()
 def get_revenue_by_day():
@@ -482,110 +286,6 @@ def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=Non
 	return appointments
 
 @frappe.whitelist()
-def export_workers_to_excel(selected_date=None, car_wash=None):
-	"""
-	Generate an Excel file that contains the workers' provided services in SpreadsheetML format for the selected date and return for download.
-	"""
-	from io import BytesIO
-	from frappe.utils import getdate
-
-	if not selected_date:
-		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
-
-	# Validate the date format
-	try:
-		getdate(selected_date)
-	except ValueError:
-		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
-
-	# Fetch appointments using the get_appointments_by_date logic
-	appointments = get_appointments_by_date(selected_date, car_wash)
-
-	# Filter out rows where box_title is "Магазин"
-	appointments = [appt for appt in appointments if appt.get("box_title") != "Магазин"]
-
-	if not appointments:
-		frappe.throw(f"No appointments found for the date {selected_date}.")
-
-	# Column translations
-	COLUMN_TRANSLATIONS = {
-		"car_wash_worker_name": "Работник автомойки",
-		"name": "Номер заявки",
-		"num": "Номер",
-		"box_title": "Бокс",
-		"work_started_on": "Начало работы",
-		"services_total": "Сумма услуг",
-		"staff_reward_total": "Сумма заработка работника",
-		"car_make_name": "Марка автомобиля",
-		"car_license_plate": "Номер автомобиля",
-		"car_body_type": "Тип кузова"
-	}
-
-	CAR_BODY_TYPE_TRANSLATIONS = {
-		"Passenger": "Седан",
-		"Minbus": "Микроавтобус",
-		"LargeSUV": "Большой джип",
-		"Jeep": "Джип",
-		"Minivan": "Минивэн",
-		"CompactSUV": "Кроссовер",
-		"Sedan": "Представительский класс"
-	}
-
-	# Create an in-memory buffer for the Excel file
-	output = BytesIO()
-
-	# Write SpreadsheetML XML content
-	output.write(b'<?xml version="1.0"?>\n')
-	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" '
-				 b'xmlns:o="urn:schemas-microsoft-com:office:office" '
-				 b'xmlns:x="urn:schemas-microsoft-com:office:excel" '
-				 b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
-	output.write(b'<Worksheet ss:Name="Appointments">\n<Table>\n')
-
-	# Write headers
-	headers = list(appointments[0].keys())
-	output.write(b"<Row>\n")
-	for header in headers:
-		translated_header = COLUMN_TRANSLATIONS.get(header, header)  # Use Russian names
-		output.write(f'<Cell><Data ss:Type="String">{translated_header}</Data></Cell>\n'.encode('utf-8'))
-	output.write(b"</Row>\n")
-
-	# Write data rows
-	for appointment in appointments:
-		output.write(b"<Row>\n")
-		for header in headers:
-			value = appointment.get(header, "")
-
-			if value is None:
-				value = "-"
-
-			if header ==  "car_body_type":
-				value = CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
-
-			if header == "work_started_on":
-				cell_type = "Time"
-			elif isinstance(value, (int, float)):
-				cell_type = "Number"
-			else:
-				cell_type = "String"
-
-			output.write(
-				f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode('utf-8'))
-		output.write(b"</Row>\n")
-
-	# Close XML structure
-	output.write(b"</Table>\n</Worksheet>\n</Workbook>\n")
-
-	# Prepare the response
-	frappe.response["type"] = "binary"
-	frappe.response["filename"] = f"Car_Wash_Workers_{selected_date}.xls"
-	frappe.response["filecontent"] = output.getvalue()
-	frappe.response["doctype"] = None  # No need to attach to Frappe's file system
-
-	# Close the output buffer
-	output.close()
-
-@frappe.whitelist()
 def export_total_services_to_xls(from_date, to_date, car_wash):
 	"""
 	Generate an Excel report summarizing worker earnings over a specified date range.
@@ -700,7 +400,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		row_total = sum(earnings.get(date, 0) for date in date_list)
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(row_total)).encode('utf-8'))
 		output.write(('<Cell><Data ss:Type="String">{}%</Data></Cell>\n'.format(int(washer_percent * 100))).encode('utf-8'))
-		# Calculate washer's percentage of total earnings
+		# начисление по проценту из настроек
 		earned = row_total * washer_percent
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(earned)).encode('utf-8'))
 		output.write(b"</Row>\n")
@@ -732,7 +432,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		row_total = sum(earnings.get(date, 0) for date in date_list)
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(row_total)).encode('utf-8'))
 		output.write(('<Cell><Data ss:Type="String">{}%</Data></Cell>\n'.format(int(cashier_percent * 100))).encode('utf-8'))
-		# Calculate cashier's percentage of total earnings
+		# начисление по проценту из настроек
 		earned = row_total * cashier_percent
 		output.write(('<Cell><Data ss:Type="Number">{}</Data></Cell>\n'.format(earned)).encode('utf-8'))
 		output.write(b"</Row>\n")
@@ -749,7 +449,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		current_col += 1
 	# Add total for earnings column
 	output.write(('<Cell ss:Formula="=SUM(R4C{}:R{}C{})"><Data ss:Type="Number">0</Data></Cell>\n'.format(current_col-2, current_row-1, current_col-2)).encode('utf-8'))
-	# Calculate total earnings (30% for washers + 10% for cashiers)
+	# Итог заработка (30% для мойщиков + 10% для кассиров)
 	output.write(('<Cell ss:Formula="=SUM(R4C{}:R{}C{})*0.3+SUM(R{}C{}:R{}C{})*0.1"><Data ss:Type="Number">0</Data></Cell>\n'.format(
 		current_col-2, cashier_start_row-1, current_col-2,
 		cashier_start_row+1, current_col-2, current_row-1, current_col-2
@@ -770,9 +470,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 
 
 
-import frappe
-from io import BytesIO
-from frappe.utils import getdate
+
 
 def _get_appointments(selected_date, start_date, end_date, car_wash):
 	"""
@@ -963,3 +661,137 @@ def export_appointments_and_services_to_excel(selected_date=None, start_date=Non
 	frappe.response["filename"] = f"Car_Wash_Appointments_and_Services_{date_info}.xls"
 	frappe.response["filecontent"] = filecontent
 	frappe.response["doctype"] = None
+
+
+# ---- Worker earning sync helper ----
+def try_sync_worker_earning(doc):
+	# Если запись помечена как удалённая — отозвать все связанные начисления и выйти
+	if getattr(doc, "is_deleted", 0):
+		for wle_name, wle_docstatus in frappe.get_all(
+			"Worker Ledger Entry",
+			filters={"entry_type": "Earning", "appointment": doc.name, "docstatus": ["<", 2]},
+			fields=["name", "docstatus"],
+			pluck=None,
+		):
+			wle = frappe.get_doc("Worker Ledger Entry", wle_name)
+			if wle.docstatus == 1:
+				wle.cancel()
+			else:
+				wle.delete()
+		return
+
+	ready = (
+		doc.payment_status == "Paid"
+		and bool(doc.work_ended_on)
+		and bool(doc.car_wash_worker)
+		and not getattr(doc, "is_deleted", 0)
+	)
+
+	# Рассчитываем начисления по настройкам автомойки: проценты от оборота
+	washer_percent = 30
+	cashier_percent = 10
+	try:
+		settings = frappe.db.get_value(
+			"Car wash settings",
+			{"car_wash": doc.car_wash},
+			["washer_default_percent_from_service", "cashier_default_percent_from_service"],
+			as_dict=True,
+		)
+		if settings and settings.get("washer_default_percent_from_service") is not None:
+			washer_percent = int(settings.get("washer_default_percent_from_service") or 0)
+		if settings and settings.get("cashier_default_percent_from_service") is not None:
+			cashier_percent = int(settings.get("cashier_default_percent_from_service") or 0)
+	except Exception:
+		pass
+
+	washer_total = cint(round(flt(doc.services_total or 0) * washer_percent / 100.0))
+	cashier_total = cint(round(flt(doc.services_total or 0) * cashier_percent / 100.0))
+
+	# Начисление для мойщика (основной worker из документа)
+	existing_name = frappe.db.get_value(
+		"Worker Ledger Entry",
+		{
+			"entry_type": "Earning",
+			"appointment": doc.name,
+			"worker": doc.car_wash_worker,
+			"docstatus": ["<", 2],
+		},
+		"name",
+	)
+
+	if ready and washer_total > 0:
+		if existing_name:
+			wle = frappe.get_doc("Worker Ledger Entry", existing_name)
+			if cint(wle.amount) != washer_total or wle.docstatus != 1:
+				if wle.docstatus == 1:
+					wle.cancel()
+					wle.reload()
+				wle.amount = washer_total
+				wle.company = doc.company
+				wle.car_wash = doc.car_wash
+				wle.submit()
+		else:
+			wle = frappe.new_doc("Worker Ledger Entry")
+			wle.worker = doc.car_wash_worker
+			wle.entry_type = "Earning"
+			wle.amount = washer_total
+			wle.company = doc.company
+			wle.car_wash = doc.car_wash
+			wle.appointment = doc.name
+			wle.insert(ignore_permissions=True)
+			wle.submit()
+	else:
+		if existing_name:
+			wle = frappe.get_doc("Worker Ledger Entry", existing_name)
+			if wle.docstatus == 1:
+				wle.cancel()
+
+	# Начисление для кассира (создатель документа, тоже worker)
+	cashier_worker = None
+	try:
+		cashier_worker = frappe.db.get_value(
+			"Car wash worker",
+			{"user": doc.owner, "car_wash": doc.car_wash, "is_deleted": 0, "is_disabled": 0},
+			"name",
+		)
+	except Exception:
+		cashier_worker = None
+
+	if cashier_worker:
+		existing_cashier = frappe.db.get_value(
+			"Worker Ledger Entry",
+			{
+				"entry_type": "Earning",
+				"appointment": doc.name,
+				"worker": cashier_worker,
+				"docstatus": ["<", 2],
+			},
+			"name",
+		)
+
+		if ready and cashier_total > 0:
+			if existing_cashier:
+				cwle = frappe.get_doc("Worker Ledger Entry", existing_cashier)
+				if cint(cwle.amount) != cashier_total or cwle.docstatus != 1:
+					if cwle.docstatus == 1:
+						cwle.cancel()
+						cwle.reload()
+					cwle.amount = cashier_total
+					cwle.company = doc.company
+					cwle.car_wash = doc.car_wash
+					cwle.submit()
+			else:
+				cwle = frappe.new_doc("Worker Ledger Entry")
+				cwle.worker = cashier_worker
+				cwle.entry_type = "Earning"
+				cwle.amount = cashier_total
+				cwle.company = doc.company
+				cwle.car_wash = doc.car_wash
+				cwle.appointment = doc.name
+				cwle.insert(ignore_permissions=True)
+				cwle.submit()
+		else:
+			if existing_cashier:
+				cwle = frappe.get_doc("Worker Ledger Entry", existing_cashier)
+				if cwle.docstatus == 1:
+					cwle.cancel()

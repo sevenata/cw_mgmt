@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:WLE-{YY}-{MM}-{DD}-{####}",
+ "creation": "2025-08-23 21:55:46.416189",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "worker",
+  "entry_type",
+  "amount",
+  "posting_datetime",
+  "company",
+  "car_wash",
+  "appointment",
+  "note",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "worker",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
+   "options": "Car wash worker",
+   "reqd": 1
+  },
+  {
+   "fieldname": "entry_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u0422\u0438\u043f \u0437\u0430\u043f\u0438\u0441\u0438",
+   "options": "Earning\nAdvance\nPayout\nCorrection",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "\u0421\u0443\u043c\u043c\u0430",
+   "reqd": 1
+  },
+  {
+   "fieldname": "posting_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "\u0414\u0430\u0442\u0430/\u0432\u0440\u0435\u043c\u044f"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f",
+   "options": "Car wash company"
+  },
+  {
+   "fieldname": "car_wash",
+   "fieldtype": "Link",
+   "label": "\u041c\u043e\u0439\u043a\u0430",
+   "options": "Car wash"
+  },
+  {
+   "fieldname": "appointment",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0417\u0430\u043a\u0430\u0437 (Appointment)",
+   "options": "Car wash appointment"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Small Text",
+   "label": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Worker Ledger Entry",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-08-23 22:01:52.495842",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Worker Ledger Entry",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
