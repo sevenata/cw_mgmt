@@ -358,3 +358,47 @@ def export_ledger_to_xls(from_date: str, to_date: str, car_wash: str | None = No
 
 
 
+
+
+@frappe.whitelist()
+def get_worker_period_sums(from_date: str, to_date: str,
+                           car_wash: str | None = None,
+                           company: str | None = None):
+    """
+    Возвращает суммы по типам записей за период по каждому работнику.
+
+    Поля вывода: worker, earnings, advances, payouts
+    (учитываются только проведенные записи docstatus=1 и датой в диапазоне включительно)
+    """
+    from frappe.utils import getdate
+
+    try:
+        start_date = getdate(from_date)
+        end_date = getdate(to_date)
+        start = str(start_date) + " 00:00:00"
+        end = str(end_date) + " 23:59:59"
+    except Exception:
+        frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
+
+    where = ["e.docstatus = 1", "e.posting_datetime BETWEEN %s AND %s"]
+    params = [start, end]
+    if car_wash:
+        where.append("e.car_wash = %s")
+        params.append(car_wash)
+    if company:
+        where.append("e.company = %s")
+        params.append(company)
+
+    sql = f"""
+        SELECT
+            e.worker AS worker,
+            COALESCE(SUM(CASE WHEN e.entry_type = 'Earning' THEN e.amount ELSE 0 END), 0) AS earnings,
+            COALESCE(SUM(CASE WHEN e.entry_type = 'Advance' THEN e.amount ELSE 0 END), 0) AS advances,
+            COALESCE(SUM(CASE WHEN e.entry_type = 'Payout' THEN e.amount ELSE 0 END), 0) AS payouts
+        FROM `tabWorker Ledger Entry` e
+        WHERE {" AND ".join(where)}
+        GROUP BY e.worker
+    """
+
+    rows = frappe.db.sql(sql, params, as_dict=True)
+    return rows
