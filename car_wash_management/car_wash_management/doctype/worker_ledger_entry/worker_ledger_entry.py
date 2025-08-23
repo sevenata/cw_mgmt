@@ -15,7 +15,8 @@ class WorkerLedgerEntry(Document):
     def validate(self):
         self.posting_datetime = self.posting_datetime or now_datetime()
         self.amount = cint(self.amount or 0)
-        if self.amount <= 0:
+        # Разрешаем отрицательные суммы только для Correction, иначе требуем > 0
+        if self.entry_type != "Correction" and self.amount <= 0:
             frappe.throw("Сумма должна быть больше 0")
 
         if self.entry_type == "Earning":
@@ -140,6 +141,7 @@ def get_all_worker_balances(company: str | None = None,
             COALESCE(SUM(CASE
                 WHEN e.entry_type = 'Earning' THEN e.amount
                 WHEN e.entry_type IN ('Advance','Payout') THEN -e.amount
+                WHEN e.entry_type = 'Correction' THEN e.amount
                 ELSE 0 END), 0) AS balance
         FROM `tabCar wash worker` w
         LEFT JOIN `tabWorker Ledger Entry` e
