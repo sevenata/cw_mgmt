@@ -17,7 +17,8 @@
   "booking",
   "transaction",
   "is_time_booking",
-  "desired_time"
+  "desired_time",
+  "note"
  ],
  "fields": [
   {
@@ -99,11 +100,16 @@
    "fieldname": "is_time_booking",
    "fieldtype": "Check",
    "label": "\u0411\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430 \u0432\u0440\u0435\u043c\u044f"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Small Text",
+   "label": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 \u043a\u043b\u0438\u0435\u043d\u0442\u0430"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-09 17:24:48.449988",
+ "modified": "2025-08-23 14:40:10.465844",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash mobile booking attempt",
