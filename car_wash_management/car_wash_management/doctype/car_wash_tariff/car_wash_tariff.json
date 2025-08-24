@@ -8,6 +8,7 @@
   "tariff_name",
   "car_wash",
   "is_active",
+  "is_deleted",
   "priority",
   "tariff_filters"
  ],
@@ -26,7 +27,7 @@
    "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0442\u0430\u0440\u0438\u0444\u0430"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "is_active",
    "fieldtype": "Check",
    "label": "\u0410\u043a\u0442\u0438\u0432\u0435\u043d"
@@ -41,11 +42,17 @@
    "fieldtype": "Table",
    "label": "\u0424\u0438\u043b\u044c\u0442\u0440\u044b",
    "options": "Car wash tariff filter"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_deleted",
+   "fieldtype": "Check",
+   "label": "\u0423\u0434\u0430\u043b\u0435\u043d"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-16 02:00:23.822692",
+ "modified": "2025-08-24 14:05:16.204287",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash tariff",
