@@ -19,7 +19,11 @@
   "is_disabled",
   "is_deleted",
   "earning_override_mode",
-  "earning_override_value"
+  "earning_override_value",
+  "address",
+  "contacts",
+  "iin",
+  "birth_date"
  ],
  "fields": [
   {
@@ -120,6 +124,26 @@
    "fieldname": "is_deleted",
    "fieldtype": "Check",
    "label": "\u0423\u0434\u0430\u043b\u0451\u043d"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "\u0410\u0434\u0440\u0435\u0441 \u043f\u0440\u043e\u0436\u0438\u0432\u0430\u043d\u0438\u044f"
+  },
+  {
+   "fieldname": "iin",
+   "fieldtype": "Data",
+   "label": "\u0418\u0418\u041d"
+  },
+  {
+   "fieldname": "birth_date",
+   "fieldtype": "Date",
+   "label": "\u0414\u0430\u0442\u0430 \u0440\u043e\u0436\u0434\u0435\u043d\u0438\u044f"
+  },
+  {
+   "fieldname": "contacts",
+   "fieldtype": "Small Text",
+   "label": "\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -129,7 +153,7 @@
    "link_fieldname": "car_wash_worker"
   }
  ],
- "modified": "2025-08-24 00:45:25.170590",
+ "modified": "2025-08-24 17:18:48.052086",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash worker",
