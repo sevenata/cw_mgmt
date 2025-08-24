@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-24 22:23:06.616177",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "worker",
+  "token",
+  "expires_at",
+  "purpose",
+  "max_uses",
+  "used_count",
+  "is_revoked",
+  "issued_by",
+  "last_ip",
+  "last_user_agent"
+ ],
+ "fields": [
+  {
+   "fieldname": "worker",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u0420\u0430\u0431\u043e\u0442\u043d\u0438\u043a",
+   "options": "Car wash worker",
+   "reqd": 1
+  },
+  {
+   "fieldname": "token",
+   "fieldtype": "Data",
+   "label": "Token",
+   "unique": 1
+  },
+  {
+   "fieldname": "expires_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "expires_at",
+   "reqd": 1
+  },
+  {
+   "default": "ViewLedger",
+   "fieldname": "purpose",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "purpose",
+   "options": "ViewLedger",
+   "reqd": 1
+  },
+  {
+   "fieldname": "max_uses",
+   "fieldtype": "Int",
+   "label": "max_uses"
+  },
+  {
+   "fieldname": "used_count",
+   "fieldtype": "Int",
+   "label": "used_count"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_revoked",
+   "fieldtype": "Check",
+   "label": "is_revoked"
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "issued_by",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "last_ip",
+   "fieldtype": "Data",
+   "label": "last_ip"
+  },
+  {
+   "fieldname": "last_user_agent",
+   "fieldtype": "Data",
+   "label": "last_user_agent"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-24 22:26:26.195218",
+ "modified_by": "Administrator",
+ "module": "Car Wash Management",
+ "name": "Car wash worker QR token",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
