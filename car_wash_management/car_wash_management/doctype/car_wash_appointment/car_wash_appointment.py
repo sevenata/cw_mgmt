@@ -781,12 +781,23 @@ def try_sync_worker_earning(doc):
 			wle = frappe.get_doc("Worker Ledger Entry", existing_name)
 			if cint(wle.amount) != washer_total or wle.docstatus != 1:
 				if wle.docstatus == 1:
+					# Нельзя редактировать отменённый документ – создаём новый после отмены
 					wle.cancel()
-					wle.reload()
-				wle.amount = washer_total
-				wle.company = doc.company
-				wle.car_wash = doc.car_wash
-				wle.submit()
+					new_wle = frappe.new_doc("Worker Ledger Entry")
+					new_wle.worker = doc.car_wash_worker
+					new_wle.entry_type = "Earning"
+					new_wle.amount = washer_total
+					new_wle.company = doc.company
+					new_wle.car_wash = doc.car_wash
+					new_wle.appointment = doc.name
+					new_wle.insert(ignore_permissions=True)
+					new_wle.submit()
+				else:
+					# Черновик можно обновить и провести
+					wle.amount = washer_total
+					wle.company = doc.company
+					wle.car_wash = doc.car_wash
+					wle.submit()
 		else:
 			wle = frappe.new_doc("Worker Ledger Entry")
 			wle.worker = doc.car_wash_worker
@@ -832,7 +843,16 @@ def try_sync_worker_earning(doc):
 				if cint(cwle.amount) != cashier_total or cwle.docstatus != 1:
 					if cwle.docstatus == 1:
 						cwle.cancel()
-						cwle.reload()
+						new_cwle = frappe.new_doc("Worker Ledger Entry")
+						new_cwle.worker = cashier_worker
+						new_cwle.entry_type = "Earning"
+						new_cwle.amount = cashier_total
+						new_cwle.company = doc.company
+						new_cwle.car_wash = doc.car_wash
+						new_cwle.appointment = doc.name
+						new_cwle.insert(ignore_permissions=True)
+						new_cwle.submit()
+				else:
 					cwle.amount = cashier_total
 					cwle.company = doc.company
 					cwle.car_wash = doc.car_wash
