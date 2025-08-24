@@ -102,13 +102,31 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+# Limit rows for all car-wash doctypes by user's linked car_wash via Car wash worker
+permission_query_conditions = {
+	"Car wash appointment": "car_wash_management.permissions.gpc_car_wash_appointment",
+	"Car wash booking": "car_wash_management.permissions.gpc_car_wash_booking",
+	"Car wash mobile booking attempt": "car_wash_management.permissions.gpc_car_wash_mobile_booking_attempt",
+	"Car wash feedback": "car_wash_management.permissions.gpc_car_wash_feedback",
+	"Worker Ledger Entry": "car_wash_management.permissions.gpc_worker_ledger_entry",
+	"Car wash invoice": "car_wash_management.permissions.gpc_car_wash_invoice",
+	"Car wash subscription": "car_wash_management.permissions.gpc_car_wash_subscription",
+	# по желанию добавь и справочники:
+	"Car wash tariff": "car_wash_management.permissions.gpc_car_wash_tariff",
+	"Car wash box": "car_wash_management.permissions.gpc_car_wash_box",
+}
+
+has_permission = {
+	"Car wash appointment": "car_wash_management.permissions.has_permission_restricted",
+	"Car wash booking": "car_wash_management.permissions.has_permission_restricted",
+	"Car wash mobile booking attempt": "car_wash_management.permissions.has_permission_restricted",
+	"Car wash feedback": "car_wash_management.permissions.has_permission_restricted",
+	"Worker Ledger Entry": "car_wash_management.permissions.has_permission_restricted",
+	"Car wash invoice": "car_wash_management.permissions.has_permission_restricted",
+	"Car wash subscription": "car_wash_management.permissions.has_permission_restricted",
+	"Car wash tariff": "car_wash_management.permissions.has_permission_restricted",
+	"Car wash box": "car_wash_management.permissions.has_permission_restricted",
+}
 
 # DocType Class
 # ---------------
