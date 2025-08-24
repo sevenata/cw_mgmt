@@ -190,29 +190,85 @@ def export_ledger_to_xls(from_date: str, to_date: str, car_wash: str | None = No
     Лист 2: Начисления по дням — суммарные Earning по работникам и дням.
     """
     from io import BytesIO
-    from frappe.utils import getdate, add_days
+    from frappe.utils import getdate, add_days, add_months
 
-    # validate dates
-    try:
-        start_date = getdate(from_date)
-        end_date = getdate(to_date)
-        start = str(start_date) + " 00:00:00"
-        end = str(end_date) + " 23:59:59"
-    except Exception:
-        frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
+    def _parse_dates(fd: str, td: str):
+        try:
+            sd = getdate(fd)
+            ed = getdate(td)
+            return sd, ed, str(sd) + " 00:00:00", str(ed) + " 23:59:59"
+        except Exception:
+            frappe.throw("Invalid date format. Please use 'YYYY-MM-DD'.")
 
-    # Base filters for ledger list
-    filters = {"docstatus": 1, "posting_datetime": ["between", [start, end]]}
-    if car_wash:
-        filters["car_wash"] = car_wash
-    if worker:
-        filters["worker"] = worker
-    if entry_type and entry_type != "All":
-        filters["entry_type"] = entry_type
+    def _ensure_period_limit(sd, ed):
+        # Require ed <= add_months(sd, 3)
+        limit = add_months(sd, 3)
+        if ed > limit:
+            frappe.throw("Максимальный период выгрузки — 3 месяца.")
 
+    def _build_ledger_filters(start_ts: str, end_ts: str):
+        base = {"docstatus": 1, "posting_datetime": ["between", [start_ts, end_ts]]}
+        if car_wash:
+            base["car_wash"] = car_wash
+        if worker:
+            base["worker"] = worker
+        if entry_type and entry_type != "All":
+            base["entry_type"] = entry_type
+        return base
+
+    def _fetch_workers_info(worker_ids_list: list[str]):
+        names_map: dict[str, str] = {}
+        roles_map: dict[str, str] = {}
+        if worker_ids_list:
+            for w in frappe.get_all(
+                "Car wash worker",
+                filters={"name": ["in", worker_ids_list]},
+                fields=["name", "full_name", "role"],
+            ):
+                names_map[w["name"]] = w.get("full_name") or w["name"]
+                roles_map[w["name"]] = w.get("role") or ""
+        return names_map, roles_map
+
+    def _xml_escape(value: str) -> str:
+        if value is None:
+            return "-"
+        s = str(value)
+        s = s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        return s
+
+    def _wb_start() -> BytesIO:
+        out = BytesIO()
+        out.write(b'<?xml version="1.0"?>\n')
+        out.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ')
+        out.write(b'xmlns:o="urn:schemas-microsoft-com:office:office" ')
+        out.write(b'xmlns:x="urn:schemas-microsoft-com:office:excel" ')
+        out.write(b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
+        return out
+
+    def _ws_start(out: BytesIO, name: str):
+        out.write(f'<Worksheet ss:Name="{_xml_escape(name)}">\n<Table>\n'.encode('utf-8'))
+
+    def _ws_end(out: BytesIO):
+        out.write(b"</Table>\n</Worksheet>\n")
+
+    def _row(out: BytesIO, cells: list[tuple[str, str | int]]):
+        out.write(b"<Row>\n")
+        for cell_type, value in cells:
+            if cell_type == "Number":
+                out.write(f'<Cell><Data ss:Type="Number">{int(value or 0)}</Data></Cell>\n'.encode('utf-8'))
+            else:
+                out.write(f'<Cell><Data ss:Type="String">{_xml_escape(value)}</Data></Cell>\n'.encode('utf-8'))
+        out.write(b"</Row>\n")
+
+    # 1) Prepare dates and filters
+    start_date, end_date, start_ts, end_ts = _parse_dates(from_date, to_date)
+    ledger_filters = _build_ledger_filters(start_ts, end_ts)
+    _ensure_period_limit(start_date, end_date)
+
+    # 2) Fetch ledger rows
     rows = frappe.get_all(
         "Worker Ledger Entry",
-        filters=filters,
+        filters=ledger_filters,
         fields=[
             "posting_datetime",
             "worker",
@@ -222,40 +278,18 @@ def export_ledger_to_xls(from_date: str, to_date: str, car_wash: str | None = No
             "car_wash",
             "appointment",
             "note",
+            "owner",
+            "modified_by",
         ],
         order_by="posting_datetime asc, creation asc",
     )
 
-    # Resolve worker names and roles
+    # 3) Resolve worker names and roles
     worker_ids = list({r["worker"] for r in rows if r.get("worker")})
-    names: dict[str, str] = {}
-    roles: dict[str, str] = {}
-    if worker_ids:
-        for w in frappe.get_all(
-            "Car wash worker",
-            filters={"name": ["in", worker_ids]},
-            fields=["name", "full_name", "role"],
-        ):
-            names[w["name"]] = w.get("full_name") or w["name"]
-            roles[w["name"]] = w.get("role") or ""
+    names, roles = _fetch_workers_info(worker_ids)
 
-    # Build SpreadsheetML XML (multiple sheets)
-    output = BytesIO()
-    output.write(b'<?xml version="1.0"?>\n')
-    output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ')
-    output.write(b'xmlns:o="urn:schemas-microsoft-com:office:office" ')
-    output.write(b'xmlns:x="urn:schemas-microsoft-com:office:excel" ')
-    output.write(b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
-
-    # Sheet 1: Ledger
-    output.write(b'<Worksheet ss:Name="Ledger">\n<Table>\n')
-    headers = [
-        "Дата", "Работник", "Тип", "Сумма", "Запись", "Комментарий",
-    ]
-    output.write(b"<Row>\n")
-    for h in headers:
-        output.write(f'<Cell><Data ss:Type="String">{h}</Data></Cell>\n'.encode('utf-8'))
-    output.write(b"</Row>\n")
+    # 4) Build workbook and sheets
+    output = _wb_start()
 
     TYPE_LABEL = {
         "Earning": "Начисление",
@@ -264,89 +298,167 @@ def export_ledger_to_xls(from_date: str, to_date: str, car_wash: str | None = No
         "Correction": "Корректировка",
     }
 
+    # Sheet 2 and 3: Per-day summaries (Начисления, Авансы)
+    def _write_summary_sheet(sheet_title: str, entry_type_key: str):
+        # dates list
+        date_list = []
+        cur = start_date
+        while cur <= end_date:
+            date_list.append(str(cur))
+            cur = add_days(cur, 1)
+
+        flt = {"docstatus": 1, "entry_type": entry_type_key, "posting_datetime": ["between", [start_ts, end_ts]]}
+        if car_wash:
+            flt["car_wash"] = car_wash
+        if worker:
+            flt["worker"] = worker
+
+        rows2 = frappe.get_all(
+            "Worker Ledger Entry",
+            filters=flt,
+            fields=["worker", "amount", "posting_datetime"],
+            order_by="posting_datetime asc",
+        )
+
+        per_worker: dict[str, dict[str, int]] = {}
+        worker_set = set()
+        for e in rows2:
+            w = e.get("worker")
+            if not w:
+                continue
+            d = str(getdate(str(e.get("posting_datetime"))[:10]))
+            worker_set.add(w)
+            per_worker.setdefault(w, {day: 0 for day in date_list})
+            per_worker[w][d] += int(e.get("amount") or 0)
+
+        # ensure names/roles contain all workers met in this sheet
+        missing_ids = [wid for wid in worker_set if wid not in names]
+        if missing_ids:
+            extra_names, extra_roles = _fetch_workers_info(missing_ids)
+            names.update(extra_names)
+            roles.update(extra_roles)
+
+        washers: list[str] = []
+        cashiers: list[str] = []
+        for w in worker_set:
+            (washers if roles.get(w) == "Washer" else cashiers).append(w)
+
+        def write_section(title: str, workers_list: list[str]):
+            _row(output, [("String", title)])
+            headers2 = [("String", "#"), ("String", "Работник")] + [("String", d) for d in date_list] + [("String", "ИТОГО")]
+            _row(output, headers2)
+
+            row_idx = 1
+            for wid in sorted(workers_list, key=lambda x: names.get(x, x)):
+                out = per_worker.get(wid, {day: 0 for day in date_list})
+                total = sum(out.get(day, 0) for day in date_list)
+                row_cells: list[tuple[str, str | int]] = [("Number", row_idx), ("String", names.get(wid, wid))]
+                for day in date_list:
+                    row_cells.append(("Number", out.get(day, 0)))
+                row_cells.append(("Number", total))
+                _row(output, row_cells)
+                row_idx += 1
+
+        _ws_start(output, sheet_title)
+        write_section("Мойщики", washers)
+        write_section("Кассиры", cashiers)
+        _ws_end(output)
+
+    _write_summary_sheet("Начисления", "Earning")
+    _write_summary_sheet("Авансы", "Advance")
+    _write_summary_sheet("Выплаты", "Payout")
+    _write_summary_sheet("Корректировки", "Correction")
+
+    # Sheet: Баланс (net per day)
+    def _write_balance_sheet(sheet_title: str = "Баланс"):
+        # dates list
+        date_list = []
+        cur = start_date
+        while cur <= end_date:
+            date_list.append(str(cur))
+            cur = add_days(cur, 1)
+
+        flt = {"docstatus": 1, "posting_datetime": ["between", [start_ts, end_ts]]}
+        if car_wash:
+            flt["car_wash"] = car_wash
+        if worker:
+            flt["worker"] = worker
+
+        rows2 = frappe.get_all(
+            "Worker Ledger Entry",
+            filters=flt,
+            fields=["worker", "entry_type", "amount", "posting_datetime"],
+            order_by="posting_datetime asc",
+        )
+
+        per_worker: dict[str, dict[str, int]] = {}
+        worker_set = set()
+        for e in rows2:
+            w = e.get("worker")
+            if not w:
+                continue
+            d = str(getdate(str(e.get("posting_datetime"))[:10]))
+            worker_set.add(w)
+            per_worker.setdefault(w, {day: 0 for day in date_list})
+            sign = ENTRY_SIGN.get(e.get("entry_type"), 1)
+            per_worker[w][d] += sign * int(e.get("amount") or 0)
+
+        # ensure names/roles contain all workers met in this sheet
+        missing_ids = [wid for wid in worker_set if wid not in names]
+        if missing_ids:
+            extra_names, extra_roles = _fetch_workers_info(missing_ids)
+            names.update(extra_names)
+            roles.update(extra_roles)
+
+        washers: list[str] = []
+        cashiers: list[str] = []
+        for w in worker_set:
+            (washers if roles.get(w) == "Washer" else cashiers).append(w)
+
+        def write_section(title: str, workers_list: list[str]):
+            _row(output, [("String", title)])
+            headers2 = [("String", "#"), ("String", "Работник")] + [("String", d) for d in date_list] + [("String", "ИТОГО")]
+            _row(output, headers2)
+
+            row_idx = 1
+            for wid in sorted(workers_list, key=lambda x: names.get(x, x)):
+                out = per_worker.get(wid, {day: 0 for day in date_list})
+                total = sum(out.get(day, 0) for day in date_list)
+                row_cells: list[tuple[str, str | int]] = [("Number", row_idx), ("String", names.get(wid, wid))]
+                for day in date_list:
+                    row_cells.append(("Number", out.get(day, 0)))
+                row_cells.append(("Number", total))
+                _row(output, row_cells)
+                row_idx += 1
+
+        _ws_start(output, sheet_title)
+        write_section("Мойщики", washers)
+        write_section("Кассиры", cashiers)
+        _ws_end(output)
+
+    _write_balance_sheet("Баланс")
+
+    # Sheet last: Operations (renamed Ledger)
+    _ws_start(output, "Операции")
+    _row(output, [("String", "Дата"), ("String", "Работник"), ("String", "Тип"), ("String", "Сумма"), ("String", "Запись"), ("String", "Комментарий"), ("String", "Автор")])
     for r in rows:
-        output.write(b"<Row>\n")
         dt = str(r.get("posting_datetime") or "")
-        output.write(f'<Cell><Data ss:Type="String">{dt}</Data></Cell>\n'.encode('utf-8'))
         wname = names.get(r.get("worker"), r.get("worker") or "-")
-        output.write(f'<Cell><Data ss:Type="String">{wname}</Data></Cell>\n'.encode('utf-8'))
         tlabel = TYPE_LABEL.get(r.get("entry_type"), r.get("entry_type") or "-")
-        output.write(f'<Cell><Data ss:Type="String">{tlabel}</Data></Cell>\n'.encode('utf-8'))
-        output.write(f'<Cell><Data ss:Type="Number">{int(r.get("amount") or 0)}</Data></Cell>\n'.encode('utf-8'))
-        output.write(f'<Cell><Data ss:Type="String">{r.get("appointment") or "-"}</Data></Cell>\n'.encode('utf-8'))
+        amount = int(r.get("amount") or 0)
+        appointment = r.get("appointment") or "-"
         note = r.get("note") or "-"
-        note = note.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-        output.write(f'<Cell><Data ss:Type="String">{note}</Data></Cell>\n'.encode('utf-8'))
-        output.write(b"</Row>\n")
-    output.write(b"</Table>\n</Worksheet>\n")
-
-    # Sheet 2: Earnings by day (summary)
-    # create date list
-    date_list = []
-    cur = start_date
-    while cur <= end_date:
-        date_list.append(str(cur))
-        cur = add_days(cur, 1)
-
-    earning_filters = {"docstatus": 1, "entry_type": "Earning", "posting_datetime": ["between", [start, end]]}
-    if car_wash:
-        earning_filters["car_wash"] = car_wash
-    if worker:
-        earning_filters["worker"] = worker
-
-    earning_rows = frappe.get_all(
-        "Worker Ledger Entry",
-        filters=earning_filters,
-        fields=["worker", "amount", "posting_datetime"],
-        order_by="posting_datetime asc",
-    )
-
-    # accumulate per worker/day
-    per_worker: dict[str, dict[str, int]] = {}
-    worker_set = set()
-    for e in earning_rows:
-        w = e.get("worker")
-        if not w:
-            continue
-        d = str(getdate(str(e.get("posting_datetime"))[:10]))
-        worker_set.add(w)
-        per_worker.setdefault(w, {day: 0 for day in date_list})
-        per_worker[w][d] += int(e.get("amount") or 0)
-
-    # categorize by role
-    washers = []
-    cashiers = []
-    for w in worker_set:
-        (washers if roles.get(w) == "Washer" else cashiers).append(w)
-
-    def write_section(title: str, workers: list[str]):
-        output.write(b'<Row>\n')
-        output.write(f'<Cell><Data ss:Type="String">{title}</Data></Cell>\n'.encode('utf-8'))
-        output.write(b'</Row>\n')
-        # header
-        headers2 = ["#", "Работник"] + date_list + ["ИТОГО"]
-        output.write(b"<Row>\n")
-        for h in headers2:
-            output.write(f'<Cell><Data ss:Type="String">{h}</Data></Cell>\n'.encode('utf-8'))
-        output.write(b"</Row>\n")
-
-        row_idx = 1
-        for w in sorted(workers, key=lambda x: names.get(x, x)):
-            out = per_worker.get(w, {day: 0 for day in date_list})
-            total = sum(out.get(day, 0) for day in date_list)
-            output.write(b"<Row>\n")
-            output.write(f'<Cell><Data ss:Type="Number">{row_idx}</Data></Cell>\n'.encode('utf-8'))
-            output.write(f'<Cell><Data ss:Type="String">{names.get(w, w)}</Data></Cell>\n'.encode('utf-8'))
-            for day in date_list:
-                output.write(f'<Cell><Data ss:Type="Number">{out.get(day, 0)}</Data></Cell>\n'.encode('utf-8'))
-            output.write(f'<Cell><Data ss:Type="Number">{total}</Data></Cell>\n'.encode('utf-8'))
-            output.write(b"</Row>\n")
-            row_idx += 1
-
-    output.write('<Worksheet ss:Name="Начисления">\n<Table>\n'.encode('utf-8'))
-    write_section("Мойщики", washers)
-    write_section("Кассиры", cashiers)
-    output.write(b"</Table>\n</Worksheet>\n")
+        author = r.get("modified_by") or r.get("owner") or "-"
+        _row(output, [
+            ("String", dt),
+            ("String", wname),
+            ("String", tlabel),
+            ("Number", amount),
+            ("String", appointment),
+            ("String", note),
+            ("String", author),
+        ])
+    _ws_end(output)
 
     # finalize workbook
     output.write(b"</Workbook>\n")
