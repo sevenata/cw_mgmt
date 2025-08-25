@@ -34,32 +34,32 @@ def get_promo_code_usage_history(promo_code: str, limit: int = 500) -> Dict[str,
         # Get usage history with joins for additional information
         usage_records = frappe.db.sql("""
             SELECT 
-                usage.name,
-                usage.usage_date,
-                usage.promo_type,
-                usage.service_discount_amount,
-                usage.commission_waived_amount,
-                usage.total_discount_amount,
-                usage.original_services_total,
-                usage.original_commission,
-                usage.final_services_total,
-                usage.final_commission,
-                usage.user,
-                usage.mobile_booking_attempt,
-                user.customer_name as user_name,
+                pcu.name,
+                pcu.usage_date,
+                pcu.promo_type,
+                pcu.service_discount_amount,
+                pcu.commission_waived_amount,
+                pcu.total_discount_amount,
+                pcu.original_services_total,
+                pcu.original_commission,
+                pcu.final_services_total,
+                pcu.final_commission,
+                pcu.user,
+                pcu.mobile_booking_attempt,
+                user.full_name as user_name,
                 user.phone as user_phone,
                 promo.code as promo_code,
                 promo.title as promo_title
             FROM 
-                `tabCar wash promo code usage` usage
+                `tabCar wash promo code usage` pcu
             LEFT JOIN 
-                `tabMobile App User` user ON usage.user = user.name
+                `tabMobile App User` user ON pcu.user = user.name
             LEFT JOIN 
-                `tabCar wash promo code` promo ON usage.promo_code = promo.name
+                `tabCar wash promo code` promo ON pcu.promo_code = promo.name
             WHERE 
-                usage.promo_code = %s
+                pcu.promo_code = %s
             ORDER BY 
-                usage.usage_date DESC
+                pcu.usage_date DESC
             LIMIT %s
         """, (promo_code, int(limit)), as_dict=True)
         
@@ -80,9 +80,7 @@ def get_promo_code_usage_history(promo_code: str, limit: int = 500) -> Dict[str,
             else:
                 record['savings_percentage'] = 0
         
-        return {
-            "message": usage_records
-        }
+        return usage_records
         
     except Exception as e:
         frappe.log_error(f"Error getting promo code usage history: {str(e)}", "Promo Code Usage History")
@@ -105,15 +103,15 @@ def get_all_promo_code_usage_stats(car_wash: str) -> Dict[str, Any]:
         stats = frappe.db.sql("""
             SELECT 
                 COUNT(*) as total_usages,
-                SUM(usage.total_discount_amount) as total_savings,
-                SUM(usage.service_discount_amount) as total_service_discounts,
-                SUM(usage.commission_waived_amount) as total_commission_waived,
-                COUNT(DISTINCT usage.user) as unique_users,
-                COUNT(DISTINCT usage.promo_code) as promo_codes_used
+                SUM(pcu.total_discount_amount) as total_savings,
+                SUM(pcu.service_discount_amount) as total_service_discounts,
+                SUM(pcu.commission_waived_amount) as total_commission_waived,
+                COUNT(DISTINCT pcu.user) as unique_users,
+                COUNT(DISTINCT pcu.promo_code) as promo_codes_used
             FROM 
-                `tabCar wash promo code usage` usage
+                `tabCar wash promo code usage` pcu
             JOIN 
-                `tabCar wash promo code` promo ON usage.promo_code = promo.name
+                `tabCar wash promo code` promo ON pcu.promo_code = promo.name
             WHERE 
                 promo.car_wash = %s
         """, (car_wash,), as_dict=True)
@@ -124,15 +122,15 @@ def get_all_promo_code_usage_stats(car_wash: str) -> Dict[str, Any]:
                 promo.code,
                 promo.title,
                 COUNT(*) as usage_count,
-                SUM(usage.total_discount_amount) as total_savings
+                SUM(pcu.total_discount_amount) as total_savings
             FROM 
-                `tabCar wash promo code usage` usage
+                `tabCar wash promo code usage` pcu
             JOIN 
-                `tabCar wash promo code` promo ON usage.promo_code = promo.name
+                `tabCar wash promo code` promo ON pcu.promo_code = promo.name
             WHERE 
                 promo.car_wash = %s
             GROUP BY 
-                usage.promo_code
+                pcu.promo_code
             ORDER BY 
                 usage_count DESC
             LIMIT 10
@@ -141,27 +139,25 @@ def get_all_promo_code_usage_stats(car_wash: str) -> Dict[str, Any]:
         # Get usage by type
         usage_by_type = frappe.db.sql("""
             SELECT 
-                usage.promo_type,
+                pcu.promo_type,
                 COUNT(*) as usage_count,
-                SUM(usage.total_discount_amount) as total_savings
+                SUM(pcu.total_discount_amount) as total_savings
             FROM 
-                `tabCar wash promo code usage` usage
+                `tabCar wash promo code usage` pcu
             JOIN 
-                `tabCar wash promo code` promo ON usage.promo_code = promo.name
+                `tabCar wash promo code` promo ON pcu.promo_code = promo.name
             WHERE 
                 promo.car_wash = %s
             GROUP BY 
-                usage.promo_type
+                pcu.promo_type
             ORDER BY 
                 usage_count DESC
         """, (car_wash,), as_dict=True)
         
         return {
-            "message": {
-                "overall_stats": stats[0] if stats else {},
-                "top_promo_codes": top_promos,
-                "usage_by_type": usage_by_type
-            }
+            "overall_stats": stats[0] if stats else {},
+            "top_promo_codes": top_promos,
+            "usage_by_type": usage_by_type
         }
         
     except Exception as e:
@@ -185,30 +181,28 @@ def get_recent_promo_code_usages(car_wash: str, limit: int = 50) -> Dict[str, An
         # Get recent usage records
         recent_usages = frappe.db.sql("""
             SELECT 
-                usage.name,
-                usage.usage_date,
-                usage.promo_type,
-                usage.total_discount_amount,
+                pcu.name,
+                pcu.usage_date,
+                pcu.promo_type,
+                pcu.total_discount_amount,
                 promo.code as promo_code,
                 promo.title as promo_title,
-                user.customer_name as user_name,
-                usage.mobile_booking_attempt
+                user.full_name as user_name,
+                pcu.mobile_booking_attempt
             FROM 
-                `tabCar wash promo code usage` usage
+                `tabCar wash promo code usage` pcu
             JOIN 
-                `tabCar wash promo code` promo ON usage.promo_code = promo.name
+                `tabCar wash promo code` promo ON pcu.promo_code = promo.name
             LEFT JOIN 
-                `tabMobile App User` user ON usage.user = user.name
+                `tabMobile App User` user ON pcu.user = user.name
             WHERE 
                 promo.car_wash = %s
             ORDER BY 
-                usage.usage_date DESC
+                pcu.usage_date DESC
             LIMIT %s
         """, (car_wash, int(limit)), as_dict=True)
         
-        return {
-            "message": recent_usages
-        }
+        return recent_usages
         
     except Exception as e:
         frappe.log_error(f"Error getting recent promo code usages: {str(e)}", "Recent Promo Code Usages")
