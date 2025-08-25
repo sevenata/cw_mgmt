@@ -8,7 +8,12 @@
   "title",
   "car_wash",
   "category",
-  "is_consumable",
+  "product_type",
+  "stock_uom",
+  "default_warehouse",
+  "opening_stock",
+  "opening_rate",
+  "reorder_level",
   "is_deleted",
   "selling_price"
  ],
@@ -36,10 +41,45 @@
    "reqd": 1
   },
   {
+   "default": "Product",
+   "fieldname": "product_type",
+   "fieldtype": "Select",
+   "label": "Тип",
+   "options": "Product\nConsumable",
+   "reqd": 1
+  },
+  {
+   "fieldname": "stock_uom",
+   "fieldtype": "Data",
+   "label": "Ед. изм."
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Склад по умолчанию",
+   "options": "Warehouse"
+  },
+  {
    "default": "0",
-   "fieldname": "is_consumable",
-   "fieldtype": "Check",
-   "label": "\u041f\u043e\u0442\u0440\u0435\u0431\u043b\u044f\u0435\u043c\u044b\u0439"
+   "fieldname": "opening_stock",
+   "fieldtype": "Float",
+   "label": "Начальный остаток",
+   "depends_on": "eval:doc.product_type=='Consumable' || doc.product_type=='Product'",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "opening_rate",
+   "fieldtype": "Currency",
+   "label": "Начальная цена за ед.",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "reorder_level",
+   "fieldtype": "Float",
+   "label": "Уровень до заказа",
+   "non_negative": 1
   },
   {
    "default": "0",

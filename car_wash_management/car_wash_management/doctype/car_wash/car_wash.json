@@ -13,6 +13,7 @@
   "announcement",
   "company",
   "company_title",
+  "default_warehouse",
   "payment_model",
   "contacts_tab",
   "contacts",
@@ -71,6 +72,12 @@
    "label": "\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f",
    "options": "Car wash company",
    "reqd": 1
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Склад по умолчанию",
+   "options": "Warehouse"
   },
   {
    "fieldname": "city",
