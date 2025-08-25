@@ -25,7 +25,8 @@
      "used_count",
      "applicable_services",
      "settings_tab",
-     "is_active"
+     "is_active",
+     "is_deleted"
     ],
     "fields": [
      {
@@ -155,10 +156,31 @@
       "fieldname": "is_active",
       "fieldtype": "Check",
       "label": "Активен"
+     },
+     {
+      "default": "0",
+      "fieldname": "is_deleted",
+      "fieldtype": "Check",
+      "label": "Удалён"
      }
     ],
     "module": "Car Wash Management",
     "name": "Car wash promo code",
     "naming_rule": "Expression",
-    "title_field": "title"
-   }
+    "title_field": "title",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ]
+}
