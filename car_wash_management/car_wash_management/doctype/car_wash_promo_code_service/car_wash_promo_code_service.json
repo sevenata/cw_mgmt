@@ -1,0 +1,22 @@
+{
+    "actions": [],
+    "creation": "2025-01-20 12:00:00.000000",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+     "service"
+    ],
+    "fields": [
+     {
+      "fieldname": "service",
+      "fieldtype": "Link",
+      "label": "Услуга",
+      "options": "Car wash service",
+      "reqd": 1
+     }
+    ],
+    "istable": 1,
+    "module": "Car Wash Management",
+    "name": "Car wash promo code service"
+   }

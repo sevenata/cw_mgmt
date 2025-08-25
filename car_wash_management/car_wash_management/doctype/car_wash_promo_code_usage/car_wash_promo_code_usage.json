@@ -1,0 +1,111 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "hash",
+    "creation": "2025-01-20 12:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+     "promo_code",
+     "mobile_booking_attempt",
+     "user",
+     "promo_type",
+     "service_discount_amount",
+     "commission_waived_amount",
+     "total_discount_amount",
+     "original_services_total",
+     "original_commission",
+     "final_services_total",
+     "final_commission",
+     "usage_date"
+    ],
+    "fields": [
+     {
+      "fieldname": "promo_code",
+      "fieldtype": "Link",
+      "label": "Промокод",
+      "options": "Car wash promo code",
+      "reqd": 1
+     },
+     {
+      "fieldname": "mobile_booking_attempt",
+      "fieldtype": "Link",
+      "label": "Попытка бронирования",
+      "options": "Car wash mobile booking attempt",
+      "reqd": 1
+     },
+     {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "Пользователь",
+      "options": "Mobile App User",
+      "reqd": 1
+     },
+     {
+      "fieldname": "promo_type",
+      "fieldtype": "Select",
+      "label": "Тип применённого промокода",
+      "options": "Service Discount\nQueue Commission Waiver\nCombined",
+      "reqd": 1
+     },
+     {
+      "fieldname": "service_discount_amount",
+      "fieldtype": "Currency",
+      "label": "Скидка на услуги",
+      "non_negative": 1,
+      "default": "0"
+     },
+     {
+      "fieldname": "commission_waived_amount",
+      "fieldtype": "Currency", 
+      "label": "Размер освобождённой комиссии",
+      "non_negative": 1,
+      "default": "0"
+     },
+     {
+      "fieldname": "total_discount_amount",
+      "fieldtype": "Currency",
+      "label": "Общий размер скидки",
+      "reqd": 1,
+      "non_negative": 1
+     },
+     {
+      "fieldname": "original_services_total",
+      "fieldtype": "Currency",
+      "label": "Исходная стоимость услуг",
+      "reqd": 1,
+      "non_negative": 1
+     },
+     {
+      "fieldname": "original_commission",
+      "fieldtype": "Currency",
+      "label": "Исходная комиссия",
+      "reqd": 1,
+      "non_negative": 1
+     },
+     {
+      "fieldname": "final_services_total",
+      "fieldtype": "Currency",
+      "label": "Итоговая стоимость услуг",
+      "reqd": 1,
+      "non_negative": 1
+     },
+     {
+      "fieldname": "final_commission",
+      "fieldtype": "Currency",
+      "label": "Итоговая комиссия",
+      "reqd": 1,
+      "non_negative": 1
+     },
+     {
+      "default": "now",
+      "fieldname": "usage_date",
+      "fieldtype": "Datetime",
+      "label": "Дата использования",
+      "reqd": 1
+     }
+    ],
+    "module": "Car Wash Management",
+    "name": "Car wash promo code usage",
+    "naming_rule": "Random"
+   }

@@ -1,0 +1,164 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "format:PROMO-{car_wash}-{###}",
+    "creation": "2025-01-20 12:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+     "details_tab",
+     "code",
+     "title",
+     "car_wash",
+     "description",
+     "promo_type",
+     "discount_section",
+     "discount_type",
+     "discount_value",
+     "minimum_order_amount",
+     "commission_section",
+     "waive_queue_commission",
+     "conditions_tab",
+     "valid_from",
+     "valid_to",
+     "usage_limit",
+     "used_count",
+     "applicable_services",
+     "settings_tab",
+     "is_active"
+    ],
+    "fields": [
+     {
+      "fieldname": "details_tab",
+      "fieldtype": "Tab Break",
+      "label": "Основная информация"
+     },
+     {
+      "fieldname": "code",
+      "fieldtype": "Data",
+      "label": "Код промокода",
+      "reqd": 1,
+      "unique": 1
+     },
+     {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "Название промокода",
+      "reqd": 1
+     },
+     {
+      "fieldname": "car_wash",
+      "fieldtype": "Link",
+      "label": "Автомойка",
+      "options": "Car wash",
+      "reqd": 1
+     },
+     {
+      "fieldname": "description",
+      "fieldtype": "Text",
+      "label": "Описание"
+     },
+     {
+      "default": "Service Discount",
+      "fieldname": "promo_type",
+      "fieldtype": "Select",
+      "label": "Тип промокода",
+      "options": "Service Discount\nQueue Commission Waiver\nCombined",
+      "reqd": 1
+     },
+     {
+      "depends_on": "eval:doc.promo_type == 'Service Discount' || doc.promo_type == 'Combined'",
+      "fieldname": "discount_section",
+      "fieldtype": "Section Break",
+      "label": "Настройки скидки на услуги"
+     },
+     {
+      "depends_on": "eval:doc.promo_type == 'Service Discount' || doc.promo_type == 'Combined'",
+      "default": "Percentage",
+      "fieldname": "discount_type",
+      "fieldtype": "Select",
+      "label": "Тип скидки",
+      "options": "Percentage\nFixed Amount"
+     },
+     {
+      "depends_on": "eval:doc.promo_type == 'Service Discount' || doc.promo_type == 'Combined'",
+      "fieldname": "discount_value",
+      "fieldtype": "Float",
+      "label": "Размер скидки",
+      "non_negative": 1
+     },
+     {
+      "depends_on": "eval:doc.promo_type == 'Service Discount' || doc.promo_type == 'Combined'",
+      "fieldname": "minimum_order_amount",
+      "fieldtype": "Currency",
+      "label": "Минимальная сумма заказа",
+      "non_negative": 1
+     },
+     {
+      "depends_on": "eval:doc.promo_type == 'Queue Commission Waiver' || doc.promo_type == 'Combined'",
+      "fieldname": "commission_section",
+      "fieldtype": "Section Break",
+      "label": "Настройки комиссии за очередь"
+     },
+     {
+      "depends_on": "eval:doc.promo_type == 'Queue Commission Waiver' || doc.promo_type == 'Combined'",
+      "default": "0",
+      "fieldname": "waive_queue_commission",
+      "fieldtype": "Check",
+      "label": "Освободить от комиссии за вставание в очередь"
+     },
+     {
+      "fieldname": "conditions_tab",
+      "fieldtype": "Tab Break",
+      "label": "Условия применения"
+     },
+     {
+      "fieldname": "valid_from",
+      "fieldtype": "Date",
+      "label": "Действует с",
+      "reqd": 1
+     },
+     {
+      "fieldname": "valid_to",
+      "fieldtype": "Date",
+      "label": "Действует до",
+      "reqd": 1
+     },
+     {
+      "fieldname": "usage_limit",
+      "fieldtype": "Int",
+      "label": "Лимит использований",
+      "non_negative": 1
+     },
+     {
+      "default": "0",
+      "fieldname": "used_count",
+      "fieldtype": "Int",
+      "label": "Количество использований",
+      "read_only": 1,
+      "non_negative": 1
+     },
+     {
+      "depends_on": "eval:doc.promo_type == 'Service Discount' || doc.promo_type == 'Combined'",
+      "fieldname": "applicable_services",
+      "fieldtype": "Table",
+      "label": "Применимые услуги",
+      "options": "Car wash promo code service"
+     },
+     {
+      "fieldname": "settings_tab",
+      "fieldtype": "Tab Break",
+      "label": "Настройки"
+     },
+     {
+      "default": "1",
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Активен"
+     }
+    ],
+    "module": "Car Wash Management",
+    "name": "Car wash promo code",
+    "naming_rule": "Expression",
+    "title_field": "title"
+   }

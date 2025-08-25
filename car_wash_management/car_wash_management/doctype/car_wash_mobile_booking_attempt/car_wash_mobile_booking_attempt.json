@@ -18,7 +18,13 @@
   "transaction",
   "is_time_booking",
   "desired_time",
-  "note"
+  "note",
+  "promo_code_applied",
+"promo_code_type", 
+"promo_service_discount",
+"promo_commission_waived",
+"original_services_total",
+"original_commission_user"
  ],
  "fields": [
   {
@@ -105,7 +111,44 @@
    "fieldname": "note",
    "fieldtype": "Small Text",
    "label": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 \u043a\u043b\u0438\u0435\u043d\u0442\u0430"
-  }
+  },
+  {
+    "fieldname": "promo_code_applied",
+    "fieldtype": "Data",
+    "label": "Применённый промокод"
+   },
+   {
+    "fieldname": "promo_code_type",
+    "fieldtype": "Select",
+    "label": "Тип промокода",
+    "options": "Service Discount\nQueue Commission Waiver\nCombined"
+   },
+   {
+    "fieldname": "promo_service_discount",
+    "fieldtype": "Currency",
+    "label": "Скидка на услуги по промокоду",
+    "non_negative": 1,
+    "default": "0"
+   },
+   {
+    "fieldname": "promo_commission_waived",
+    "fieldtype": "Currency",
+    "label": "Освобождённая комиссия по промокоду",
+    "non_negative": 1,
+    "default": "0"
+   },
+   {
+    "fieldname": "original_services_total",
+    "fieldtype": "Currency",
+    "label": "Стоимость услуг до применения промокода",
+    "non_negative": 1
+   },
+   {
+    "fieldname": "original_commission_user",
+    "fieldtype": "Currency",
+    "label": "Комиссия до применения промокода",
+    "non_negative": 1
+   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
