@@ -112,30 +112,56 @@ class Carwashappointment(Document):
 def get_appointments_by_date(selected_date=None, car_wash=None):
 	"""
 	Extracts Car Wash Appointment records for the selected date.
+	Now supports both date-only and datetime formats.
 
 	Args:
-	selected_date (str): The date in "YYYY-MM-DD" format to filter appointments.
+	selected_date (str): The date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format to filter appointments.
 
 	Returns:
 	list: A list of appointments with the specified fields.
 	"""
 	if not selected_date:
-		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' format.")
+		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
 
-	# Validate the date format
-	try:
-		getdate(selected_date)
-	except ValueError:
-		frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
+	# Check if selected_date includes time
+	selected_has_time = ' ' in str(selected_date) and ':' in str(selected_date)
+	
+	if selected_has_time:
+		# Selected date has time - use precise datetime filtering
+		try:
+			from frappe.utils import get_datetime
+			selected_datetime = get_datetime(selected_date)
+		except ValueError:
+			frappe.throw("Invalid datetime format. Please provide a valid 'YYYY-MM-DD HH:MM:SS' format.")
+		
+		# For datetime, we need to handle the specific time
+		# Extract the date part and create a time range for that specific day
+		date_part = str(selected_datetime.date())
+		time_part = selected_datetime.time()
+		
+		# Create filters for the specific time on that date
+		filters = {
+			"payment_received_on": ["between",
+									[f"{date_part} {time_part}", f"{date_part} 23:59:59"]],
+			"is_deleted": 0,
+			"payment_status": "Paid",
+			"car_wash": car_wash
+		}
+	else:
+		# Fallback to date-only processing (original behavior)
+		try:
+			getdate(selected_date)
+		except ValueError:
+			frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
 
-	# Define the filters
-	filters = {
-		"payment_received_on": ["between",
-								[f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
-		"is_deleted": 0,
-		"payment_status": "Paid",
-		"car_wash": car_wash
-	}
+		# Define the filters for full day
+		filters = {
+			"payment_received_on": ["between",
+									[f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
+			"is_deleted": 0,
+			"payment_status": "Paid",
+			"car_wash": car_wash
+		}
 
 	# Fetch the required fields
 	fields = [
@@ -227,30 +253,54 @@ def get_revenue_by_day():
 def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=None):
 	"""
 	Extracts Car Wash Appointment records between the given start and end dates.
+	Now supports both date-only and datetime formats.
 
 	Args:
-		start_date (str): The start date in "YYYY-MM-DD" format.
-		end_date (str): The end date in "YYYY-MM-DD" format.
+		start_date (str): The start date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format.
+		end_date (str): The end date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format.
 		car_wash (str, optional): Filter appointments by a specific car wash.
 
 	Returns:
 		list: A list of appointments with the specified fields.
 	"""
-	from frappe.utils import getdate
+	from frappe.utils import getdate, get_datetime
 
 	if not start_date or not end_date:
-		frappe.throw("Please provide both start_date and end_date in 'YYYY-MM-DD' format.")
+		frappe.throw("Please provide both start_date and end_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
 
-	# Validate the date formats
-	try:
-		getdate(start_date)
-		getdate(end_date)
-	except ValueError:
-		frappe.throw("Invalid date format. Please provide valid 'YYYY-MM-DD' dates for both start_date and end_date.")
+	# Check if dates include time
+	start_has_time = ' ' in str(start_date) and ':' in str(start_date)
+	end_has_time = ' ' in str(end_date) and ':' in str(end_date)
+	
+	# If both dates have time, use precise datetime filtering
+	if start_has_time and end_has_time:
+		try:
+			start_datetime = get_datetime(start_date)
+			end_datetime = get_datetime(end_date)
+		except ValueError:
+			frappe.throw("Invalid datetime format. Please provide valid 'YYYY-MM-DD HH:MM:SS' values.")
+		
+		if start_datetime > end_datetime:
+			frappe.throw("start_date cannot be later than end_date.")
+		
+		# Use precise datetime filtering
+		start_datetime_str = str(start_datetime)
+		end_datetime_str = str(end_datetime)
+	else:
+		# Fallback to date-only processing (original behavior)
+		try:
+			getdate(start_date)
+			getdate(end_date)
+		except ValueError:
+			frappe.throw("Invalid date format. Please provide valid 'YYYY-MM-DD' dates for both start_date and end_date.")
+		
+		# Define the filters. Include car_wash filter only if provided.
+		start_datetime_str = f"{start_date} 00:00:00"
+		end_datetime_str = f"{end_date} 23:59:59"
 
 	# Define the filters. Include car_wash filter only if provided.
 	filters = {
-		"payment_received_on": ["between", [f"{start_date} 00:00:00", f"{end_date} 23:59:59"]],
+		"payment_received_on": ["between", [start_datetime_str, end_datetime_str]],
 		"is_deleted": 0,
 		"payment_status": "Paid"
 	}
@@ -290,53 +340,97 @@ def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=Non
 def export_total_services_to_xls(from_date, to_date, car_wash):
 	"""
 	Generate an Excel report summarizing worker earnings over a specified date range.
+	Now supports both date-only and datetime formats.
 	"""
 	from io import BytesIO
-	from frappe.utils import getdate, add_days
+	from frappe.utils import getdate, add_days, get_datetime
+	from datetime import datetime, timedelta
 
 	if not from_date or not to_date:
-		frappe.throw("Please provide both from_date and to_date in 'YYYY-MM-DD' format.")
+		frappe.throw("Please provide both from_date and to_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
 
-	# Validate date format
-	try:
-		from_date = getdate(from_date)
-		to_date = getdate(to_date)
-	except ValueError:
-		frappe.throw("Invalid date format. Please provide valid 'YYYY-MM-DD' values.")
+	# Check if dates include time
+	from_has_time = ' ' in str(from_date) and ':' in str(from_date)
+	to_has_time = ' ' in str(to_date) and ':' in str(to_date)
+	
+	# If both dates have time, use precise datetime filtering
+	if from_has_time and to_has_time:
+		try:
+			from_datetime = get_datetime(from_date)
+			to_datetime = get_datetime(to_date)
+		except ValueError:
+			frappe.throw("Invalid datetime format. Please provide valid 'YYYY-MM-DD HH:MM:SS' values.")
+		
+		if from_datetime > to_datetime:
+			frappe.throw("from_date cannot be later than to_date.")
+		
+		# Use precise datetime filtering
+		appointments = get_appointments_by_time_period(from_date, to_date, car_wash)
+		date_list = _generate_datetime_date_list(from_datetime, to_datetime)
+		title_period = f"{from_datetime.strftime('%Y-%m-%d %H:%M')} - {to_datetime.strftime('%Y-%m-%d %H:%M')}"
+		
+	else:
+		# Fallback to date-only processing (original behavior)
+		try:
+			from_date = getdate(from_date)
+			to_date = getdate(to_date)
+		except ValueError:
+			frappe.throw("Invalid date format. Please provide valid 'YYYY-MM-DD' values.")
 
-	if from_date > to_date:
-		frappe.throw("from_date cannot be later than to_date.")
+		if from_date > to_date:
+			frappe.throw("from_date cannot be later than to_date.")
 
-	date_list = []
+		date_list = []
+		# Step 1: Build full date list first
+		current_date = from_date
+		while current_date <= to_date:
+			date_list.append(str(current_date))
+			current_date = add_days(current_date, 1)
+		
+		# Step 2: Get appointments for each date
+		appointments = []
+		for date_str in date_list:
+			date_appointments = get_appointments_by_date(date_str, car_wash)
+			appointments.extend(date_appointments)
+		
+		title_period = f"{str(from_date)} - {str(to_date)}"
 
-	# Step 1: Build full date list first
-	current_date = from_date
-	while current_date <= to_date:
-		date_list.append(str(current_date))
-		current_date = add_days(current_date, 1)
-
-	# Step 2: Initialize empty earnings dict
+	# Step 3: Initialize empty earnings dict
 	worker_earnings = {}
 	cashier_earnings = {}
 
-	# Step 3: Loop through each date and fill earnings
-	for date_str in date_list:
-		appointments = get_appointments_by_date(date_str, car_wash)
+	# Step 4: Process appointments and calculate earnings
+	for appt in appointments:
+		worker = appt.get("car_wash_worker_name", "Unknown")
+		cashier = appt.get("owner", "Unknown")
+		earnings = appt.get("services_total", 0)
+		staff_reward = appt.get("staff_reward_total", earnings)
 
-		for appt in appointments:
-			worker = appt.get("car_wash_worker_name", "Unknown")
-			cashier = appt.get("owner", "Unknown")
-			earnings = appt.get("services_total", 0)
-			staff_reward = appt.get("staff_reward_total", earnings)
+		# Determine the date key for this appointment
+		if from_has_time and to_has_time:
+			# For datetime mode, use the actual appointment date
+			appt_date = appt.get("payment_received_on")
+			if appt_date:
+				if hasattr(appt_date, 'date'):
+					date_key = str(appt_date.date())
+				else:
+					date_key = str(appt_date)[:10]
+			else:
+				continue
+		else:
+			# For date mode, use the date from the loop
+			date_key = str(appt.get("payment_received_on", ""))[:10]
 
-			if worker not in worker_earnings:
-				# Ensure we initialize with all dates
-				worker_earnings[worker] = {date: 0 for date in date_list}
-			worker_earnings[worker][date_str] += staff_reward
+		if worker not in worker_earnings:
+			# Ensure we initialize with all dates
+			worker_earnings[worker] = {date: 0 for date in date_list}
+		if date_key in worker_earnings[worker]:
+			worker_earnings[worker][date_key] += staff_reward
 
-			if cashier not in cashier_earnings:
-				cashier_earnings[cashier] = {date: 0 for date in date_list}
-			cashier_earnings[cashier][date_str] += staff_reward
+		if cashier not in cashier_earnings:
+			cashier_earnings[cashier] = {date: 0 for date in date_list}
+		if date_key in cashier_earnings[cashier]:
+			cashier_earnings[cashier][date_key] += staff_reward
 
 	# Get percentage values from Car wash settings
 	try:
@@ -361,7 +455,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 	output.write(b"<Row>\n")
 	output.write(b'<Cell><Data ss:Type="String"></Data></Cell>\n')
 	merge_across = str(len(date_list) + 3)
-	title = "Расчёт зарплаты за период " + str(from_date) + "-" + str(to_date)
+	title = "Расчёт зарплаты за период " + title_period
 	cell_content = '<Cell ss:MergeAcross="' + merge_across + '"><Data ss:Type="String">' + title + '</Data></Cell>\n'
 	output.write(cell_content.encode('utf-8'))
 	output.write(b"</Row>\n")
@@ -476,25 +570,56 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 def _get_appointments(selected_date, start_date, end_date, car_wash):
 	"""
 	Fetch appointments based on a selected date or a date range.
+	Now supports both date-only and datetime formats.
 	Returns a tuple (appointments, date_info) where date_info is used for naming the file.
 	"""
 	if start_date and end_date:
-		try:
-			getdate(start_date)
-			getdate(end_date)
-		except ValueError:
-			frappe.throw("Invalid date format for start_date or end_date. Please provide valid 'YYYY-MM-DD' dates.")
-		appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
-		date_info = f"{start_date}_to_{end_date}"
+		# Check if dates include time
+		start_has_time = ' ' in str(start_date) and ':' in str(start_date)
+		end_has_time = ' ' in str(end_date) and ':' in str(end_date)
+		
+		if start_has_time and end_has_time:
+			# Both dates have time - use precise datetime filtering
+			try:
+				from frappe.utils import get_datetime
+				start_datetime = get_datetime(start_date)
+				end_datetime = get_datetime(end_date)
+			except ValueError:
+				frappe.throw("Invalid datetime format for start_date or end_date. Please provide valid 'YYYY-MM-DD HH:MM:SS' dates.")
+			appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
+			date_info = f"{start_datetime.strftime('%Y-%m-%d_%H-%M')}_to_{end_datetime.strftime('%Y-%m-%d_%H-%M')}"
+		else:
+			# Fallback to date-only processing (original behavior)
+			try:
+				getdate(start_date)
+				getdate(end_date)
+			except ValueError:
+				frappe.throw("Invalid date format for start_date or end_date. Please provide valid 'YYYY-MM-DD' dates.")
+			appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
+			date_info = f"{start_date}_to_{end_date}"
 	elif selected_date:
-		try:
-			getdate(selected_date)
-		except ValueError:
-			frappe.throw("Invalid date format for selected_date. Please provide a valid 'YYYY-MM-DD' format.")
-		appointments = get_appointments_by_date(selected_date, car_wash)
-		date_info = selected_date
+		# Check if selected_date includes time
+		selected_has_time = ' ' in str(selected_date) and ':' in str(selected_date)
+		
+		if selected_has_time:
+			# Selected date has time - use precise datetime filtering
+			try:
+				from frappe.utils import get_datetime
+				selected_datetime = get_datetime(selected_date)
+			except ValueError:
+				frappe.throw("Invalid datetime format for selected_date. Please provide a valid 'YYYY-MM-DD HH:MM:SS' format.")
+			appointments = get_appointments_by_date(selected_date, car_wash)
+			date_info = f"{selected_datetime.strftime('%Y-%m-%d_%H-%M')}"
+		else:
+			# Fallback to date-only processing (original behavior)
+			try:
+				getdate(selected_date)
+			except ValueError:
+				frappe.throw("Invalid date format for selected_date. Please provide a valid 'YYYY-MM-DD' format.")
+			appointments = get_appointments_by_date(selected_date, car_wash)
+			date_info = selected_date
 	else:
-		frappe.throw("Please provide either selected_date or both start_date and end_date in 'YYYY-MM-DD' format.")
+		frappe.throw("Please provide either selected_date or both start_date and end_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
 
 	if not appointments:
 		frappe.throw(f"No appointments found for the given period ({date_info}).")
@@ -625,6 +750,13 @@ def _get_merged_appointments_services_rows(appointments):
 def export_appointments_and_services_to_excel(selected_date=None, start_date=None, end_date=None, car_wash=None):
 	"""
 	Exports appointments into a multi‑sheet Excel file.
+	Now supports both date-only and datetime formats.
+
+	Parameters:
+	- selected_date: Single date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format
+	- start_date: Start date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format
+	- end_date: End date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format
+	- car_wash: Car wash name (optional)
 
 	Sheet "Appointments" contains only the appointment records.
 	Sheet "Услуги" contains the merged appointment and service records —
@@ -874,3 +1006,31 @@ def try_sync_worker_earning(doc):
 				cwle = frappe.get_doc("Worker Ledger Entry", existing_cashier)
 				if cwle.docstatus == 1:
 					cwle.cancel()
+
+
+
+
+
+def _generate_datetime_date_list(from_datetime, to_datetime):
+	"""
+	Generate a list of dates between two datetimes, including partial days.
+	
+	Args:
+		from_datetime (datetime): Start datetime
+		to_datetime (datetime): End datetime
+		
+	Returns:
+		list: List of date strings in YYYY-MM-DD format
+	"""
+	from frappe.utils import add_days
+	from datetime import datetime, timedelta
+	
+	date_list = []
+	current_date = from_datetime.date()
+	end_date = to_datetime.date()
+	
+	while current_date <= end_date:
+		date_list.append(str(current_date))
+		current_date = add_days(current_date, 1)
+	
+	return date_list

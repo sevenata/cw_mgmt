@@ -9,7 +9,7 @@
   "subscription_plan",
   "starts_at",
   "ends_at",
-  "\u0441\u0442\u0430\u0442\u0443\u0441_\u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438",
+  "status",
   "features"
  ],
  "fields": [
@@ -43,22 +43,22 @@
    "reqd": 1
   },
   {
-   "fieldname": "\u0441\u0442\u0430\u0442\u0443\u0441_\u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438",
-   "fieldtype": "Select",
-   "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438",
-   "options": "Active\nInactive\nCancelled\nExpired",
-   "reqd": 1
-  },
-  {
    "fieldname": "features",
    "fieldtype": "Table",
    "label": "Features",
    "options": "Car wash subscription journal feature"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "\u0421\u0442\u0430\u0442\u0443\u0441 \u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438",
+   "options": "Active\nInactive\nCancelled\nExpired",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-26 20:41:10.353624",
+ "modified": "2025-08-26 20:53:22.869610",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash subscription",
