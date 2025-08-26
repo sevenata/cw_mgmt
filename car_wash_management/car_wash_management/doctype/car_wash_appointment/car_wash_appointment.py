@@ -668,17 +668,19 @@ def export_appointments_and_services_to_excel(selected_date=None, start_date=Non
 def try_sync_worker_earning(doc):
 	# Если запись помечена как удалённая — отозвать все связанные начисления и выйти
 	if getattr(doc, "is_deleted", 0):
-		for wle_name, wle_docstatus in frappe.get_all(
+		entries = frappe.get_all(
 			"Worker Ledger Entry",
 			filters={"entry_type": "Earning", "appointment": doc.name, "docstatus": ["<", 2]},
 			fields=["name", "docstatus"],
-			pluck=None,
-		):
-			wle = frappe.get_doc("Worker Ledger Entry", wle_name)
-			if wle.docstatus == 1:
-				wle.cancel()
+		)
+		for entry in entries:
+			name = entry.get("name")
+			if not name:
+				continue
+			if cint(entry.get("docstatus")) == 1:
+				frappe.get_doc("Worker Ledger Entry", name).cancel()
 			else:
-				wle.delete()
+				frappe.get_doc("Worker Ledger Entry", name).delete()
 		return
 
 	ready = (

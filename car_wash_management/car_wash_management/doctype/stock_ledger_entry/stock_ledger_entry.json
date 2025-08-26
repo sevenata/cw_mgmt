@@ -12,11 +12,12 @@
   "purpose",
   "car_wash",
   "warehouse",
+  "from_warehouse",
+  "to_warehouse",
   "product",
   "qty",
   "rate",
   "amount",
-  "uom",
   "remarks",
   "appointment",
   "service"
@@ -66,7 +67,19 @@
    "in_list_view": 1,
    "label": "\u0421\u043a\u043b\u0430\u0434",
    "options": "Warehouse",
-   "reqd": 1
+   "reqd": 0
+  },
+  {
+   "fieldname": "from_warehouse",
+   "fieldtype": "Link",
+   "label": "Склад-источник",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "to_warehouse",
+   "fieldtype": "Link",
+   "label": "Склад-назначение",
+   "options": "Warehouse"
   },
   {
    "fieldname": "product",
@@ -97,11 +110,6 @@
    "label": "Сумма",
    "read_only": 1,
    "non_negative": 1
-  },
-  {
-   "fieldname": "uom",
-   "fieldtype": "Data",
-   "label": "\u0415\u0434. \u0438\u0437\u043c."
   },
   {
    "fieldname": "remarks",
