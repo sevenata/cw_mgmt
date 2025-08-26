@@ -93,3 +93,8 @@ def gpc_car_wash_subscription(user=None): return _gpc("Car wash subscription", u
 # добавляй по мере необходимости:
 def gpc_car_wash_tariff(user=None): return _gpc("Car wash tariff", user)
 def gpc_car_wash_box(user=None): return _gpc("Car wash box", user)
+
+def gpc_warehouse(user=None): return _gpc("Warehouse", user)
+def gpc_sle(user=None): return _gpc("Stock Ledger Entry", user)
+def gpc_product(user=None): return _gpc("Product", user)
+def gpc_product_category(user=None): return _gpc("Product category", user)
