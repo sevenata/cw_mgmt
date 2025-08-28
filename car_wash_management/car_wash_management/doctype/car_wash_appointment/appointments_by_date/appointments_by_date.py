@@ -162,6 +162,7 @@ def get_by_time_period(start_date=None, end_date=None, car_wash=None):
 		"payment_type",
 		"custom_payment_method",
 		"payment_status",
+		"payment_received_on",
 		"out_of_turn",
 		"out_of_turn_reason",
 		"owner",
