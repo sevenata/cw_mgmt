@@ -1,9 +1,13 @@
 from frappe.model.document import Document
 import frappe
 from frappe.utils import flt, cint, today, add_days, getdate, now_datetime, add_to_date
-from io import StringIO, BytesIO
+
+from .appointments import _get_appointments, _get_appointment_column_translations, \
+	_get_merged_appointments_services_rows
+from .utils import _generate_datetime_date_list, _generate_multi_sheet_excel, _translate_value
+from .worker_earnings import try_sync_worker_earning
+from .appointments_by_date import get_by_date, get_by_time_period
 from ..car_wash_booking.booking_price_and_duration import get_booking_price_and_duration
-import csv
 
 class Carwashappointment(Document):
 	def before_insert(self):
@@ -110,89 +114,7 @@ class Carwashappointment(Document):
 
 @frappe.whitelist()
 def get_appointments_by_date(selected_date=None, car_wash=None):
-	"""
-	Extracts Car Wash Appointment records for the selected date.
-	Now supports both date-only and datetime formats.
-
-	Args:
-	selected_date (str): The date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format to filter appointments.
-
-	Returns:
-	list: A list of appointments with the specified fields.
-	"""
-	if not selected_date:
-		frappe.throw("Please provide a selected_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
-
-	# Check if selected_date includes time
-	selected_has_time = ' ' in str(selected_date) and ':' in str(selected_date)
-	
-	if selected_has_time:
-		# Selected date has time - use precise datetime filtering
-		try:
-			from frappe.utils import get_datetime
-			selected_datetime = get_datetime(selected_date)
-		except ValueError:
-			frappe.throw("Invalid datetime format. Please provide a valid 'YYYY-MM-DD HH:MM:SS' format.")
-		
-		# For datetime, we need to handle the specific time
-		# Extract the date part and create a time range for that specific day
-		date_part = str(selected_datetime.date())
-		time_part = selected_datetime.time()
-		
-		# Create filters for the specific time on that date
-		filters = {
-			"payment_received_on": ["between",
-									[f"{date_part} {time_part}", f"{date_part} 23:59:59"]],
-			"is_deleted": 0,
-			"payment_status": "Paid",
-			"car_wash": car_wash
-		}
-	else:
-		# Fallback to date-only processing (original behavior)
-		try:
-			getdate(selected_date)
-		except ValueError:
-			frappe.throw("Invalid date format. Please provide a valid 'YYYY-MM-DD' format.")
-
-		# Define the filters for full day
-		filters = {
-			"payment_received_on": ["between",
-									[f"{selected_date} 00:00:00", f"{selected_date} 23:59:59"]],
-			"is_deleted": 0,
-			"payment_status": "Paid",
-			"car_wash": car_wash
-		}
-
-	# Fetch the required fields
-	fields = [
-		"name",
-		"num",
-		"box_title",
-		"work_started_on",
-		"car_wash_worker",
-		"car_wash_worker_name",
-		"services_total",
-		"staff_reward_total",
-		"car_make_name",
-		"car_model_name",
-		"car_license_plate",
-		"car_body_type",
-		"payment_type",
-		"payment_status",
-		"payment_received_on",
-		"out_of_turn",
-		"out_of_turn_reason",
-		"owner",
-	]
-
-	# Query the database
-	appointments = frappe.get_all(
-		"Car wash appointment",
-		filters=filters,
-		fields=fields
-	)
-
-	return appointments
+	return get_by_date(selected_date, car_wash)
 
 @frappe.whitelist()
 def get_revenue_by_day():
@@ -251,90 +173,7 @@ def get_revenue_by_day():
 
 @frappe.whitelist()
 def get_appointments_by_time_period(start_date=None, end_date=None, car_wash=None):
-	"""
-	Extracts Car Wash Appointment records between the given start and end dates.
-	Now supports both date-only and datetime formats.
-
-	Args:
-		start_date (str): The start date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format.
-		end_date (str): The end date in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format.
-		car_wash (str, optional): Filter appointments by a specific car wash.
-
-	Returns:
-		list: A list of appointments with the specified fields.
-	"""
-	from frappe.utils import getdate, get_datetime
-
-	if not start_date or not end_date:
-		frappe.throw("Please provide both start_date and end_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
-
-	# Check if dates include time
-	start_has_time = ' ' in str(start_date) and ':' in str(start_date)
-	end_has_time = ' ' in str(end_date) and ':' in str(end_date)
-	
-	# If both dates have time, use precise datetime filtering
-	if start_has_time and end_has_time:
-		try:
-			start_datetime = get_datetime(start_date)
-			end_datetime = get_datetime(end_date)
-		except ValueError:
-			frappe.throw("Invalid datetime format. Please provide valid 'YYYY-MM-DD HH:MM:SS' values.")
-		
-		if start_datetime > end_datetime:
-			frappe.throw("start_date cannot be later than end_date.")
-		
-		# Use precise datetime filtering
-		start_datetime_str = str(start_datetime)
-		end_datetime_str = str(end_datetime)
-	else:
-		# Fallback to date-only processing (original behavior)
-		try:
-			getdate(start_date)
-			getdate(end_date)
-		except ValueError:
-			frappe.throw("Invalid date format. Please provide valid 'YYYY-MM-DD' dates for both start_date and end_date.")
-		
-		# Define the filters. Include car_wash filter only if provided.
-		start_datetime_str = f"{start_date} 00:00:00"
-		end_datetime_str = f"{end_date} 23:59:59"
-
-	# Define the filters. Include car_wash filter only if provided.
-	filters = {
-		"payment_received_on": ["between", [start_datetime_str, end_datetime_str]],
-		"is_deleted": 0,
-		"payment_status": "Paid"
-	}
-	if car_wash:
-		filters["car_wash"] = car_wash
-
-	# List of fields to fetch
-	fields = [
-		"name",
-		"num",
-		"box_title",
-		"work_started_on",
-		"car_wash_worker_name",
-		"services_total",
-		"staff_reward_total",
-		"car_make_name",
-		"car_model_name",
-		"car_license_plate",
-		"car_body_type",
-		"payment_type",
-		"payment_status",
-		"out_of_turn",
-		"out_of_turn_reason",
-		"owner",
-	]
-
-	# Query the database for appointments in the given time period
-	appointments = frappe.get_all(
-		"Car wash appointment",
-		filters=filters,
-		fields=fields
-	)
-
-	return appointments
+	return get_by_time_period(start_date, end_date, car_wash)
 
 @frappe.whitelist()
 def export_total_services_to_xls(from_date, to_date, car_wash):
@@ -344,7 +183,6 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 	"""
 	from io import BytesIO
 	from frappe.utils import getdate, add_days, get_datetime
-	from datetime import datetime, timedelta
 
 	if not from_date or not to_date:
 		frappe.throw("Please provide both from_date and to_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
@@ -352,7 +190,7 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 	# Check if dates include time
 	from_has_time = ' ' in str(from_date) and ':' in str(from_date)
 	to_has_time = ' ' in str(to_date) and ':' in str(to_date)
-	
+
 	# If both dates have time, use precise datetime filtering
 	if from_has_time and to_has_time:
 		try:
@@ -360,15 +198,15 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 			to_datetime = get_datetime(to_date)
 		except ValueError:
 			frappe.throw("Invalid datetime format. Please provide valid 'YYYY-MM-DD HH:MM:SS' values.")
-		
+
 		if from_datetime > to_datetime:
 			frappe.throw("from_date cannot be later than to_date.")
-		
+
 		# Use precise datetime filtering
 		appointments = get_appointments_by_time_period(from_date, to_date, car_wash)
 		date_list = _generate_datetime_date_list(from_datetime, to_datetime)
 		title_period = f"{from_datetime.strftime('%Y-%m-%d %H:%M')} - {to_datetime.strftime('%Y-%m-%d %H:%M')}"
-		
+
 	else:
 		# Fallback to date-only processing (original behavior)
 		try:
@@ -386,13 +224,13 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 		while current_date <= to_date:
 			date_list.append(str(current_date))
 			current_date = add_days(current_date, 1)
-		
+
 		# Step 2: Get appointments for each date
 		appointments = []
 		for date_str in date_list:
-			date_appointments = get_appointments_by_date(date_str, car_wash)
+			date_appointments = get_by_date(date_str, car_wash)
 			appointments.extend(date_appointments)
-		
+
 		title_period = f"{str(from_date)} - {str(to_date)}"
 
 	# Step 3: Initialize empty earnings dict
@@ -564,188 +402,6 @@ def export_total_services_to_xls(from_date, to_date, car_wash):
 	output.close()
 
 
-
-
-
-def _get_appointments(selected_date, start_date, end_date, car_wash):
-	"""
-	Fetch appointments based on a selected date or a date range.
-	Now supports both date-only and datetime formats.
-	Returns a tuple (appointments, date_info) where date_info is used for naming the file.
-	"""
-	if start_date and end_date:
-		# Check if dates include time
-		start_has_time = ' ' in str(start_date) and ':' in str(start_date)
-		end_has_time = ' ' in str(end_date) and ':' in str(end_date)
-		
-		if start_has_time and end_has_time:
-			# Both dates have time - use precise datetime filtering
-			try:
-				from frappe.utils import get_datetime
-				start_datetime = get_datetime(start_date)
-				end_datetime = get_datetime(end_date)
-			except ValueError:
-				frappe.throw("Invalid datetime format for start_date or end_date. Please provide valid 'YYYY-MM-DD HH:MM:SS' dates.")
-			appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
-			date_info = f"{start_datetime.strftime('%Y-%m-%d_%H-%M')}_to_{end_datetime.strftime('%Y-%m-%d_%H-%M')}"
-		else:
-			# Fallback to date-only processing (original behavior)
-			try:
-				getdate(start_date)
-				getdate(end_date)
-			except ValueError:
-				frappe.throw("Invalid date format for start_date or end_date. Please provide valid 'YYYY-MM-DD' dates.")
-			appointments = get_appointments_by_time_period(start_date, end_date, car_wash)
-			date_info = f"{start_date}_to_{end_date}"
-	elif selected_date:
-		# Check if selected_date includes time
-		selected_has_time = ' ' in str(selected_date) and ':' in str(selected_date)
-		
-		if selected_has_time:
-			# Selected date has time - use precise datetime filtering
-			try:
-				from frappe.utils import get_datetime
-				selected_datetime = get_datetime(selected_date)
-			except ValueError:
-				frappe.throw("Invalid datetime format for selected_date. Please provide a valid 'YYYY-MM-DD HH:MM:SS' format.")
-			appointments = get_appointments_by_date(selected_date, car_wash)
-			date_info = f"{selected_datetime.strftime('%Y-%m-%d_%H-%M')}"
-		else:
-			# Fallback to date-only processing (original behavior)
-			try:
-				getdate(selected_date)
-			except ValueError:
-				frappe.throw("Invalid date format for selected_date. Please provide a valid 'YYYY-MM-DD' format.")
-			appointments = get_appointments_by_date(selected_date, car_wash)
-			date_info = selected_date
-	else:
-		frappe.throw("Please provide either selected_date or both start_date and end_date in 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' format.")
-
-	if not appointments:
-		frappe.throw(f"No appointments found for the given period ({date_info}).")
-	return appointments, date_info
-
-def _get_appointment_column_translations():
-	"""
-	Returns a dictionary mapping appointment column keys to Russian translations.
-	"""
-	return {
-		"name": "Номер заявки",
-		"num": "Номер",
-		"box_title": "Бокс",
-		"work_started_on": "Начало работы",
-		"car_wash_worker_name": "Работник автомойки",
-		"services_total": "Сумма услуг",
-		"staff_reward_total": "Сумма заработка работника",
-		"car_make_name": "Марка автомобиля",
-		"car_model_name": "Модель автомобиля",
-		"car_license_plate": "Номер автомобиля",
-		"car_body_type": "Тип кузова",
-		"payment_type": "Тип оплаты",
-		"payment_status": "Статус оплаты",
-		"payment_received_on": "Дата оплаты",
-		"out_of_turn": "Без очереди",
-		"out_of_turn_reason": "Почему без очереди",
-		"owner": "Добавил"
-	}
-
-def _translate_value(field, value):
-	"""
-	Translates values for specific fields such as payment types or car body types.
-	"""
-	PAYMENT_TYPE_TRANSLATIONS = {
-		"Paid": "Оплачено",
-		"Not paid": "Не оплачено",
-		"Cash": "Наличные",
-		"Card": "Карта",
-		"Kaspi": "Каспи",
-		"Contract": "Договор"
-	}
-	CAR_BODY_TYPE_TRANSLATIONS = {
-		"Passenger": "Пассажир",
-		"Minbus": "Микроавтобус",
-		"LargeSUV": "Большой внедорожник",
-		"Jeep": "Джип",
-		"Minivan": "Минивэн",
-		"CompactSUV": "Компактный внедорожник",
-		"Sedan": "Седан"
-	}
-
-	if field in ["payment_type", "payment_status"]:
-		return PAYMENT_TYPE_TRANSLATIONS.get(value, value)
-	elif field == "car_body_type":
-		return CAR_BODY_TYPE_TRANSLATIONS.get(value, value)
-	return value
-
-def _generate_multi_sheet_excel(sheets_data):
-	"""
-	Generates a multi-sheet Excel file in SpreadsheetML XML format.
-
-	Args:
-		sheets_data (dict): Keys are sheet names and values are tuples (headers, rows, translations).
-
-	Returns:
-		Binary Excel content.
-	"""
-	output = BytesIO()
-	output.write(b'<?xml version="1.0"?>\n')
-	output.write(b'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ')
-	output.write(b'xmlns:o="urn:schemas-microsoft-com:office:office" ')
-	output.write(b'xmlns:x="urn:schemas-microsoft-com:office:excel" ')
-	output.write(b'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n')
-
-	for sheet_name, (headers, rows, translations) in sheets_data.items():
-		output.write(f'<Worksheet ss:Name="{sheet_name}">\n'.encode("utf-8"))
-		output.write(b'<Table>\n')
-		# Write header row with translated column names
-		output.write(b"<Row>\n")
-		for header in headers:
-			translated = translations.get(header, header)
-			output.write(f'<Cell><Data ss:Type="String">{translated}</Data></Cell>\n'.encode("utf-8"))
-		output.write(b"</Row>\n")
-		# Write data rows
-		for row in rows:
-			output.write(b"<Row>\n")
-			for header in headers:
-				value = row.get(header, "-")
-				if value is None:
-					value = "-"
-				# Apply translations where needed
-				if header in ["payment_type", "payment_status", "car_body_type"]:
-					value = _translate_value(header, value)
-				cell_type = "Number" if isinstance(value, (int, float)) else "String"
-				output.write(f'<Cell><Data ss:Type="{cell_type}">{value}</Data></Cell>\n'.encode("utf-8"))
-			output.write(b"</Row>\n")
-		output.write(b"</Table>\n</Worksheet>\n")
-	output.write(b"</Workbook>\n")
-	return output.getvalue()
-
-def _get_merged_appointments_services_rows(appointments):
-	"""
-	Builds a row set that merges each appointment with its child service records.
-	If an appointment has multiple services, multiple rows are produced;
-	if none, a row with empty service fields is added.
-	"""
-	rows = []
-	for appt in appointments:
-		services = frappe.get_all(
-			"Car wash appointment service",
-			filters={"parent": appt["name"]},
-			fields=["service_name", "duration", "price"]
-		)
-		if services:
-			for svc in services:
-				merged = appt.copy()
-				merged.update(svc)
-				rows.append(merged)
-		else:
-			row = appt.copy()
-			row["service_name"] = "-"
-			row["duration"] = "-"
-			row["price"] = "-"
-			rows.append(row)
-	return rows
-
 @frappe.whitelist()
 def export_appointments_and_services_to_excel(selected_date=None, start_date=None, end_date=None, car_wash=None):
 	"""
@@ -794,243 +450,3 @@ def export_appointments_and_services_to_excel(selected_date=None, start_date=Non
 	frappe.response["filename"] = f"Car_Wash_Appointments_and_Services_{date_info}.xls"
 	frappe.response["filecontent"] = filecontent
 	frappe.response["doctype"] = None
-
-
-# ---- Worker earning sync helper ----
-def try_sync_worker_earning(doc):
-	# Если запись помечена как удалённая — отозвать все связанные начисления и выйти
-	if getattr(doc, "is_deleted", 0):
-		entries = frappe.get_all(
-			"Worker Ledger Entry",
-			filters={"entry_type": "Earning", "appointment": doc.name, "docstatus": ["<", 2]},
-			fields=["name", "docstatus"],
-		)
-		for entry in entries:
-			name = entry.get("name")
-			if not name:
-				continue
-			if cint(entry.get("docstatus")) == 1:
-				frappe.get_doc("Worker Ledger Entry", name).cancel()
-			else:
-				frappe.get_doc("Worker Ledger Entry", name).delete()
-		return
-
-	ready = (
-		doc.payment_status == "Paid"
-		and bool(doc.work_ended_on)
-		and bool(doc.car_wash_worker)
-		and not getattr(doc, "is_deleted", 0)
-	)
-
-	# Рассчитываем начисления по настройкам автомойки: процент/фикс
-	washer_percent = 30
-	cashier_percent = 10
-	washer_fixed = 0
-	cashier_fixed = 0
-	try:
-		settings = frappe.db.get_value(
-			"Car wash settings",
-			{"car_wash": doc.car_wash},
-			[
-				"washer_earning_mode",
-				"washer_earning_value",
-				"washer_default_percent_from_service",
-				"cashier_earning_mode",
-				"cashier_earning_value",
-				"cashier_default_percent_from_service",
-			],
-			as_dict=True,
-		)
-		if settings:
-			if settings.get("washer_earning_mode") == "Fixed":
-				washer_percent = None
-				washer_fixed = cint(settings.get("washer_earning_value") or 0)
-			else:
-				washer_percent = int(settings.get("washer_default_percent_from_service") or 0)
-			if settings.get("cashier_earning_mode") == "Fixed":
-				cashier_percent = None
-				cashier_fixed = cint(settings.get("cashier_earning_value") or 0)
-			else:
-				cashier_percent = int(settings.get("cashier_default_percent_from_service") or 0)
-	except Exception:
-		pass
-
-	# Применяем персональные переопределения для мойщика/кассира
-	if washer_percent is not None:
-		washer_total = cint(round(flt(doc.services_total or 0) * washer_percent / 100.0))
-	else:
-		washer_total = cint(washer_fixed)
-	try:
-		worker_override = frappe.db.get_value(
-			"Car wash worker",
-			{"name": doc.car_wash_worker},
-			["earning_override_mode", "earning_override_value"],
-			as_dict=True,
-		)
-		if worker_override:
-			mode = (worker_override.get("earning_override_mode") or "Default").strip()
-			val = cint(worker_override.get("earning_override_value") or 0)
-			if mode == "Percent":
-				washer_total = cint(round(flt(doc.services_total or 0) * (val / 100.0)))
-			elif mode == "Fixed":
-				washer_total = cint(val)
-	except Exception:
-		pass
-
-	if cashier_percent is not None:
-		cashier_total = cint(round(flt(doc.services_total or 0) * cashier_percent / 100.0))
-	else:
-		cashier_total = cint(cashier_fixed)
-	try:
-		cashier_worker = frappe.db.get_value(
-			"Car wash worker",
-			{"user": doc.owner, "car_wash": doc.car_wash, "is_deleted": 0, "is_disabled": 0},
-			["name", "earning_override_mode", "earning_override_value"],
-			as_dict=True,
-		)
-		if cashier_worker and cashier_worker.get("name"):
-			mode = (cashier_worker.get("earning_override_mode") or "Default").strip()
-			val = cint(cashier_worker.get("earning_override_value") or 0)
-			if mode == "Percent":
-				cashier_total = cint(round(flt(doc.services_total or 0) * (val / 100.0)))
-			elif mode == "Fixed":
-				cashier_total = cint(val)
-	except Exception:
-		pass
-
-	# Начисление для мойщика (основной worker из документа)
-	existing_name = frappe.db.get_value(
-		"Worker Ledger Entry",
-		{
-			"entry_type": "Earning",
-			"appointment": doc.name,
-			"worker": doc.car_wash_worker,
-			"docstatus": ["<", 2],
-		},
-		"name",
-	)
-
-	if ready and washer_total > 0:
-		if existing_name:
-			wle = frappe.get_doc("Worker Ledger Entry", existing_name)
-			if cint(wle.amount) != washer_total or wle.docstatus != 1:
-				if wle.docstatus == 1:
-					# Нельзя редактировать отменённый документ – создаём новый после отмены
-					wle.cancel()
-					new_wle = frappe.new_doc("Worker Ledger Entry")
-					new_wle.worker = doc.car_wash_worker
-					new_wle.entry_type = "Earning"
-					new_wle.amount = washer_total
-					new_wle.company = doc.company
-					new_wle.car_wash = doc.car_wash
-					new_wle.appointment = doc.name
-					new_wle.insert(ignore_permissions=True)
-					new_wle.submit()
-				else:
-					# Черновик можно обновить и провести
-					wle.amount = washer_total
-					wle.company = doc.company
-					wle.car_wash = doc.car_wash
-					wle.submit()
-		else:
-			wle = frappe.new_doc("Worker Ledger Entry")
-			wle.worker = doc.car_wash_worker
-			wle.entry_type = "Earning"
-			wle.amount = washer_total
-			wle.company = doc.company
-			wle.car_wash = doc.car_wash
-			wle.appointment = doc.name
-			wle.insert(ignore_permissions=True)
-			wle.submit()
-	else:
-		if existing_name:
-			wle = frappe.get_doc("Worker Ledger Entry", existing_name)
-			if wle.docstatus == 1:
-				wle.cancel()
-
-	# Начисление для кассира (создатель документа, тоже worker)
-	cashier_worker = None
-	try:
-		cashier_worker = frappe.db.get_value(
-			"Car wash worker",
-			{"user": doc.owner, "car_wash": doc.car_wash, "is_deleted": 0, "is_disabled": 0},
-			"name",
-		)
-	except Exception:
-		cashier_worker = None
-
-	if cashier_worker:
-		existing_cashier = frappe.db.get_value(
-			"Worker Ledger Entry",
-			{
-				"entry_type": "Earning",
-				"appointment": doc.name,
-				"worker": cashier_worker,
-				"docstatus": ["<", 2],
-			},
-			"name",
-		)
-
-		if ready and cashier_total > 0:
-			if existing_cashier:
-				cwle = frappe.get_doc("Worker Ledger Entry", existing_cashier)
-				if cint(cwle.amount) != cashier_total or cwle.docstatus != 1:
-					if cwle.docstatus == 1:
-						cwle.cancel()
-						new_cwle = frappe.new_doc("Worker Ledger Entry")
-						new_cwle.worker = cashier_worker
-						new_cwle.entry_type = "Earning"
-						new_cwle.amount = cashier_total
-						new_cwle.company = doc.company
-						new_cwle.car_wash = doc.car_wash
-						new_cwle.appointment = doc.name
-						new_cwle.insert(ignore_permissions=True)
-						new_cwle.submit()
-				else:
-					cwle.amount = cashier_total
-					cwle.company = doc.company
-					cwle.car_wash = doc.car_wash
-					cwle.submit()
-			else:
-				cwle = frappe.new_doc("Worker Ledger Entry")
-				cwle.worker = cashier_worker
-				cwle.entry_type = "Earning"
-				cwle.amount = cashier_total
-				cwle.company = doc.company
-				cwle.car_wash = doc.car_wash
-				cwle.appointment = doc.name
-				cwle.insert(ignore_permissions=True)
-				cwle.submit()
-		else:
-			if existing_cashier:
-				cwle = frappe.get_doc("Worker Ledger Entry", existing_cashier)
-				if cwle.docstatus == 1:
-					cwle.cancel()
-
-
-
-
-
-def _generate_datetime_date_list(from_datetime, to_datetime):
-	"""
-	Generate a list of dates between two datetimes, including partial days.
-	
-	Args:
-		from_datetime (datetime): Start datetime
-		to_datetime (datetime): End datetime
-		
-	Returns:
-		list: List of date strings in YYYY-MM-DD format
-	"""
-	from frappe.utils import add_days
-	from datetime import datetime, timedelta
-	
-	date_list = []
-	current_date = from_datetime.date()
-	end_date = to_datetime.date()
-	
-	while current_date <= end_date:
-		date_list.append(str(current_date))
-		current_date = add_days(current_date, 1)
-	
-	return date_list
