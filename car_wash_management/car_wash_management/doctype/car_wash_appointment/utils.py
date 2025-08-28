@@ -81,7 +81,8 @@ def _translate_value(field, value):
 		"Cash": "Наличные",
 		"Card": "Карта",
 		"Kaspi": "Каспи",
-		"Contract": "Договор"
+		"Contract": "Договор",
+		"Mixed": "Смешанный"
 	}
 	CAR_BODY_TYPE_TRANSLATIONS = {
 		"Passenger": "Пассажир",
