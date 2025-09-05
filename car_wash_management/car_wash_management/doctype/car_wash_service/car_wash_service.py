@@ -74,14 +74,37 @@ def get_services_statistics():
 
     # Helper function to aggregate service statistics
     def aggregate_service_stats(start_date, end_date):
-        # Fetch services within the given date range
+        # Determine datetime range strings
+        start_dt = start_date + " 00:00:00"
+        end_dt = end_date + " 23:59:59"
+
+        # Get eligible appointments: Paid, not deleted, within period (by payment_received_on)
+        appointment_filters = {
+            "payment_received_on": ["between", [start_dt, end_dt]],
+            "is_deleted": 0,
+            "payment_status": "Paid",
+        }
+        if car_wash:
+            appointment_filters["car_wash"] = car_wash
+
+        eligible_appointments = frappe.get_all(
+            "Car wash appointment",
+            filters=appointment_filters,
+            fields=["name"],
+        )
+
+        if not eligible_appointments:
+            return {}
+
+        appointment_names = [a["name"] for a in eligible_appointments]
+
+        # Fetch services belonging only to eligible appointments
         services = frappe.get_all(
             "Car wash appointment service",
             filters={
-                "creation": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]],
-                "car_wash": car_wash
+                "parent": ["in", appointment_names],
             },
-            fields=["service_name", "price"]
+            fields=["service_name", "price"],
         )
 
         # Aggregate services by service name
