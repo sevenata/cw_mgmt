@@ -1,18 +1,20 @@
 # car_wash/booking.py
 
 import frappe
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
-from .tariffs import (resolve_applicable_tariff, ensure_tariff_valid_for_car_wash)
+from .tariffs import resolve_applicable_tariff
 from .validation import (
     validate_required_params,
     build_service_counter,
     build_custom_price_map,
 )
-from .repository import (
-    get_valid_service_ids,
-    get_service_docs,
-	get_service_prices_by_tariff,
+from .cache_helpers import (
+    _make_service_ids_tuple,
+    _cached_get_valid_service_ids,
+    _cached_get_service_docs,
+    _cached_get_service_prices_by_tariff,
+    _ensure_tariff_valid_cached,
 )
 from .calculation import (
     calculate_totals,
@@ -51,18 +53,26 @@ def get_booking_price_and_duration(
         validate_required_params(car_wash, car, services)
 
         service_counter = build_service_counter(services)
-        custom_price_map = build_custom_price_map(services)
-        valid_ids = get_valid_service_ids(list(service_counter.keys()))
+
+        # Avoid building custom map if no custom_price entries exist
+        custom_price_map = build_custom_price_map(services) if any(
+            isinstance(s, dict) and s.get('custom_price') for s in services
+        ) else {}
+
+        # Cache-aware resolution of valid ids
+        ids_tuple = _make_service_ids_tuple(service_counter)
+        valid_ids = list(_cached_get_valid_service_ids(ids_tuple))
 
         # 1) Явно переданный тариф → валидируем, иначе авто-подбор
         if tariff:
-            tariff_id = ensure_tariff_valid_for_car_wash(tariff, car_wash)
+            tariff_id = _ensure_tariff_valid_cached(tariff, car_wash)
         else:
             tariff_id = resolve_applicable_tariff(car_wash=car_wash, car=car, services=services)
 
         # 2) Документы услуг + цены по тарифу
-        docs = get_service_docs(valid_ids)
-        prices = get_service_prices_by_tariff(valid_ids, tariff_id)
+        ids_tuple = tuple(valid_ids)
+        docs = _cached_get_service_docs(ids_tuple)
+        prices = _cached_get_service_prices_by_tariff(ids_tuple, tariff_id)
 
         # 3) Базовые итоги (без промокода)
         base_services_price, total_duration, modifiers, custom_prices, staff_reward_total = calculate_totals(
@@ -76,16 +86,27 @@ def get_booking_price_and_duration(
             actual_commission = commission_amount
 
         # 5) Применение промокода
-        promo_result = validate_and_apply_promocode(
-            promocode=promocode,
-            car_wash=car_wash,
-            user=user,
-            services_total=base_services_price,
-            commission_amount=actual_commission,
-            is_time_booking=is_time_booking,
-            services=services,
-            created_by_admin=created_by_admin
-        )
+        if promocode:
+            promo_result = validate_and_apply_promocode(
+                promocode=promocode,
+                car_wash=car_wash,
+                user=user,
+                services_total=base_services_price,
+                commission_amount=actual_commission,
+                is_time_booking=is_time_booking,
+                services=services,
+                created_by_admin=created_by_admin
+            )
+        else:
+            promo_result = {
+                'valid': False,
+                'message': '',
+                'service_discount': 0.0,
+                'commission_waived': 0.0,
+                'total_discount': 0.0,
+                'final_services_total': base_services_price,
+                'final_commission': actual_commission,
+            }
 
         # 6) Финальные расчёты с учётом промокода
         final_services_price = promo_result['final_services_total']
