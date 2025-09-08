@@ -1,0 +1,40 @@
+{
+    "actions": [],
+    "autoname": "format:AUTO-DISC-USE-{car_wash}-{####}",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "car_wash",
+        "customer",
+        "context_type",
+        "context_id",
+        "discount_id",
+        "discount_name",
+        "rules_snapshot",
+        "service_discount",
+        "commission_waived",
+        "total_discount"
+    ],
+    "fields": [
+        {"fieldname": "car_wash", "fieldtype": "Link", "label": "Автомойка", "options": "Car wash", "reqd": 1},
+        {"fieldname": "customer", "fieldtype": "Link", "label": "Клиент", "options": "Car wash client"},
+        {"fieldname": "context_type", "fieldtype": "Select", "label": "Контекст", "options": "Booking\nAppointment\nMobileAttempt", "reqd": 1},
+        {"fieldname": "context_id", "fieldtype": "Data", "label": "ID Контекста", "reqd": 1},
+        {"fieldname": "discount_id", "fieldtype": "Link", "label": "Скидка", "options": "Car wash auto discount", "reqd": 1},
+        {"fieldname": "discount_name", "fieldtype": "Data", "label": "Название скидки"},
+        {"fieldname": "rules_snapshot", "fieldtype": "Long Text", "label": "Снимок правил"},
+        {"fieldname": "service_discount", "fieldtype": "Currency", "label": "Скидка на услуги"},
+        {"fieldname": "commission_waived", "fieldtype": "Currency", "label": "Комиссия списана"},
+        {"fieldname": "total_discount", "fieldtype": "Currency", "label": "Итого скидка"}
+    ],
+    "module": "Car Wash Management",
+    "name": "Car wash auto discount usage",
+    "owner": "Administrator",
+    "permissions": [
+        {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "print": 1, "share": 1}
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC"
+}
+
+

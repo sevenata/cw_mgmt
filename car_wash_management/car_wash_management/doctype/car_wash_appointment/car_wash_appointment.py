@@ -1,11 +1,13 @@
 from frappe.model.document import Document
 import frappe
+import uuid
 from frappe.utils import flt, cint, today, add_days, getdate, now_datetime, add_to_date
 from ...inventory import recalc_products_totals, issue_products_from_rows, cancel_sles_by_appointment, reconcile_issues_for_appointment
 
 from .worker_earnings import try_sync_worker_earning
 from .appointments_by_date import get_by_date, get_by_time_period
 from ..car_wash_booking.booking_price_and_duration import get_booking_price_and_duration
+from ..car_wash_booking.booking_price_and_duration.auto_discounts import record_auto_discount_usage
 from .excel.export_services_to_excel import export_services_to_excel
 from .excel.export_workers_to_excel import export_workers_to_xls
 
@@ -38,12 +40,26 @@ class Carwashappointment(Document):
 		self.starts_on = now_datetime()
 		self.work_started_on = self.starts_on
 
+		self.name = uuid.uuid4()
+
+		try:
+			if not getattr(self, "is_deleted", 0):
+				result = get_booking_price_and_duration(self.car_wash, self.car, self.services,
+														self.tariff, user=self.customer)
+				auto_result = result.get("auto_discounts", {}) or {}
+				print("auto_result", auto_result)
+				record_auto_discount_usage(self.car_wash, self.customer, "Appointment",
+												   self.name, auto_result)
+		except Exception as e:
+			print("Record auto discount usage (appointment) failed", e)
+			frappe.log_error(frappe.get_traceback(),
+							 "Record auto discount usage (appointment) failed")
+
 	def validate(self):
 		price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff)
 		self.services_total = price_and_duration["total_price"]
 		self.duration_total = price_and_duration["total_duration"]
 		self.staff_reward_total = price_and_duration["staff_reward_total"]
-
 
 		# Пересчёт товаров и общего итога
 		recalc_products_totals(self)
@@ -63,7 +79,6 @@ class Carwashappointment(Document):
 			})
 			booking_doc.save()
 
-	# ---- ДОБАВЬ ЭТИ ДВА ХУКА ----
 	def after_insert(self):
 		# На создание тоже шлём (например, старт работ)
 		self._schedule_push_if_changed(created=True)

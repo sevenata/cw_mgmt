@@ -1,0 +1,29 @@
+{
+    "actions": [],
+    "creation": "2025-01-20 12:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "service"
+    ],
+    "fields": [
+        {
+            "columns": 2,
+            "fieldname": "service",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Услуга",
+            "options": "Car wash service",
+            "reqd": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "istable": 1,
+    "module": "Car Wash Management",
+    "name": "Car wash auto discount service",
+    "owner": "Administrator",
+    "permissions": [],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
+}

@@ -1,0 +1,189 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "format:AUTO-DISCOUNT-{car_wash}-{###}",
+    "creation": "2025-01-20 12:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "details_tab",
+        "name_title",
+        "car_wash", 
+        "description",
+        "discount_type_section",
+        "discount_type",
+        "discount_value",
+        "minimum_order_amount",
+        "waive_queue_commission",
+        "conditions_tab",
+        "target_services",
+        "applicable_services",
+        "rules_tab",
+        "rules_logic",
+        "rules",
+        "settings_tab",
+        "priority",
+        "can_combine_with_promocodes",
+        "can_combine_with_other_auto_discounts",
+        "valid_from",
+        "valid_to",
+        "usage_limit_per_customer",
+        "is_active",
+        "is_deleted"
+    ],
+    "fields": [
+        {
+            "fieldname": "details_tab",
+            "fieldtype": "Tab Break",
+            "label": "Основная информация"
+        },
+        {
+            "fieldname": "name_title",
+            "fieldtype": "Data",
+            "label": "Название скидки",
+            "reqd": 1
+        },
+        {
+            "fieldname": "car_wash",
+            "fieldtype": "Link",
+            "label": "Автомойка",
+            "options": "Car wash",
+            "reqd": 1
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Text",
+            "label": "Описание скидки"
+        },
+        {
+            "fieldname": "discount_type_section",
+            "fieldtype": "Section Break",
+            "label": "Настройки скидки"
+        },
+        {
+            "default": "Percentage",
+            "fieldname": "discount_type",
+            "fieldtype": "Select",
+            "label": "Тип скидки",
+            "options": "Percentage\nFixed Amount",
+            "reqd": 1
+        },
+        {
+            "fieldname": "discount_value",
+            "fieldtype": "Float",
+            "label": "Размер скидки",
+            "non_negative": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "minimum_order_amount",
+            "fieldtype": "Currency",
+            "label": "Минимальная сумма заказа",
+            "non_negative": 1
+        },
+        {
+            "default": "0",
+            "fieldname": "waive_queue_commission",
+            "fieldtype": "Check",
+            "label": "Освободить от комиссии за очередь"
+        },
+        {"fieldname": "conditions_tab", "fieldtype": "Tab Break", "label": "Условия применения"},
+        {"fieldname": "target_services", "fieldtype": "Table", "label": "Целевые услуги для условия", "options": "Car wash auto discount service"},
+        {
+            "fieldname": "applicable_services",
+            "fieldtype": "Table",
+            "label": "Применимые услуги (пусто = все)",
+            "options": "Car wash auto discount service"
+        },
+        {
+            "fieldname": "rules_tab",
+            "fieldtype": "Tab Break",
+            "label": "Правила"
+        },
+        {
+            "default": "ALL (AND)",
+            "fieldname": "rules_logic",
+            "fieldtype": "Select",
+            "label": "Логика правил",
+            "options": "ALL (AND)\nANY (OR)"
+        },
+        {
+            "fieldname": "rules",
+            "fieldtype": "Table",
+            "label": "Правила применения",
+            "options": "Car wash auto discount rule"
+        },
+        {
+            "fieldname": "settings_tab",
+            "fieldtype": "Tab Break",
+            "label": "Настройки"
+        },
+        {
+            "default": "1",
+            "fieldname": "priority",
+            "fieldtype": "Int",
+            "label": "Приоритет (1 - высший)",
+            "non_negative": 1,
+            "reqd": 1
+        },
+        {
+            "default": "1",
+            "fieldname": "can_combine_with_promocodes",
+            "fieldtype": "Check",
+            "label": "Можно комбинировать с промокодами"
+        },
+        {
+            "default": "0",
+            "fieldname": "can_combine_with_other_auto_discounts",
+            "fieldtype": "Check",
+            "label": "Можно комбинировать с другими автоскидками"
+        },
+        {
+            "fieldname": "valid_from",
+            "fieldtype": "Date",
+            "label": "Действует с"
+        },
+        {
+            "fieldname": "valid_to",
+            "fieldtype": "Date",
+            "label": "Действует до"
+        },
+        {
+            "fieldname": "usage_limit_per_customer",
+            "fieldtype": "Int",
+            "label": "Лимит использований на клиента",
+            "non_negative": 1
+        },
+        {
+            "default": "1",
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "label": "Активна"
+        },
+        {
+            "default": "0",
+            "fieldname": "is_deleted",
+            "fieldtype": "Check",
+            "label": "Удалена"
+        }
+    ],
+    "module": "Car Wash Management",
+    "name": "Car wash auto discount",
+    "naming_rule": "Expression",
+    "title_field": "name_title",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ]
+}

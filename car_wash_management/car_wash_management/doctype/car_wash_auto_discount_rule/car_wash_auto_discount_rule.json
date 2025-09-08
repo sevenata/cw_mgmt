@@ -1,0 +1,89 @@
+{
+    "actions": [],
+    "creation": "2025-01-20 12:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "rule_type",
+        "operator",
+        "value",
+        "period",
+        "nth_step",
+        "nth_offset",
+        "services_section",
+        "services"
+    ],
+    "fields": [
+        {
+            "in_list_view": 1,
+            "default": "Total Orders Count",
+            "fieldname": "rule_type",
+            "fieldtype": "Select",
+            "label": "Тип правила",
+            "options": "Total Orders Count\nPaid Orders Count\nTotal Spent Amount\nService Usage Count\nUnique Cars Count\nFirst Time Customer\nLast Visit Days Ago\nAverage Ticket Amount\nNth Order",
+            "reqd": 1
+        },
+        {
+            "in_list_view": 1,
+            "default": ">=",
+            "fieldname": "operator",
+            "fieldtype": "Select",
+            "label": "Оператор",
+            "options": ">=\n>\n=\n<\n<="
+        },
+        {
+            "in_list_view": 1,
+            "fieldname": "value",
+            "fieldtype": "Float",
+            "label": "Значение"
+        },
+        {
+            "in_list_view": 1,
+            "default": "all_time",
+            "fieldname": "period",
+            "fieldtype": "Select",
+            "label": "Период",
+            "options": "all_time\nyear\nmonth"
+        },
+        {
+            "in_list_view": 1,
+            "depends_on": "eval:doc.rule_type == 'Nth Order'",
+            "fieldname": "nth_step",
+            "fieldtype": "Int",
+            "label": "Каждый N-й заказ",
+            "non_negative": 1
+        },
+        {
+            "default": "0",
+            "depends_on": "eval:doc.rule_type == 'Nth Order'",
+            "fieldname": "nth_offset",
+            "fieldtype": "Int",
+            "label": "Смещение (offset)",
+            "non_negative": 1
+        },
+        {
+            "depends_on": "eval:doc.rule_type == 'Service Usage Count'",
+            "fieldname": "services_section",
+            "fieldtype": "Section Break",
+            "label": "Целевые услуги для правила"
+        },
+        {
+            "depends_on": "eval:doc.rule_type == 'Service Usage Count'",
+            "fieldname": "services",
+            "fieldtype": "Table",
+            "label": "Услуги для подсчёта",
+            "options": "Car wash auto discount rule service"
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "istable": 1,
+    "module": "Car Wash Management",
+    "name": "Car wash auto discount rule",
+    "owner": "Administrator",
+    "permissions": [],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
+}
+
+

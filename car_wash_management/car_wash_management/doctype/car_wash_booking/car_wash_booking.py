@@ -2,6 +2,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import today, now_datetime
 from .booking_price_and_duration.booking import get_booking_price_and_duration
+from .booking_price_and_duration.auto_discounts import record_auto_discount_usage
 from ...inventory import recalc_products_totals, reserve_products, unreserve_products
 
 class Carwashbooking(Document):
@@ -28,7 +29,9 @@ class Carwashbooking(Document):
             self.car_wash_confirmation_status = "Not applicable"
 
     def validate(self):
-        price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff)
+        # Расчет использует customer, полученного из автомобиля; учитываем очередь/время из поля документа
+        is_time_booking = bool(getattr(self, "is_time_booking", 0))
+        price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, is_time_booking=is_time_booking)
         self.services_total = price_and_duration["total_price"]
         self.duration_total = price_and_duration["total_duration"]
         self.staff_reward_total = price_and_duration["staff_reward_total"]
@@ -46,6 +49,13 @@ class Carwashbooking(Document):
             self.has_appointment = False
 
         update_cars_in_queue(self)
+
+        # Сохранить историю применения автоскидок (только для не удаленных)
+        try:
+            if not getattr(self, "is_deleted", 0):
+                record_auto_discount_usage(self.car_wash, self.customer, "Booking", self.name, price_and_duration.get("auto_discounts", {}))
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Record auto discount usage (booking) failed")
 
     def on_update(self):
         # Снятие резерва при soft-delete
