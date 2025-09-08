@@ -20,6 +20,10 @@ class StockLedgerEntry(Document):
 			else:
 				if not getattr(self, "warehouse", None):
 					raise frappe.ValidationError("Укажите склад")
+
+			# расчёт суммы по строке
+			rate = float(getattr(self, "rate", 0) or 0)
+			self.amount = float(qty * rate)
 		except frappe.ValidationError:
 			raise
 		except Exception:

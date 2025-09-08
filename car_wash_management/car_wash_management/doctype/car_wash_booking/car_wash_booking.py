@@ -2,6 +2,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import today, now_datetime
 from .booking_price_and_duration.booking import get_booking_price_and_duration
+from ...inventory import recalc_products_totals, reserve_products, unreserve_products
 
 class Carwashbooking(Document):
     def before_insert(self):
@@ -32,6 +33,9 @@ class Carwashbooking(Document):
         self.duration_total = price_and_duration["total_duration"]
         self.staff_reward_total = price_and_duration["staff_reward_total"]
 
+        # Пересчитать товары (если поле products есть)
+        recalc_products_totals(self)
+
         if self.payment_status == "Paid" and self.payment_type and not self.payment_received_on:
             self.payment_received_on = now_datetime()
 
@@ -42,6 +46,28 @@ class Carwashbooking(Document):
             self.has_appointment = False
 
         update_cars_in_queue(self)
+
+    def on_update(self):
+        # Снятие резерва при soft-delete
+        try:
+            if self.has_value_changed("is_deleted") and getattr(self, "is_deleted", 0):
+                unreserve_products(getattr(self, "products", []) or [])
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Booking on_update soft-delete unreserve failed")
+
+    def on_submit(self):
+        try:
+            reserve_products(getattr(self, "products", []) or [])
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Booking on_submit reserve failed")
+
+    def on_cancel(self):
+        try:
+            unreserve_products(getattr(self, "products", []) or [])
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Booking on_cancel unreserve failed")
+
+    # helper methods removed; use shared inventory helpers
 
 import frappe
 from frappe import _

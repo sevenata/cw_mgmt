@@ -1,6 +1,7 @@
 from frappe.model.document import Document
 import frappe
 from frappe.utils import flt, cint, today, add_days, getdate, now_datetime, add_to_date
+from ...inventory import recalc_products_totals, issue_products_from_rows, cancel_sles_by_appointment, reconcile_issues_for_appointment
 
 from .worker_earnings import try_sync_worker_earning
 from .appointments_by_date import get_by_date, get_by_time_period
@@ -43,6 +44,10 @@ class Carwashappointment(Document):
 		self.duration_total = price_and_duration["total_duration"]
 		self.staff_reward_total = price_and_duration["staff_reward_total"]
 
+
+		# Пересчёт товаров и общего итога
+		recalc_products_totals(self)
+
 		if self.starts_on and not self.ends_on and self.duration_total:
 			self.ends_on = add_to_date(self.starts_on, seconds=self.duration_total)
 
@@ -67,6 +72,30 @@ class Carwashappointment(Document):
 		# На любое сохранение шлём только если важные поля реально изменились
 		self._schedule_push_if_changed()
 		try_sync_worker_earning(self)
+
+		# Автоматическое списание/возврат товаров по изменению статуса оплаты
+		try:
+			if self.has_value_changed("payment_status"):
+				if getattr(self, "payment_status", None) == "Paid":
+					issue_products_from_rows(self.car_wash, getattr(self, "products", []) or [], appointment=self.name, release_reserved=True)
+				else:
+					cancel_sles_by_appointment(self.name)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_update stock flow failed")
+
+		# Дельта-реконсиляция, если уже Paid, а товары изменились
+		try:
+			if getattr(self, "payment_status", None) == "Paid" and self.has_value_changed("products"):
+				reconcile_issues_for_appointment(self)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Car wash appointment reconcile failed")
+
+		# Soft-delete: при установке is_deleted = 1 вернуть стоки (отменить SLE)
+		try:
+			if self.has_value_changed("is_deleted") and getattr(self, "is_deleted", 0):
+				cancel_sles_by_appointment(self.name)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Car wash appointment soft-delete revert stock failed")
 
 	# ---- ВНУТРЕННЕЕ: планирование фоновой отправки после коммита ----
 	def _schedule_push_if_changed(self, created: bool = False):
@@ -108,6 +137,22 @@ class Carwashappointment(Document):
             ))
 
 		frappe.db.after_commit(_after_commit)
+
+
+
+	def on_trash(self):
+		# перед удалением документа гарантируем возврат товара
+		try:
+			cancel_sles_by_appointment(self.name)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_trash revert stock failed")
+
+	def on_cancel(self):
+		# при отмене документа вернуть стоки, как и для worker ledger entry
+		try:
+			cancel_sles_by_appointment(self.name)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_cancel revert stock failed")
 
 
 

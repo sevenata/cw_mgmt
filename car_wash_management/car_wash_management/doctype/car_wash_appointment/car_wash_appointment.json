@@ -39,8 +39,6 @@
   "car_wash_worker",
   "car_wash_worker_name",
   "column_break_gjig",
-  "services_total",
-  "staff_reward_total",
   "duration_total",
   "services",
   "services_json",
@@ -63,7 +61,14 @@
   "car_body_type",
   "car_color",
   "customer_mobile_number",
-  "connections_tab"
+  "connections_tab",
+  "shop_tab",
+  "products",
+  "pricing_tab",
+  "services_total",
+  "staff_reward_total",
+  "products_total",
+  "grand_total"
  ],
  "fields": [
   {
@@ -88,7 +93,8 @@
    "in_standard_filter": 1,
    "label": "\u041a\u043b\u0438\u0435\u043d\u0442",
    "options": "Car wash client",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -337,7 +343,8 @@
    "fieldname": "car_wash_worker",
    "fieldtype": "Link",
    "label": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c",
-   "options": "Car wash worker"
+   "options": "Car wash worker",
+   "search_index": 1
   },
   {
    "fetch_from": "car_wash_worker.full_name",
@@ -421,6 +428,32 @@
    "fieldtype": "Link",
    "label": "\u0422\u0430\u0440\u0438\u0444",
    "options": "Car wash tariff"
+  },
+  {
+   "fieldname": "shop_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u041c\u0430\u0433\u0430\u0437\u0438\u043d"
+  },
+  {
+   "fieldname": "products",
+   "fieldtype": "Table",
+   "label": "\u041f\u0440\u043e\u0434\u0443\u043a\u0442\u044b",
+   "options": "Car wash appointment product"
+  },
+  {
+   "fieldname": "products_total",
+   "fieldtype": "Currency",
+   "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c \u0442\u043e\u0432\u0430\u0440\u043e\u0432"
+  },
+  {
+   "fieldname": "pricing_tab",
+   "fieldtype": "Tab Break",
+   "label": "\u0421\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "\u041e\u0431\u0449\u0430\u044f \u0441\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u044c"
   }
  ],
  "is_calendar_and_gantt": 1,
@@ -430,7 +463,7 @@
    "link_fieldname": "appointment"
   }
  ],
- "modified": "2025-08-16 19:16:48.415857",
+ "modified": "2025-09-08 20:11:09.970991",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash appointment",

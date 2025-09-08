@@ -331,3 +331,74 @@ def admin_login_and_get_jwt(email, password):
 	return {
 		"token": token
 	}
+
+import frappe
+
+@frappe.whitelist(allow_guest=True)
+def search_products(car_wash: str, q: str = "", category: str | None = None, limit: int = 50, offset: int = 0):
+    filters = {"car_wash": car_wash, "is_deleted": 0}
+    if category:
+        filters["category"] = category
+
+    or_filters = []
+    if q:
+        or_filters = [{"title": ["like", f"%{q}%"]}]
+
+    rows = frappe.get_all(
+        "Product",
+        filters=filters,
+        or_filters=or_filters,
+        fields=["name", "title", "category", "product_type", "stock_uom", "default_warehouse", "selling_price"],
+        limit=limit,
+        start=offset,
+        order_by="modified desc",
+    )
+    return {"items": rows, "has_more": len(rows) == limit}
+
+
+@frappe.whitelist(allow_guest=True)
+def get_products_price_and_stock(car_wash: str, items, warehouse: str | None = None):
+    # items может прийти строкой из JSON
+    try:
+        items = frappe.parse_json(items)
+    except Exception:
+        pass
+
+    if not isinstance(items, list):
+        frappe.throw("items must be a list of { product, qty, rate?, warehouse? }")
+
+    result = []
+    products_total = 0.0
+
+    for it in items:
+        product = it.get("product")
+        qty = float(it.get("qty") or 0)
+        row_wh = it.get("warehouse")
+        doc = frappe.get_doc("Product", product)
+
+        rate = float(it.get("rate") or doc.selling_price or 0)
+        amount = qty * rate
+
+        wh = row_wh or warehouse or doc.default_warehouse
+        bin_qty = None
+        if wh:
+            bin_qty = frappe.db.get_value("Bin", {"warehouse": wh, "product": product}, "actual_qty") or 0
+
+        result.append({
+            "product": product,
+            "title": doc.title,
+            "qty": qty,
+            "rate": rate,
+            "amount": amount,
+            "warehouse": wh,
+            "available_qty": bin_qty,
+            "stock_uom": doc.stock_uom,
+        })
+        products_total += amount
+
+    return {
+        "status": "success",
+        "items": result,
+        "products_total": products_total,
+        "grand_total": products_total,  # итог по товарам (услуги добавляйте на фронте)
+    }
