@@ -7,7 +7,7 @@ from ...inventory import recalc_products_totals, issue_products_from_rows, cance
 from .worker_earnings import try_sync_worker_earning
 from .appointments_by_date import get_by_date, get_by_time_period
 from ..car_wash_booking.booking_price_and_duration import get_booking_price_and_duration
-from ..car_wash_booking.booking_price_and_duration.auto_discounts import record_auto_discount_usage
+from ..car_wash_booking.booking_price_and_duration.auto_discounts import record_auto_discount_usage, apply_recorded_auto_discounts_to_base, delete_recorded_auto_discount_usage, refresh_recorded_auto_discount_usage
 from .excel.export_services_to_excel import export_services_to_excel
 from .excel.export_workers_to_excel import export_workers_to_xls
 
@@ -40,26 +40,34 @@ class Carwashappointment(Document):
 		self.starts_on = now_datetime()
 		self.work_started_on = self.starts_on
 
-		self.name = uuid.uuid4()
-
-		try:
-			if not getattr(self, "is_deleted", 0):
-				result = get_booking_price_and_duration(self.car_wash, self.car, self.services,
-														self.tariff, user=self.customer)
-				auto_result = result.get("auto_discounts", {}) or {}
-				print("auto_result", auto_result)
-				record_auto_discount_usage(self.car_wash, self.customer, "Appointment",
-												   self.name, auto_result)
-		except Exception as e:
-			print("Record auto discount usage (appointment) failed", e)
-			frappe.log_error(frappe.get_traceback(),
-							 "Record auto discount usage (appointment) failed")
-
 	def validate(self):
-		price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff)
-		self.services_total = price_and_duration["total_price"]
-		self.duration_total = price_and_duration["total_duration"]
-		self.staff_reward_total = price_and_duration["staff_reward_total"]
+		# Для нового документа рассчитываем итоги с учётом автоскидок напрямую
+		if self.is_new():
+			full = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff)
+			self.duration_total = full["total_duration"]
+			self.staff_reward_total = full["staff_reward_total"]
+			self.services_total = full["total_price"]
+		else:
+			# Для обновлений используем зафиксированные usage, чтобы не переоценивать условия
+			base = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, apply_auto_discounts=False)
+			self.duration_total = base["total_duration"]
+			self.staff_reward_total = base["staff_reward_total"]
+
+			# Обновить usage под текущую базу
+			refresh_recorded_auto_discount_usage(
+				"Appointment",
+				self.name,
+				base_services_total=base.get("final_services_price", 0.0),
+				base_commission=base.get("final_commission", 0.0),
+			)
+
+			applied = apply_recorded_auto_discounts_to_base(
+				base_services_total=base.get("final_services_price", 0.0),
+				base_commission=base.get("final_commission", 0.0),
+				context_type="Appointment",
+				context_id=self.name,
+			)
+			self.services_total = applied["final_services_total"] + applied["final_commission"]
 
 		# Пересчёт товаров и общего итога
 		recalc_products_totals(self)
@@ -82,6 +90,14 @@ class Carwashappointment(Document):
 	def after_insert(self):
 		# На создание тоже шлём (например, старт работ)
 		self._schedule_push_if_changed(created=True)
+		# Зафиксировать usage автоскидок уже с финальным именем документа
+		try:
+			if not getattr(self, "is_deleted", 0):
+				result = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, user=self.customer)
+				auto_result = result.get("auto_discounts", {}) or {}
+				record_auto_discount_usage(self.car_wash, self.customer, "Appointment", self.name, auto_result)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Record auto discount usage (appointment after_insert) failed")
 
 	def on_update(self):
 		# На любое сохранение шлём только если важные поля реально изменились
@@ -105,10 +121,11 @@ class Carwashappointment(Document):
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment reconcile failed")
 
-		# Soft-delete: при установке is_deleted = 1 вернуть стоки (отменить SLE)
+		# Soft-delete: при установке is_deleted = 1 вернуть стоки (отменить SLE) и удалить usage
 		try:
 			if self.has_value_changed("is_deleted") and getattr(self, "is_deleted", 0):
 				cancel_sles_by_appointment(self.name)
+				delete_recorded_auto_discount_usage("Appointment", self.name)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment soft-delete revert stock failed")
 
@@ -146,26 +163,26 @@ class Carwashappointment(Document):
 		# вызываем ТОЛЬКО после успешного коммита транзакции
 		def _after_commit():
 			frappe.db.after_commit(lambda: frappe.enqueue(
-                "car_wash_management.api.push_to_nest",
-                now=True,                # важно: выполнить синхронно, без RQ
-                payload=payload
-            ))
+				"car_wash_management.api.push_to_nest",
+				now=True,                # важно: выполнить синхронно, без RQ
+				payload=payload
+			))
 
 		frappe.db.after_commit(_after_commit)
 
-
-
 	def on_trash(self):
-		# перед удалением документа гарантируем возврат товара
+		# перед удалением документа гарантируем возврат товара и удаляем usage
 		try:
 			cancel_sles_by_appointment(self.name)
+			delete_recorded_auto_discount_usage("Appointment", self.name)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_trash revert stock failed")
 
 	def on_cancel(self):
-		# при отмене документа вернуть стоки, как и для worker ledger entry
+		# при отмене документа вернуть стоки и удалить usage, как и для worker ledger entry
 		try:
 			cancel_sles_by_appointment(self.name)
+			delete_recorded_auto_discount_usage("Appointment", self.name)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_cancel revert stock failed")
 

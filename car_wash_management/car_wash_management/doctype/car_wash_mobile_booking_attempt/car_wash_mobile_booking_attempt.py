@@ -7,10 +7,45 @@ from ..car_wash_booking.booking_price_and_duration.auto_discounts import (
     get_applicable_auto_discounts_cached,
     apply_best_auto_discounts,
     record_auto_discount_usage,
+    apply_recorded_auto_discounts_to_base,
+    delete_recorded_auto_discount_usage,
+    refresh_recorded_auto_discount_usage,
 )
+from ..car_wash_booking.booking_price_and_duration.booking import get_booking_price_and_duration
 
 
 class Carwashmobilebookingattempt(Document):
+	def validate(self):
+		# База без автоскидок, затем применим зафиксированные usage (context: MobileAttempt)
+		base = get_booking_price_and_duration(
+			self.car_wash,
+			self.car,
+			getattr(self, "services", []) or [],
+			getattr(self, "tariff", None),
+			is_time_booking=bool(getattr(self, "is_time_booking", 0)),
+			created_by_admin=False,
+			apply_auto_discounts=False,
+		)
+
+		# Обновить usage под текущую базу
+		refresh_recorded_auto_discount_usage(
+			"MobileAttempt",
+			self.name,
+			base_services_total=base.get("final_services_price", 0.0),
+			base_commission=base.get("final_commission", 0.0),
+		)
+
+		applied = apply_recorded_auto_discounts_to_base(
+			base_services_total=base.get("final_services_price", 0.0),
+			base_commission=base.get("final_commission", 0.0),
+			context_type="MobileAttempt",
+			context_id=self.name,
+		)
+		# total хранится как services_total + commission_user
+		self.services_total = applied["final_services_total"]
+		self.commission_user = applied["final_commission"]
+		self.total = applied["final_services_total"] + applied["final_commission"]
+
 	def after_insert(self):
 		# Запишем историю автоскидок на момент создания попытки бронирования
 		try:
@@ -38,3 +73,9 @@ class Carwashmobilebookingattempt(Document):
 			)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Record auto discount usage (mobile attempt) failed")
+
+	def on_trash(self):
+		try:
+			delete_recorded_auto_discount_usage("MobileAttempt", self.name)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Mobile attempt delete usage failed")

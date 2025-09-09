@@ -2,7 +2,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import today, now_datetime
 from .booking_price_and_duration.booking import get_booking_price_and_duration
-from .booking_price_and_duration.auto_discounts import record_auto_discount_usage
+from .booking_price_and_duration.auto_discounts import record_auto_discount_usage, apply_recorded_auto_discounts_to_base, delete_recorded_auto_discount_usage, refresh_recorded_auto_discount_usage
 from ...inventory import recalc_products_totals, reserve_products, unreserve_products
 
 class Carwashbooking(Document):
@@ -29,12 +29,37 @@ class Carwashbooking(Document):
             self.car_wash_confirmation_status = "Not applicable"
 
     def validate(self):
-        # Расчет использует customer, полученного из автомобиля; учитываем очередь/время из поля документа
+        # Базовые суммы без применения автоскидок
         is_time_booking = bool(getattr(self, "is_time_booking", 0))
-        price_and_duration = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, is_time_booking=is_time_booking)
-        self.services_total = price_and_duration["total_price"]
-        self.duration_total = price_and_duration["total_duration"]
-        self.staff_reward_total = price_and_duration["staff_reward_total"]
+        base = get_booking_price_and_duration(
+            self.car_wash,
+            self.car,
+            self.services,
+            self.tariff,
+            is_time_booking=is_time_booking,
+            apply_auto_discounts=False,
+        )
+
+        # Обновить usage под текущую базу
+        refresh_recorded_auto_discount_usage(
+            "Booking",
+            self.name,
+            base_services_total=base.get("final_services_price", 0.0),
+            base_commission=base.get("final_commission", 0.0),
+        )
+
+        # Применим зафиксированные автоскидки, записанные при создании (context: Booking)
+        applied = apply_recorded_auto_discounts_to_base(
+            base_services_total=base.get("final_services_price", 0.0),
+            base_commission=base.get("final_commission", 0.0),
+            context_type="Booking",
+            context_id=self.name,
+        )
+
+        # Запишем поля документа
+        self.services_total = applied["final_services_total"] + applied["final_commission"]
+        self.duration_total = base["total_duration"]
+        self.staff_reward_total = base["staff_reward_total"]
 
         # Пересчитать товары (если поле products есть)
         recalc_products_totals(self)
@@ -50,10 +75,24 @@ class Carwashbooking(Document):
 
         update_cars_in_queue(self)
 
-        # Сохранить историю применения автоскидок (только для не удаленных)
+        # Сохранить историю применения автоскидок (только при создании или явном первом расчёте)
         try:
-            if not getattr(self, "is_deleted", 0):
-                record_auto_discount_usage(self.car_wash, self.customer, "Booking", self.name, price_and_duration.get("auto_discounts", {}))
+            if self.is_new() and not getattr(self, "is_deleted", 0):
+                # На момент создания фиксируем автоскидки по текущим условиям
+                price_and_duration_full = get_booking_price_and_duration(
+                    self.car_wash,
+                    self.car,
+                    self.services,
+                    self.tariff,
+                    is_time_booking=is_time_booking,
+                )
+                record_auto_discount_usage(
+                    self.car_wash,
+                    self.customer,
+                    "Booking",
+                    self.name,
+                    price_and_duration_full.get("auto_discounts", {})
+                )
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Record auto discount usage (booking) failed")
 
@@ -62,6 +101,8 @@ class Carwashbooking(Document):
         try:
             if self.has_value_changed("is_deleted") and getattr(self, "is_deleted", 0):
                 unreserve_products(getattr(self, "products", []) or [])
+                # Удалить записанные usage
+                delete_recorded_auto_discount_usage("Booking", self.name)
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Booking on_update soft-delete unreserve failed")
 
@@ -74,6 +115,7 @@ class Carwashbooking(Document):
     def on_cancel(self):
         try:
             unreserve_products(getattr(self, "products", []) or [])
+            delete_recorded_auto_discount_usage("Booking", self.name)
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Booking on_cancel unreserve failed")
 

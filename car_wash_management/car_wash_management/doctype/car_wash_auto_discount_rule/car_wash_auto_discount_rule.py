@@ -5,3 +5,4 @@ class Carwashautodiscountrule(Document):
     pass
 
 
+

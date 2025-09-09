@@ -49,16 +49,16 @@ def get_booking_price_and_duration(
 
     Если tariff передан, используем его (с валидацией принадлежности мойке и активности).
     Иначе авто-подбираем тариф по мойке (и при необходимости контексту).
-    
+
     Комиссия за очередь:
     - Администратор мойки: комиссия не взимается (created_by_admin=True)
     - Обычный пользователь: комиссия 100 тенге за вставание в очередь (is_time_booking=False)
-    
+
     Автоматические скидки:
     - Применяются автоматически на основе статистики клиента (apply_auto_discounts=True)
     - Можно отключить отдельные скидки через disabled_auto_discounts
     - Кэшируются для повышения производительности
-    
+
     Промокод применяется к итоговой стоимости услуг и может освобождать от комиссии за очередь.
     Автоскидки и промокоды могут комбинироваться в зависимости от настроек скидки.
     """
@@ -111,7 +111,7 @@ def get_booking_price_and_duration(
 
         # 5) Получение и применение автоматических скидок
         auto_discount_result = {"applied_discounts": [], "total_service_discount": 0.0, "commission_waived": 0.0, "final_services_total": base_services_price, "final_commission": actual_commission, "total_discount": 0.0}
-        
+
         if apply_auto_discounts and resolved_user:  # Автоскидки применяются только для авторизованных пользователей
             try:
                 # Получаем применимые автоскидки
@@ -131,14 +131,14 @@ def get_booking_price_and_duration(
                 print("auto_discount_cache_ttl", auto_discount_cache_ttl)
                 print("force_refresh", True)
                 print("applicable_auto_discounts", applicable_auto_discounts)
-                
+
                 # Исключаем отключенные скидки
                 if disabled_auto_discounts:
                     applicable_auto_discounts = [
-                        discount for discount in applicable_auto_discounts 
+                        discount for discount in applicable_auto_discounts
                         if discount["discount_id"] not in disabled_auto_discounts
                     ]
-                
+
                 # Применяем лучшие автоскидки
                 if applicable_auto_discounts:
                     auto_discount_result = apply_best_auto_discounts(
@@ -166,11 +166,11 @@ def get_booking_price_and_duration(
             'final_services_total': services_after_auto_discount,
             'final_commission': commission_after_auto_discount,
         }
-        
+
         if promocode:
             # Проверяем совместимость автоскидок с промокодом
             can_combine = validate_auto_discount_with_promocode(auto_discount_result, True)
-            
+
             if can_combine:
                 promo_result = validate_and_apply_promocode(
                     promocode=promocode,
@@ -212,7 +212,7 @@ def get_booking_price_and_duration(
             "tariff": tariff_id,
             "created_by_admin": created_by_admin,
             "is_time_booking": is_time_booking,
-            
+
             # Информация об автоматических скидках
             "auto_discounts_applied": len(auto_discount_result["applied_discounts"]) > 0,
             "auto_discounts": {
@@ -223,7 +223,7 @@ def get_booking_price_and_duration(
                 "services_price_after_auto_discounts": services_after_auto_discount,
                 "commission_after_auto_discounts": commission_after_auto_discount
             },
-            
+
             # Информация о промокоде
             "promocode_applied": promo_result['valid'],
             "promocode_message": promo_result.get('message', ''),
@@ -234,7 +234,7 @@ def get_booking_price_and_duration(
                 "promo_type": promo_result.get('promo_type'),
                 "promo_data": promo_result.get('promo_data')
             },
-            
+
             # Общая информация о скидках
             "total_discounts": {
                 "auto_discount_total": auto_discount_result["total_discount"],
@@ -263,23 +263,23 @@ def apply_promocode_to_booking_attempt(
     """
     Apply promocode to existing booking attempt.
     Updates the booking attempt with promocode data.
-    
+
     Args:
         booking_attempt_id: ID of the booking attempt
-        promocode: Promocode to apply  
+        promocode: Promocode to apply
         created_by_admin: True if promocode is being applied by admin
     """
     try:
         # Получаем документ booking attempt
         booking_doc = frappe.get_doc("Car wash mobile booking attempt", booking_attempt_id)
-        
+
         # Определяем исходную комиссию в зависимости от того, кто применяет промокод
         original_commission = booking_doc.commission_user
         if created_by_admin and not booking_doc.is_time_booking:
             # Если админ применяет промокод к бронированию обычного пользователя
             # исходная комиссия остается той, что была при создании
             pass  # original_commission остается как есть
-        
+
         # Применяем промокод
         promo_result = validate_and_apply_promocode(
             promocode=promocode,
@@ -330,96 +330,3 @@ def apply_promocode_to_booking_attempt(
     except Exception as e:
         frappe.log_error(str(e), "Promocode Application Error")
         return {"status": "error", "message": str(e)}
-
-
-@frappe.whitelist()
-def disable_auto_discounts_and_recalculate(
-    car_wash: str,
-    car: str,
-    services: list,
-    user: str,
-    disabled_auto_discount_ids: list,
-    tariff: Any = None,
-    promocode: str = None,
-    is_time_booking: bool = False,
-    commission_amount: float = 100.0,
-    created_by_admin: bool = True
-) -> Dict[str, Any]:
-    """
-    Recalculate booking price with specific auto discounts disabled
-    
-    Args:
-        car_wash: Car wash ID
-        car: Car ID
-        services: List of services
-        user: User ID
-        disabled_auto_discount_ids: List of auto discount IDs to disable
-        tariff: Tariff to use (optional)
-        promocode: Promocode to apply (optional)
-        is_time_booking: Whether it's a time booking
-        commission_amount: Commission amount
-        created_by_admin: Whether created by admin
-        
-    Returns:
-        Recalculated booking data
-    """
-    return get_booking_price_and_duration(
-        car_wash=car_wash,
-        car=car,
-        services=services,
-        tariff=tariff,
-        promocode=promocode,
-        user=user,
-        is_time_booking=is_time_booking,
-        commission_amount=commission_amount,
-        created_by_admin=created_by_admin,
-        apply_auto_discounts=True,
-        disabled_auto_discounts=disabled_auto_discount_ids,
-        auto_discount_cache_ttl=60  # Короткий кэш для перерасчетов
-    )
-
-
-@frappe.whitelist()
-def get_available_auto_discounts_for_customer(
-    car_wash: str,
-    customer: str,
-    services: list,
-    services_total: float,
-    cache_ttl_sec: int = 300
-) -> Dict[str, Any]:
-    """
-    Get all available auto discounts for customer (without applying them)
-    
-    Args:
-        car_wash: Car wash ID
-        customer: Customer ID
-        services: List of services
-        services_total: Total services amount
-        cache_ttl_sec: Cache TTL
-        
-    Returns:
-        List of available auto discounts with details
-    """
-    try:
-        applicable_discounts = get_applicable_auto_discounts_cached(
-            car_wash=car_wash,
-            customer=customer,
-            services=services,
-            services_total=services_total,
-            cache_ttl_sec=cache_ttl_sec
-        )
-        
-        return {
-            "status": "success",
-            "available_discounts": applicable_discounts,
-            "count": len(applicable_discounts)
-        }
-    
-    except Exception as e:
-        frappe.log_error(str(e), "Get Available Auto Discounts Error")
-        return {
-            "status": "error",
-            "message": str(e),
-            "available_discounts": [],
-            "count": 0
-        }

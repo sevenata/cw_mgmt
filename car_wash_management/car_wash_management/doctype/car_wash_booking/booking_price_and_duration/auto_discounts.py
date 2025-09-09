@@ -370,3 +370,140 @@ def clear_customer_auto_discount_cache(customer: str, car_wash: str = None):
     """Clear auto discount cache for customer"""
     pattern = f"auto_discounts:v1:{car_wash or '*'}:{customer}:*"
     frappe.cache().delete_keys(pattern)
+
+
+# ---- Reusable helpers for recorded auto-discount usage ----
+def get_recorded_auto_discount_totals(context_type: str, context_id: str) -> tuple[float, float]:
+    """
+    Sum recorded auto-discount usage totals for a given context.
+
+    Returns:
+        (service_discount_sum, commission_waived_sum)
+    """
+    try:
+        rows = frappe.get_all(
+            "Car wash auto discount usage",
+            filters={
+                "context_type": context_type,
+                "context_id": context_id,
+            },
+            fields=["service_discount", "commission_waived"],
+        )
+        service_discount_sum = 0.0
+        commission_waived_sum = 0.0
+        for r in rows:
+            service_discount_sum += flt(r.get("service_discount") or 0.0)
+            commission_waived_sum += flt(r.get("commission_waived") or 0.0)
+        return service_discount_sum, commission_waived_sum
+    except Exception:
+        return 0.0, 0.0
+
+
+def apply_recorded_auto_discounts_to_base(
+    base_services_total: float,
+    base_commission: float,
+    context_type: str,
+    context_id: str,
+) -> dict:
+    """
+    Convenience helper to apply recorded usage on top of base totals.
+    """
+    service_discount_sum, commission_waived_sum = get_recorded_auto_discount_totals(context_type, context_id)
+    final_services_total = max(0.0, flt(base_services_total) - flt(service_discount_sum))
+    final_commission = max(0.0, flt(base_commission) - flt(commission_waived_sum))
+    return {
+        "final_services_total": final_services_total,
+        "final_commission": final_commission,
+        "total_discount": flt(service_discount_sum) + flt(commission_waived_sum),
+        "service_discount_sum": flt(service_discount_sum),
+        "commission_waived_sum": flt(commission_waived_sum),
+    }
+
+
+def delete_recorded_auto_discount_usage(context_type: str, context_id: str) -> None:
+    """Delete recorded auto discount usage rows for a context."""
+    try:
+        frappe.db.delete(
+            "Car wash auto discount usage",
+            filters={"context_type": context_type, "context_id": context_id},
+        )
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Delete auto discount usage failed")
+
+
+def refresh_recorded_auto_discount_usage(
+    context_type: str,
+    context_id: str,
+    base_services_total: float,
+    base_commission: float,
+) -> Dict[str, float]:
+    """
+    Recompute and update recorded usage amounts against new base totals without re-evaluating eligibility.
+
+    Returns dict with aggregated sums: {service_discount_sum, commission_waived_sum, total_discount_sum, updated_count}
+    """
+    rows = frappe.get_all(
+        "Car wash auto discount usage",
+        filters={"context_type": context_type, "context_id": context_id},
+        fields=["name", "discount_id"],
+        order_by="creation asc",
+    ) or []
+
+    if not rows:
+        return {
+            "service_discount_sum": 0.0,
+            "commission_waived_sum": 0.0,
+            "total_discount_sum": 0.0,
+            "updated_count": 0,
+        }
+
+    # Determine which discount (first with waive flag) should carry the commission waiver
+    index_with_waiver = -1
+    discount_docs: List[Optional[Any]] = []
+    for idx, r in enumerate(rows):
+        try:
+            d = frappe.get_doc("Car wash auto discount", r["discount_id"]) if r.get("discount_id") else None
+        except Exception:
+            d = None
+        discount_docs.append(d)
+        if index_with_waiver == -1 and d and getattr(d, "waive_queue_commission", 0):
+            index_with_waiver = idx
+
+    service_discount_sum = 0.0
+    commission_waived_sum = 0.0
+
+    for idx, r in enumerate(rows):
+        d = discount_docs[idx]
+        if not d:
+            # If missing, zero out
+            service_discount = 0.0
+            commission_waived = 0.0
+        else:
+            # Recompute service discount from discount config (no rule re-evaluation)
+            if getattr(d, "discount_type", "Percentage") == "Percentage":
+                service_discount = (flt(base_services_total) * flt(d.discount_value or 0)) / 100.0
+            else:
+                service_discount = min(flt(d.discount_value or 0), flt(base_services_total))
+            commission_waived = flt(base_commission) if (idx == index_with_waiver and getattr(d, "waive_queue_commission", 0)) else 0.0
+
+        total_discount = flt(service_discount) + flt(commission_waived)
+
+        # Update the usage row
+        try:
+            doc = frappe.get_doc("Car wash auto discount usage", r["name"]) 
+            doc.service_discount = service_discount
+            doc.commission_waived = commission_waived
+            doc.total_discount = total_discount
+            doc.save(ignore_permissions=True)
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), f"Refresh auto discount usage failed: {r['name']}")
+
+        service_discount_sum += service_discount
+        commission_waived_sum += commission_waived
+
+    return {
+        "service_discount_sum": flt(service_discount_sum),
+        "commission_waived_sum": flt(commission_waived_sum),
+        "total_discount_sum": flt(service_discount_sum + commission_waived_sum),
+        "updated_count": len(rows),
+    }
