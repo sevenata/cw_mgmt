@@ -28,6 +28,20 @@ class Carwashmobilebookingattempt(Document):
 	- on_trash: delete recorded usage for this attempt.
 	Rationale: aligns mobile attempt calculations and toggles with booking/appointment via helpers.
 	"""
+	
+	def has_shop_feature(self):
+		"""
+		Check if the car wash has the shop feature enabled
+		Results are cached for 3 minutes to improve performance
+		
+		Returns:
+			bool: True if shop feature is available, False otherwise
+		"""
+		if not self.car_wash:
+			return False
+			
+		car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
+		return car_wash_doc.has_journal_feature("shop")
 	def validate(self):
 		# База без автоскидок, затем применим зафиксированные usage (context: MobileAttempt)
 		base = compute_base_price_and_duration(
@@ -73,6 +87,13 @@ class Carwashmobilebookingattempt(Document):
 		try:
 			if getattr(self, "is_deleted", 0):
 				return
+			
+			# Проверяем наличие фичи promo у мойки
+			car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
+			has_promo_feature = car_wash_doc.has_journal_feature("promo")
+			if not has_promo_feature:
+				return
+				
 			applicable = get_applicable_auto_discounts_cached(
 				car_wash=self.car_wash,
 				customer=getattr(self, "user", None),

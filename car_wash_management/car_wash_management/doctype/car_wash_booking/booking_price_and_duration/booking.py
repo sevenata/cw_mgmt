@@ -54,8 +54,9 @@ def get_booking_price_and_duration(
     - Администратор мойки: комиссия не взимается (created_by_admin=True)
     - Обычный пользователь: комиссия 100 тенге за вставание в очередь (is_time_booking=False)
 
-    Автоматические скидки:
-    - Применяются автоматически на основе статистики клиента (apply_auto_discounts=True)
+    Автоматические скидки и промокоды:
+    - Применяются только если у мойки есть фича "promo" в активной подписке
+    - Автоскидки применяются автоматически на основе статистики клиента (apply_auto_discounts=True)
     - Можно отключить отдельные скидки через disabled_auto_discounts
     - Кэшируются для повышения производительности
 
@@ -109,10 +110,18 @@ def get_booking_price_and_duration(
             # Комиссия только для обычных пользователей при вставании в очередь
             actual_commission = commission_amount
 
-        # 5) Получение и применение автоматических скидок
+        # 5) Проверка наличия фичи promo у мойки
+        print(f"DEBUG get_booking_price_and_duration: Checking promo feature for car_wash={car_wash}")
+        car_wash_doc = frappe.get_doc("Car wash", car_wash)
+        has_promo_feature = car_wash_doc.has_journal_feature("promo")
+        print(f"DEBUG get_booking_price_and_duration: has_promo_feature={has_promo_feature}")
+
+        print("has_promo_feature", has_promo_feature)
+        
+        # 6) Получение и применение автоматических скидок (только если есть фича promo)
         auto_discount_result = {"applied_discounts": [], "total_service_discount": 0.0, "commission_waived": 0.0, "final_services_total": base_services_price, "final_commission": actual_commission, "total_discount": 0.0}
 
-        if apply_auto_discounts and resolved_user:  # Автоскидки применяются только для авторизованных пользователей
+        if has_promo_feature and apply_auto_discounts and resolved_user:  # Автоскидки применяются только для авторизованных пользователей с фичей promo
             try:
                 # Получаем применимые автоскидки
                 applicable_auto_discounts = get_applicable_auto_discounts_cached(
@@ -156,7 +165,7 @@ def get_booking_price_and_duration(
         services_after_auto_discount = auto_discount_result["final_services_total"]
         commission_after_auto_discount = auto_discount_result["final_commission"]
 
-        # 6) Применение промокода
+        # 7) Применение промокода (только если есть фича promo)
         promo_result = {
             'valid': False,
             'message': '',
@@ -167,7 +176,7 @@ def get_booking_price_and_duration(
             'final_commission': commission_after_auto_discount,
         }
 
-        if promocode:
+        if has_promo_feature and promocode:
             # Проверяем совместимость автоскидок с промокодом
             can_combine = validate_auto_discount_with_promocode(auto_discount_result, True)
 
@@ -193,7 +202,7 @@ def get_booking_price_and_duration(
                     'final_commission': commission_after_auto_discount,
                 }
 
-        # 7) Финальные расчёты с учётом промокода
+        # 8) Финальные расчёты с учётом промокода
         final_services_price = promo_result['final_services_total']
         final_commission = promo_result['final_commission']
         final_total = final_services_price + final_commission
@@ -212,6 +221,7 @@ def get_booking_price_and_duration(
             "tariff": tariff_id,
             "created_by_admin": created_by_admin,
             "is_time_booking": is_time_booking,
+            "has_promo_feature": has_promo_feature,
 
             # Информация об автоматических скидках
             "auto_discounts_applied": len(auto_discount_result["applied_discounts"]) > 0,
@@ -272,6 +282,16 @@ def apply_promocode_to_booking_attempt(
     try:
         # Получаем документ booking attempt
         booking_doc = frappe.get_doc("Car wash mobile booking attempt", booking_attempt_id)
+        
+        # Проверяем наличие фичи promo у мойки
+        car_wash_doc = frappe.get_doc("Car wash", booking_doc.car_wash)
+        has_promo_feature = car_wash_doc.has_journal_feature("promo")
+        
+        if not has_promo_feature:
+            return {
+                "status": "error",
+                "message": "Промокоды недоступны для данной мойки"
+            }
 
         # Определяем исходную комиссию в зависимости от того, кто применяет промокод
         original_commission = booking_doc.commission_user

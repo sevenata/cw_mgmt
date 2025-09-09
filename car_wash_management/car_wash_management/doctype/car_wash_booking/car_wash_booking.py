@@ -25,6 +25,20 @@ class Carwashbooking(Document):
     - on_cancel: unreserve products and delete recorded usage.
     Rationale: central helpers keep pricing/discount logic consistent across doctypes.
     """
+    
+    def has_shop_feature(self):
+        """
+        Check if the car wash has the shop feature enabled
+        Results are cached for 3 minutes to improve performance
+        
+        Returns:
+            bool: True if shop feature is available, False otherwise
+        """
+        if not self.car_wash:
+            return False
+            
+        car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
+        return car_wash_doc.has_journal_feature("shop")
     def before_insert(self):
         if not self.car_wash:
             frappe.throw(_("Car Wash is required"))
@@ -67,33 +81,38 @@ class Carwashbooking(Document):
 
         try:
             if self.is_new() and not getattr(self, "is_deleted", 0):
-                full = get_booking_price_and_duration(
-                    self.car_wash,
-                    self.car,
-                    self.services,
-                    self.tariff,
-                    is_time_booking=is_time_booking,
-                    user=getattr(self, "customer", None),
-                )
-                auto_result = (full.get("auto_discounts", {}) or {}).copy()
-                applied_list = list(auto_result.get("applied_discounts", []) or [])
-                if disabled_ids:
-                    applied_list = [d for d in applied_list if d.get("discount_id") not in disabled_ids]
-                filtered_auto_result = {
-                    "applied_discounts": applied_list,
-                    "total_service_discount": 0.0,
-                    "commission_waived": 0.0,
-                    "final_services_total": base.get("final_services_price", 0.0),
-                    "final_commission": base.get("final_commission", 0.0),
-                    "total_discount": 0.0,
-                }
-                record_auto_discount_usage(
-                    self.car_wash,
-                    getattr(self, "customer", None),
-                    "Booking",
-                    self.name,
-                    filtered_auto_result,
-                )
+                # Проверяем наличие фичи promo у мойки
+                car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
+                has_promo_feature = car_wash_doc.has_journal_feature("promo")
+                
+                if has_promo_feature:
+                    full = get_booking_price_and_duration(
+                        self.car_wash,
+                        self.car,
+                        self.services,
+                        self.tariff,
+                        is_time_booking=is_time_booking,
+                        user=getattr(self, "customer", None),
+                    )
+                    auto_result = (full.get("auto_discounts", {}) or {}).copy()
+                    applied_list = list(auto_result.get("applied_discounts", []) or [])
+                    if disabled_ids:
+                        applied_list = [d for d in applied_list if d.get("discount_id") not in disabled_ids]
+                    filtered_auto_result = {
+                        "applied_discounts": applied_list,
+                        "total_service_discount": 0.0,
+                        "commission_waived": 0.0,
+                        "final_services_total": base.get("final_services_price", 0.0),
+                        "final_commission": base.get("final_commission", 0.0),
+                        "total_discount": 0.0,
+                    }
+                    record_auto_discount_usage(
+                        self.car_wash,
+                        getattr(self, "customer", None),
+                        "Booking",
+                        self.name,
+                        filtered_auto_result,
+                    )
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Record auto discount usage (booking) failed")
 
@@ -125,8 +144,13 @@ class Carwashbooking(Document):
         self.duration_total = base["total_duration"]
         self.staff_reward_total = base["staff_reward_total"]
 
-        # Пересчитать товары (если поле products есть)
-        recalc_products_totals(self)
+        # Пересчитать товары (если поле products есть и у мойки есть фича shop)
+        if self.has_shop_feature():
+            recalc_products_totals(self)
+        else:
+            # Если нет фичи shop, очищаем товары
+            if hasattr(self, 'products') and self.products:
+                self.products = []
 
         if self.payment_status == "Paid" and self.payment_type and not self.payment_received_on:
             self.payment_received_on = now_datetime()
@@ -142,10 +166,11 @@ class Carwashbooking(Document):
         # История применения автоскидок на создании уже записана выше
 
     def on_update(self):
-        # Снятие резерва при soft-delete
+        # Снятие резерва при soft-delete (только если есть фича shop)
         try:
             if self.has_value_changed("is_deleted") and getattr(self, "is_deleted", 0):
-                unreserve_products(getattr(self, "products", []) or [])
+                if self.has_shop_feature():
+                    unreserve_products(getattr(self, "products", []) or [])
                 # Удалить записанные usage
                 delete_recorded_auto_discount_usage("Booking", self.name)
         except Exception:
@@ -153,13 +178,17 @@ class Carwashbooking(Document):
 
     def on_submit(self):
         try:
-            reserve_products(getattr(self, "products", []) or [])
+            # Резервировать товары только если есть фича shop
+            if self.has_shop_feature():
+                reserve_products(getattr(self, "products", []) or [])
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Booking on_submit reserve failed")
 
     def on_cancel(self):
         try:
-            unreserve_products(getattr(self, "products", []) or [])
+            # Снять резерв товаров только если есть фича shop
+            if self.has_shop_feature():
+                unreserve_products(getattr(self, "products", []) or [])
             delete_recorded_auto_discount_usage("Booking", self.name)
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Booking on_cancel unreserve failed")

@@ -31,6 +31,13 @@ def get_applicable_auto_discounts_cached(
     Returns:
         List of applicable auto discounts
     """
+    # Проверяем наличие фичи promo у мойки
+    car_wash_doc = frappe.get_doc("Car wash", car_wash)
+    has_promo_feature = car_wash_doc.has_journal_feature("promo")
+    
+    if not has_promo_feature:
+        return []
+
     # Create cache key
     service_ids = []
     for service in services:
@@ -254,6 +261,13 @@ def record_auto_discount_usage(
 ):
     """Persist auto discount usage history for the applied auto discounts result"""
     if not auto_result or not auto_result.get("applied_discounts"):
+        return
+
+    # Проверяем наличие фичи promo у мойки
+    car_wash_doc = frappe.get_doc("Car wash", car_wash)
+    has_promo_feature = car_wash_doc.has_journal_feature("promo")
+    
+    if not has_promo_feature:
         return
 
     print('Try to record')

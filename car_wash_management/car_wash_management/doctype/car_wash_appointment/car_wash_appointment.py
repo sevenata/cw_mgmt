@@ -33,6 +33,20 @@ class Carwashappointment(Document):
 	- on_trash/on_cancel: revert stock and delete usage.
 	Rationale: shared helpers keep pricing/discount application consistent across doctypes.
 	"""
+	
+	def has_shop_feature(self):
+		"""
+		Check if the car wash has the shop feature enabled
+		Results are cached for 3 minutes to improve performance
+		
+		Returns:
+			bool: True if shop feature is available, False otherwise
+		"""
+		if not self.car_wash:
+			return False
+			
+		car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
+		return car_wash_doc.has_journal_feature("shop")
 	def before_insert(self):
 		if not self.car_wash:
 			frappe.throw("Car Wash is required")
@@ -98,6 +112,12 @@ class Carwashappointment(Document):
 
 	def _record_filtered_usage_for_create(self, base: dict, disabled_ids: set) -> None:
 		try:
+			# Проверяем наличие фичи promo у мойки
+			car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
+			has_promo_feature = car_wash_doc.has_journal_feature("promo")
+			if not has_promo_feature:
+				return
+				
 			full = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, user=self.customer)
 			auto_result = (full.get("auto_discounts", {}) or {}).copy()
 			applied = list(auto_result.get("applied_discounts", []) or [])
@@ -135,6 +155,13 @@ class Carwashappointment(Document):
 		try:
 			if getattr(self, "is_deleted", 0):
 				return
+			
+			# Проверяем наличие фичи promo у мойки
+			car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
+			has_promo_feature = car_wash_doc.has_journal_feature("promo")
+			if not has_promo_feature:
+				return
+				
 			existing = frappe.get_all(
 				"Car wash auto discount usage",
 				filters={"context_type": "Appointment", "context_id": self.name},
@@ -176,7 +203,14 @@ class Carwashappointment(Document):
 			self._set_totals_from_applied(applied)
 
 		# Common post-calculation steps
-		recalc_products_totals(self)
+		# Пересчитать товары только если есть фича shop
+		if self.has_shop_feature():
+			recalc_products_totals(self)
+		else:
+			# Если нет фичи shop, очищаем товары
+			if hasattr(self, 'products') and self.products:
+				self.products = []
+		
 		self._maybe_update_ends_on()
 		self._maybe_update_payment_received()
 		self._propagate_to_booking()
@@ -191,9 +225,9 @@ class Carwashappointment(Document):
 		self._schedule_push_if_changed()
 		try_sync_worker_earning(self)
 
-		# Автоматическое списание/возврат товаров по изменению статуса оплаты
+		# Автоматическое списание/возврат товаров по изменению статуса оплаты (только если есть фича shop)
 		try:
-			if self.has_value_changed("payment_status"):
+			if self.has_shop_feature() and self.has_value_changed("payment_status"):
 				if getattr(self, "payment_status", None) == "Paid":
 					issue_products_from_rows(self.car_wash, getattr(self, "products", []) or [], appointment=self.name, release_reserved=True)
 				else:
@@ -201,17 +235,18 @@ class Carwashappointment(Document):
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_update stock flow failed")
 
-		# Дельта-реконсиляция, если уже Paid, а товары изменились
+		# Дельта-реконсиляция, если уже Paid, а товары изменились (только если есть фича shop)
 		try:
-			if getattr(self, "payment_status", None) == "Paid" and self.has_value_changed("products"):
+			if self.has_shop_feature() and getattr(self, "payment_status", None) == "Paid" and self.has_value_changed("products"):
 				reconcile_issues_for_appointment(self)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment reconcile failed")
 
-		# Soft-delete: при установке is_deleted = 1 вернуть стоки (отменить SLE) и удалить usage
+		# Soft-delete: при установке is_deleted = 1 вернуть стоки (отменить SLE) и удалить usage (только если есть фича shop)
 		try:
 			if self.has_value_changed("is_deleted") and getattr(self, "is_deleted", 0):
-				cancel_sles_by_appointment(self.name)
+				if self.has_shop_feature():
+					cancel_sles_by_appointment(self.name)
 				delete_recorded_auto_discount_usage("Appointment", self.name)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment soft-delete revert stock failed")
@@ -258,17 +293,19 @@ class Carwashappointment(Document):
 		frappe.db.after_commit(_after_commit)
 
 	def on_trash(self):
-		# перед удалением документа гарантируем возврат товара и удаляем usage
+		# перед удалением документа гарантируем возврат товара и удаляем usage (только если есть фича shop)
 		try:
-			cancel_sles_by_appointment(self.name)
+			if self.has_shop_feature():
+				cancel_sles_by_appointment(self.name)
 			delete_recorded_auto_discount_usage("Appointment", self.name)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_trash revert stock failed")
 
 	def on_cancel(self):
-		# при отмене документа вернуть стоки и удалить usage, как и для worker ledger entry
+		# при отмене документа вернуть стоки и удалить usage, как и для worker ledger entry (только если есть фича shop)
 		try:
-			cancel_sles_by_appointment(self.name)
+			if self.has_shop_feature():
+				cancel_sles_by_appointment(self.name)
 			delete_recorded_auto_discount_usage("Appointment", self.name)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_cancel revert stock failed")

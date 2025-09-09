@@ -45,6 +45,21 @@ def validate_and_apply_promocode(
     if not promocode:
         return _create_no_promo_response(services_total, commission_amount)
 
+    # Проверяем наличие фичи promo у мойки
+    car_wash_doc = frappe.get_doc("Car wash", car_wash)
+    has_promo_feature = car_wash_doc.has_journal_feature("promo")
+    
+    if not has_promo_feature:
+        return {
+            'valid': False,
+            'message': 'Промокоды недоступны для данной мойки',
+            'service_discount': 0.0,
+            'commission_waived': 0.0,
+            'total_discount': 0.0,
+            'final_services_total': services_total,
+            'final_commission': commission_amount,
+        }
+
     # Получаем данные промокода
     promo_doc = _get_promocode_doc(promocode, car_wash)
     if not promo_doc:
