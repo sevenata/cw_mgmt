@@ -386,6 +386,7 @@ def get_recorded_auto_discount_totals(context_type: str, context_id: str) -> tup
             filters={
                 "context_type": context_type,
                 "context_id": context_id,
+                "is_disabled": 0,
             },
             fields=["service_discount", "commission_waived"],
         )

@@ -7,17 +7,30 @@ from ..car_wash_booking.booking_price_and_duration.auto_discounts import (
     get_applicable_auto_discounts_cached,
     apply_best_auto_discounts,
     record_auto_discount_usage,
-    apply_recorded_auto_discounts_to_base,
     delete_recorded_auto_discount_usage,
-    refresh_recorded_auto_discount_usage,
 )
 from ..car_wash_booking.booking_price_and_duration.booking import get_booking_price_and_duration
+from ..car_wash_booking.booking_price_and_duration.workflow_helpers import (
+	compute_base_price_and_duration,
+	get_disabled_auto_discount_ids_from_request_or_doc,
+	set_auto_discount_usage_flags,
+	refresh_usage,
+	apply_usage,
+)
 
 
 class Carwashmobilebookingattempt(Document):
+	"""Workflow:
+	- validate: compute base totals via helpers (without auto-discounts), toggle disabled
+	  usage, refresh/apply recorded usage; write final `services_total`, `commission_user`,
+	  and `total`.
+	- after_insert: determine best applicable auto-discounts and record usage snapshot.
+	- on_trash: delete recorded usage for this attempt.
+	Rationale: aligns mobile attempt calculations and toggles with booking/appointment via helpers.
+	"""
 	def validate(self):
 		# База без автоскидок, затем применим зафиксированные usage (context: MobileAttempt)
-		base = get_booking_price_and_duration(
+		base = compute_base_price_and_duration(
 			self.car_wash,
 			self.car,
 			getattr(self, "services", []) or [],
@@ -27,19 +40,28 @@ class Carwashmobilebookingattempt(Document):
 			apply_auto_discounts=False,
 		)
 
+		# Проставить/снять флаги отключённых скидок в usage, если список передан через форму
+		try:
+			disabled_ids = get_disabled_auto_discount_ids_from_request_or_doc(self)
+			if disabled_ids:
+				# for MobileAttempt we align with appointment behavior: enable others too
+				set_auto_discount_usage_flags("MobileAttempt", self.name, disabled_ids, enable_others=True)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Mark disabled auto discount usage (mobile attempt) failed")
+
 		# Обновить usage под текущую базу
-		refresh_recorded_auto_discount_usage(
+		refresh_usage(
 			"MobileAttempt",
 			self.name,
 			base_services_total=base.get("final_services_price", 0.0),
 			base_commission=base.get("final_commission", 0.0),
 		)
 
-		applied = apply_recorded_auto_discounts_to_base(
-			base_services_total=base.get("final_services_price", 0.0),
-			base_commission=base.get("final_commission", 0.0),
+		applied = apply_usage(
 			context_type="MobileAttempt",
 			context_id=self.name,
+			base_services_total=base.get("final_services_price", 0.0),
+			base_commission=base.get("final_commission", 0.0),
 		)
 		# total хранится как services_total + commission_user
 		self.services_total = applied["final_services_total"]

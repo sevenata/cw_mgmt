@@ -1,11 +1,30 @@
 import frappe
 from frappe.model.document import Document
 from frappe.utils import today, now_datetime
+
 from .booking_price_and_duration.booking import get_booking_price_and_duration
-from .booking_price_and_duration.auto_discounts import record_auto_discount_usage, apply_recorded_auto_discounts_to_base, delete_recorded_auto_discount_usage, refresh_recorded_auto_discount_usage
+from .booking_price_and_duration.auto_discounts import record_auto_discount_usage, delete_recorded_auto_discount_usage
+from .booking_price_and_duration.workflow_helpers import (
+	compute_base_price_and_duration,
+	get_disabled_auto_discount_ids_from_request_or_doc,
+	set_auto_discount_usage_flags,
+	refresh_usage,
+	apply_usage,
+)
+from .availiability import update_cars_in_queue
 from ...inventory import recalc_products_totals, reserve_products, unreserve_products
 
 class Carwashbooking(Document):
+    """Workflow:
+    - validate: compute base totals without auto-discounts via helpers, refresh/apply
+      recorded auto-discount usage, update totals and product rows, set payment ts,
+      and update queue flags.
+    - creation: record a snapshot of auto-discounts for current conditions.
+    - on_update: on soft-delete unreserve products and delete recorded usage.
+    - on_submit: reserve products.
+    - on_cancel: unreserve products and delete recorded usage.
+    Rationale: central helpers keep pricing/discount logic consistent across doctypes.
+    """
     def before_insert(self):
         if not self.car_wash:
             frappe.throw(_("Car Wash is required"))
@@ -31,7 +50,7 @@ class Carwashbooking(Document):
     def validate(self):
         # Базовые суммы без применения автоскидок
         is_time_booking = bool(getattr(self, "is_time_booking", 0))
-        base = get_booking_price_and_duration(
+        base = compute_base_price_and_duration(
             self.car_wash,
             self.car,
             self.services,
@@ -40,20 +59,65 @@ class Carwashbooking(Document):
             apply_auto_discounts=False,
         )
 
+        # На создании зафиксируем usage с учетом отключений, если они переданы
+        try:
+            disabled_ids = get_disabled_auto_discount_ids_from_request_or_doc(self)
+        except Exception:
+            disabled_ids = set()
+
+        try:
+            if self.is_new() and not getattr(self, "is_deleted", 0):
+                full = get_booking_price_and_duration(
+                    self.car_wash,
+                    self.car,
+                    self.services,
+                    self.tariff,
+                    is_time_booking=is_time_booking,
+                    user=getattr(self, "customer", None),
+                )
+                auto_result = (full.get("auto_discounts", {}) or {}).copy()
+                applied_list = list(auto_result.get("applied_discounts", []) or [])
+                if disabled_ids:
+                    applied_list = [d for d in applied_list if d.get("discount_id") not in disabled_ids]
+                filtered_auto_result = {
+                    "applied_discounts": applied_list,
+                    "total_service_discount": 0.0,
+                    "commission_waived": 0.0,
+                    "final_services_total": base.get("final_services_price", 0.0),
+                    "final_commission": base.get("final_commission", 0.0),
+                    "total_discount": 0.0,
+                }
+                record_auto_discount_usage(
+                    self.car_wash,
+                    getattr(self, "customer", None),
+                    "Booking",
+                    self.name,
+                    filtered_auto_result,
+                )
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Record auto discount usage (booking) failed")
+
+        # Если в документе есть список отключённых автоскидок, проставим флаги в usage
+        try:
+            if disabled_ids:
+                set_auto_discount_usage_flags("Booking", self.name, disabled_ids)
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "Mark disabled auto discount usage failed")
+
         # Обновить usage под текущую базу
-        refresh_recorded_auto_discount_usage(
+        refresh_usage(
             "Booking",
             self.name,
             base_services_total=base.get("final_services_price", 0.0),
             base_commission=base.get("final_commission", 0.0),
         )
 
-        # Применим зафиксированные автоскидки, записанные при создании (context: Booking)
-        applied = apply_recorded_auto_discounts_to_base(
-            base_services_total=base.get("final_services_price", 0.0),
-            base_commission=base.get("final_commission", 0.0),
+        # Применим зафиксированные автоскидки (context: Booking)
+        applied = apply_usage(
             context_type="Booking",
             context_id=self.name,
+            base_services_total=base.get("final_services_price", 0.0),
+            base_commission=base.get("final_commission", 0.0),
         )
 
         # Запишем поля документа
@@ -75,26 +139,7 @@ class Carwashbooking(Document):
 
         update_cars_in_queue(self)
 
-        # Сохранить историю применения автоскидок (только при создании или явном первом расчёте)
-        try:
-            if self.is_new() and not getattr(self, "is_deleted", 0):
-                # На момент создания фиксируем автоскидки по текущим условиям
-                price_and_duration_full = get_booking_price_and_duration(
-                    self.car_wash,
-                    self.car,
-                    self.services,
-                    self.tariff,
-                    is_time_booking=is_time_booking,
-                )
-                record_auto_discount_usage(
-                    self.car_wash,
-                    self.customer,
-                    "Booking",
-                    self.name,
-                    price_and_duration_full.get("auto_discounts", {})
-                )
-        except Exception:
-            frappe.log_error(frappe.get_traceback(), "Record auto discount usage (booking) failed")
+        # История применения автоскидок на создании уже записана выше
 
     def on_update(self):
         # Снятие резерва при soft-delete
@@ -118,215 +163,3 @@ class Carwashbooking(Document):
             delete_recorded_auto_discount_usage("Booking", self.name)
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Booking on_cancel unreserve failed")
-
-    # helper methods removed; use shared inventory helpers
-
-import frappe
-from frappe import _
-from frappe.utils import now_datetime, today
-from frappe.model.document import Document
-
-@frappe.whitelist(allow_guest=False)
-def create_car_wash_booking(
-    car_wash,
-    customer,
-    car,
-    services,
-    source_type
-):
-    """
-    Creates a new Car Wash Booking with service prices based on Car body type.
-
-    **Parameters:**
-    - `car_wash` (str): Name (ID) of the Car Wash (Link to Car wash DocType).
-    - `customer` (str): Name (ID) of the Customer (Link to Car wash client DocType).
-    - `car` (str): Name (ID) of the Car (Link to Car wash car DocType).
-    - `services` (list of dict): List of services with details.
-        Example:
-        [
-            {
-                "service": "Service ID",
-                "quantity": 1
-            },
-            ...
-        ]
-    - `source_type` (str): Source of the booking. Options: "Direct", "WebPanel", "TelegramMiniApp", "TelegramBot".
-
-    **Returns:**
-    - `dict`: Success or error message along with booking details.
-
-    **Example Call:**
-    Refer to the [Usage Examples](#6-usage-examples) section.
-    """
-    try:
-        # 1. Validate required parameters
-        if not all([car_wash, customer, car, services, source_type]):
-            frappe.throw(_("Missing required parameters. Please provide all mandatory fields."))
-
-        # 2. Validate source_type
-        valid_source_types = ["Direct", "WebPanel", "TelegramMiniApp", "TelegramBot"]
-        if source_type not in valid_source_types:
-            frappe.throw(_(
-                "Invalid source_type. Allowed values are: {0}".format(", ".join(valid_source_types))
-            ))
-
-        # 3. Validate services
-        if not isinstance(services, list):
-            frappe.throw(_("Services should be a list of service details."))
-
-        if not services:
-            frappe.throw(_("At least one service must be provided."))
-
-        service_ids = [service.get("service") for service in services]
-        if not all(service_ids):
-            frappe.throw(_("Each service entry must include a 'service' field."))
-
-        # 4. Validate if services exist
-        existing_services = frappe.get_all("Car wash service", filters={"name": ["in", service_ids]}, pluck="name")
-        invalid_services = set(service_ids) - set(existing_services)
-        if invalid_services:
-            frappe.throw(_("Invalid services: {0}".format(", ".join(invalid_services))))
-
-        # 5. Retrieve Car's Body Type
-        car_doc = frappe.get_doc("Car wash car", car)
-        car_body_type = car_doc.body_type
-        if not car_body_type:
-            frappe.throw(_("The selected car does not have a 'Car Body Type' specified."))
-
-        # 6. Create a new Carwashbooking document
-        booking = frappe.get_doc({
-            "doctype": "Car wash booking",
-            "car_wash": car_wash,
-            "customer": customer,
-            "car": car,
-            "source_type": source_type
-            # Optional fields are omitted as per requirements
-        })
-
-        # 7. Append services to the child table with dynamic pricing
-        for service in services:
-            service_id = service.get("service")
-            quantity = service.get("quantity", 1)  # Default quantity to 1 if not provided
-
-            # Fetch service details
-            service_doc = frappe.get_doc("Car wash service", service_id)
-
-            # Fetch service price based on Car's body type
-            service_price_doc = frappe.get_all(
-                "Car wash service price",
-                filters={
-                    "base_service": service_id,
-                    "body_type": car_body_type,
-                    "is_disabled": False,
-                    "is_deleted": False
-                },
-                limit=1,
-                fields=["price"]
-            )
-
-            if service_price_doc:
-                price = service_price_doc[0].price
-            else:
-                # Fallback to base service price if specific price not found
-                price = service_doc.price
-                if not price:
-                    frappe.throw(_(
-                        "Price not defined for service '{0}' and Car body type '{1}', and no base price is set."
-                        .format(service_doc.title, car_body_type)
-                    ))
-
-            # Append to child table
-            service_row = booking.append("services", {})
-            service_row.service = service_doc.name
-            service_row.service_name = service_doc.title
-            service_row.duration = service_doc.duration
-            service_row.price = price
-            service_row.car_wash = service_doc.car_wash
-            service_row.quantity = quantity
-
-        # 8. Insert the document
-        booking.insert(ignore_permissions=False)  # Enforce permissions
-
-        # 9. Commit the transaction
-        frappe.db.commit()
-
-        return {
-            "status": "success",
-            "message": _("Car wash booking created successfully."),
-            "booking": booking.as_dict()
-        }
-
-    except frappe.ValidationError as ve:
-        frappe.log_error(message=ve.message, title="Car Wash Booking Validation Error")
-        return {
-            "status": "error",
-            "message": ve.message
-        }
-    except Exception as e:
-        frappe.log_error(message=str(e), title="Car Wash Booking Creation Error")
-        return {
-            "status": "error",
-            "message": _("An unexpected error occurred while creating the booking.")
-        }
-
-import frappe
-from frappe.utils import now_datetime, today
-from frappe.model.document import Document
-
-from frappe import _
-
-def update_cars_in_queue(doc):
-    """
-    Increments `cars_in_queue` in `Car Wash Availability` when `has_appointment`
-    changes from False to True in `Car Wash Booking`.
-    """
-    if doc.is_new():
-        try:
-            update_queue_num(doc)
-        except frappe.DoesNotExistError:
-            create_availability(doc)
-        return
-
-    # Fetch the previous state of the document
-    previous_doc = frappe.get_doc("Car wash booking", doc.name)
-
-    # Check if has_appointment changed from False → True
-    if not previous_doc.has_appointment and doc.has_appointment:
-
-        # Fetch the corresponding Car Wash Availability document
-        try:
-            update_queue_num(doc)
-        except frappe.DoesNotExistError:
-            create_availability(doc)
-            return  # If the document doesn't exist, safely exit
-
-def get_cars_in_queue(doc):
-    return frappe.db.count("Car wash booking", {"has_appointment": False,"is_cancelled":False,"is_deleted":False,"car_wash": doc.car_wash})
-
-def update_queue_num(doc):
-    availability_doc = frappe.get_doc("Car wash availability", doc.car_wash)
-    boxes_count = frappe.db.count('Car wash box', {'car_wash': doc.car_wash})
-    availability_doc.cars_in_queue = get_cars_in_queue(doc)
-    availability_doc.boxes_count = boxes_count
-    availability_doc.save(ignore_permissions=True)
-
-def create_availability(doc):
-    boxes_count = frappe.db.count('Car wash box', {'car_wash': doc.car_wash})
-    cars_in_queue = get_cars_in_queue(doc)
-    availability_doc = frappe.get_doc({
-        "doctype": "Car wash availability",
-        "name": doc.car_wash,
-        "car_wash": doc.car_wash,
-        "boxes_count": boxes_count,
-        "cars_in_boxes": 0,
-        "cars_in_queue": cars_in_queue,
-        "is_working_now": 1
-    })
-    availability_doc.insert(ignore_permissions=True)
-
-def update_or_create_availability(doc):
-    try:
-        update_queue_num(doc)
-    except frappe.DoesNotExistError:
-        create_availability(doc)
-        return

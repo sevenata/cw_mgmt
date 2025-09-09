@@ -7,11 +7,32 @@ from ...inventory import recalc_products_totals, issue_products_from_rows, cance
 from .worker_earnings import try_sync_worker_earning
 from .appointments_by_date import get_by_date, get_by_time_period
 from ..car_wash_booking.booking_price_and_duration import get_booking_price_and_duration
-from ..car_wash_booking.booking_price_and_duration.auto_discounts import record_auto_discount_usage, apply_recorded_auto_discounts_to_base, delete_recorded_auto_discount_usage, refresh_recorded_auto_discount_usage
+from ..car_wash_booking.booking_price_and_duration.auto_discounts import record_auto_discount_usage, delete_recorded_auto_discount_usage
+from ..car_wash_booking.booking_price_and_duration.workflow_helpers import (
+	compute_base_price_and_duration,
+	get_disabled_auto_discount_ids_from_request_or_doc,
+	set_auto_discount_usage_flags,
+	refresh_usage,
+	apply_usage,
+)
 from .excel.export_services_to_excel import export_services_to_excel
 from .excel.export_workers_to_excel import export_workers_to_xls
 
 class Carwashappointment(Document):
+	"""Workflow:
+	- before_insert: initialize counters, default payment, and start timestamps; inherit
+	  payment fields from linked booking when paid.
+	- validate:
+	  - for new docs: compute totals with auto-discounts directly;
+	  - for updates: compute base totals via helpers, toggle disabled usage, refresh/apply
+	    recorded auto-discounts, then recalc products and timings.
+	  - also sync payment timestamp and propagate status to linked booking.
+	- after_insert: enqueue push and record snapshot of auto-discount usage.
+	- on_update: enqueue push, sync worker earnings, stock issue/revert by payment status,
+	  reconcile items if changed while paid, handle soft-delete (revert stock + delete usage).
+	- on_trash/on_cancel: revert stock and delete usage.
+	Rationale: shared helpers keep pricing/discount application consistent across doctypes.
+	"""
 	def before_insert(self):
 		if not self.car_wash:
 			frappe.throw("Car Wash is required")
@@ -40,45 +61,68 @@ class Carwashappointment(Document):
 		self.starts_on = now_datetime()
 		self.work_started_on = self.starts_on
 
-	def validate(self):
-		# Для нового документа рассчитываем итоги с учётом автоскидок напрямую
-		if self.is_new():
-			full = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff)
-			self.duration_total = full["total_duration"]
-			self.staff_reward_total = full["staff_reward_total"]
-			self.services_total = full["total_price"]
-		else:
-			# Для обновлений используем зафиксированные usage, чтобы не переоценивать условия
-			base = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, apply_auto_discounts=False)
-			self.duration_total = base["total_duration"]
-			self.staff_reward_total = base["staff_reward_total"]
+	# ---- Helpers (internal) ----
+	def _get_disabled_ids(self) -> set:
+		try:
+			return get_disabled_auto_discount_ids_from_request_or_doc(self)
+		except Exception:
+			return set()
 
-			# Обновить usage под текущую базу
-			refresh_recorded_auto_discount_usage(
-				"Appointment",
-				self.name,
-				base_services_total=base.get("final_services_price", 0.0),
-				base_commission=base.get("final_commission", 0.0),
-			)
+	def _compute_base(self) -> dict:
+		return compute_base_price_and_duration(self.car_wash, self.car, self.services, self.tariff, apply_auto_discounts=False)
 
-			applied = apply_recorded_auto_discounts_to_base(
-				base_services_total=base.get("final_services_price", 0.0),
-				base_commission=base.get("final_commission", 0.0),
-				context_type="Appointment",
-				context_id=self.name,
-			)
-			self.services_total = applied["final_services_total"] + applied["final_commission"]
+	def _refresh_and_apply_usage(self, base: dict) -> dict:
+		refresh_usage(
+			"Appointment",
+			self.name,
+			base_services_total=base.get("final_services_price", 0.0),
+			base_commission=base.get("final_commission", 0.0),
+		)
+		return apply_usage(
+			context_type="Appointment",
+			context_id=self.name,
+			base_services_total=base.get("final_services_price", 0.0),
+			base_commission=base.get("final_commission", 0.0),
+		)
 
-		# Пересчёт товаров и общего итога
-		recalc_products_totals(self)
+	def _set_totals_from_base(self, base: dict) -> None:
+		self.duration_total = base["total_duration"]
+		self.staff_reward_total = base["staff_reward_total"]
 
+	def _set_totals_from_applied(self, applied: dict) -> None:
+		self.services_total = applied["final_services_total"] + applied["final_commission"]
+
+	def _toggle_disabled_usage(self, disabled_ids: set, enable_others: bool = False) -> None:
+		if disabled_ids:
+			set_auto_discount_usage_flags("Appointment", self.name, disabled_ids, enable_others=enable_others)
+
+	def _record_filtered_usage_for_create(self, base: dict, disabled_ids: set) -> None:
+		try:
+			full = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, user=self.customer)
+			auto_result = (full.get("auto_discounts", {}) or {}).copy()
+			applied = list(auto_result.get("applied_discounts", []) or [])
+			filtered_applied = [d for d in applied if d.get("discount_id") not in disabled_ids]
+			filtered_auto_result = {
+				"applied_discounts": filtered_applied,
+				"total_service_discount": 0.0,
+				"commission_waived": 0.0,
+				"final_services_total": base.get("final_services_price", 0.0),
+				"final_commission": base.get("final_commission", 0.0),
+				"total_discount": 0.0,
+			}
+			record_auto_discount_usage(self.car_wash, self.customer, "Appointment", self.name, filtered_auto_result)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Appointment create with disabled discounts failed")
+
+	def _maybe_update_ends_on(self) -> None:
 		if self.starts_on and not self.ends_on and self.duration_total:
 			self.ends_on = add_to_date(self.starts_on, seconds=self.duration_total)
 
+	def _maybe_update_payment_received(self) -> None:
 		if self.payment_status == "Paid" and self.payment_type and not self.payment_received_on:
 			self.payment_received_on = now_datetime()
 
-		# Automatically update booking fields if appointment is updated
+	def _propagate_to_booking(self) -> None:
 		if self.booking:
 			booking_doc = frappe.get_doc("Car wash booking", self.booking)
 			booking_doc.update({
@@ -87,17 +131,60 @@ class Carwashappointment(Document):
 			})
 			booking_doc.save()
 
-	def after_insert(self):
-		# На создание тоже шлём (например, старт работ)
-		self._schedule_push_if_changed(created=True)
-		# Зафиксировать usage автоскидок уже с финальным именем документа
+	def _ensure_usage_recorded_after_insert(self) -> None:
 		try:
-			if not getattr(self, "is_deleted", 0):
+			if getattr(self, "is_deleted", 0):
+				return
+			existing = frappe.get_all(
+				"Car wash auto discount usage",
+				filters={"context_type": "Appointment", "context_id": self.name},
+				limit=1,
+			)
+			if not existing:
 				result = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff, user=self.customer)
 				auto_result = result.get("auto_discounts", {}) or {}
 				record_auto_discount_usage(self.car_wash, self.customer, "Appointment", self.name, auto_result)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Record auto discount usage (appointment after_insert) failed")
+
+	def validate(self):
+		# New document: support disabled auto-discounts on create
+		if self.is_new():
+			disabled_ids = self._get_disabled_ids()
+			print('_get_disabled_ids', disabled_ids)
+			if disabled_ids:
+				base = self._compute_base()
+				self._set_totals_from_base(base)
+				self._record_filtered_usage_for_create(base, disabled_ids)
+				applied = self._refresh_and_apply_usage(base)
+				self._set_totals_from_applied(applied)
+			else:
+				full = get_booking_price_and_duration(self.car_wash, self.car, self.services, self.tariff)
+				self.duration_total = full["total_duration"]
+				self.staff_reward_total = full["staff_reward_total"]
+				self.services_total = full["total_price"]
+		else:
+			# Update document: use recorded usage and respect disabled flags
+			base = self._compute_base()
+			self._set_totals_from_base(base)
+			try:
+				disabled_ids = self._get_disabled_ids()
+				self._toggle_disabled_usage(disabled_ids, enable_others=True)
+			except Exception:
+				frappe.log_error(frappe.get_traceback(), "Mark disabled auto discount usage (appointment) failed")
+			applied = self._refresh_and_apply_usage(base)
+			self._set_totals_from_applied(applied)
+
+		# Common post-calculation steps
+		recalc_products_totals(self)
+		self._maybe_update_ends_on()
+		self._maybe_update_payment_received()
+		self._propagate_to_booking()
+
+	def after_insert(self):
+		# На создание тоже шлём (например, старт работ)
+		self._schedule_push_if_changed(created=True)
+		self._ensure_usage_recorded_after_insert()
 
 	def on_update(self):
 		# На любое сохранение шлём только если важные поля реально изменились
@@ -160,7 +247,7 @@ class Carwashappointment(Document):
 			"ts": str(now_datetime()),
 		}
 
-		# вызываем ТОЛЬКО после успешного коммита транзакции
+		# вызываем ТОЛКО после успешного коммита транзакции
 		def _after_commit():
 			frappe.db.after_commit(lambda: frappe.enqueue(
 				"car_wash_management.api.push_to_nest",

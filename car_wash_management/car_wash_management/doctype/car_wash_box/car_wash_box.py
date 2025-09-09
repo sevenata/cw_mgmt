@@ -8,7 +8,7 @@ from frappe import _
 
 import frappe
 
-from ..car_wash_booking.car_wash_booking import update_or_create_availability
+from ..car_wash_booking.availiability import update_or_create_availability
 
 
 class Carwashbox(Document):

@@ -13,7 +13,8 @@
         "rules_snapshot",
         "service_discount",
         "commission_waived",
-        "total_discount"
+        "total_discount",
+        "is_disabled"
     ],
     "fields": [
         {"fieldname": "car_wash", "fieldtype": "Link", "label": "Автомойка", "options": "Car wash", "reqd": 1},
@@ -25,7 +26,8 @@
         {"fieldname": "rules_snapshot", "fieldtype": "Long Text", "label": "Снимок правил"},
         {"fieldname": "service_discount", "fieldtype": "Currency", "label": "Скидка на услуги"},
         {"fieldname": "commission_waived", "fieldtype": "Currency", "label": "Комиссия списана"},
-        {"fieldname": "total_discount", "fieldtype": "Currency", "label": "Итого скидка"}
+        {"fieldname": "total_discount", "fieldtype": "Currency", "label": "Итого скидка"},
+        {"fieldname": "is_disabled", "fieldtype": "Check", "label": "Отключено администратором", "default": "0"}
     ],
     "module": "Car Wash Management",
     "name": "Car wash auto discount usage",
