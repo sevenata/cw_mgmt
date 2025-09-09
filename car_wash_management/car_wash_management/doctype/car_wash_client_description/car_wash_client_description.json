@@ -8,6 +8,8 @@
   "client",
   "car_wash",
   "company",
+  "first_name",
+  "last_name",
   "description"
  ],
  "fields": [
@@ -38,11 +40,21 @@
    "fieldname": "description",
    "fieldtype": "Long Text",
    "label": "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "\u0418\u043c\u044f"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "\u0424\u0430\u043c\u0438\u043b\u0438\u044f"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-31 12:13:19.863443",
+ "modified": "2025-09-09 23:59:42.428319",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash client description",
