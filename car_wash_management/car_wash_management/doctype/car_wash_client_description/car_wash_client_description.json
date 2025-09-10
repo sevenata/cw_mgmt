@@ -10,6 +10,12 @@
   "company",
   "first_name",
   "last_name",
+  "birth_date",
+  "email",
+  "telegram",
+  "whatsapp",
+  "allergies_notes",
+  "staff_preferences",
   "description"
  ],
  "fields": [
@@ -50,6 +56,36 @@
    "fieldname": "last_name",
    "fieldtype": "Data",
    "label": "\u0424\u0430\u043c\u0438\u043b\u0438\u044f"
+  },
+  {
+   "fieldname": "birth_date",
+   "fieldtype": "Date",
+   "label": "\u0414\u0430\u0442\u0430 \u0440\u043e\u0436\u0434\u0435\u043d\u0438\u044f"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "telegram",
+   "fieldtype": "Data",
+   "label": "Telegram"
+  },
+  {
+   "fieldname": "whatsapp",
+   "fieldtype": "Data",
+   "label": "WhatsApp"
+  },
+  {
+   "fieldname": "allergies_notes",
+   "fieldtype": "Text",
+   "label": "\u0410\u043b\u043b\u0435\u0440\u0433\u0438\u0438/\u043e\u0441\u043e\u0431\u0435\u043d\u043d\u043e\u0441\u0442\u0438"
+  },
+  {
+   "fieldname": "staff_preferences",
+   "fieldtype": "Text",
+   "label": "\u041f\u0440\u0435\u0434\u043f\u043e\u0447\u0442\u0435\u043d\u0438\u044f \u043f\u043e \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u0443"
   }
  ],
  "index_web_pages_for_search": 1,
