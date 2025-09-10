@@ -11,6 +11,7 @@ def get_appointments_with_details(
     services=None,
     statuses=None,
     payment_status=None,
+    customers=None,
     starts_on=None,
     end_date=None,
     limit=200,
@@ -28,7 +29,9 @@ def get_appointments_with_details(
         services (list): List of service IDs to filter by
         statuses (list): List of workflow states to filter by
         payment_status (str): Payment status filter
+        customers (list): List of customer IDs to filter by
         starts_on (str): Start date in YYYY-MM-DD format
+        end_date (str): End date in YYYY-MM-DD format
         limit (int): Maximum number of records to return
         is_deleted (int): Filter by deletion status (0 or 1)
     
@@ -41,6 +44,7 @@ def get_appointments_with_details(
     workers = workers or []
     services = services or []
     statuses = statuses or []
+    customers = customers or []
 
     # Main doctypes
     appointment = DocType("Car wash appointment")
@@ -80,6 +84,9 @@ def get_appointments_with_details(
 
     if statuses:
         base = base.where(appointment.workflow_state.isin(statuses))
+
+    if customers:
+        base = base.where(appointment.customer.isin(customers))
 
     # If filtering by services, we need to join service to the base, but only to constrain the set of appointment names. We'll compute names via a distinct select.
     if services:
@@ -215,6 +222,7 @@ def get_appointments_with_details_by_date_range(
     services=None,
     statuses=None,
     payment_status=None,
+    customers=None,
     limit=200,
     is_deleted=0
 ):
@@ -229,6 +237,7 @@ def get_appointments_with_details_by_date_range(
         services=services,
         statuses=statuses,
         payment_status=payment_status,
+        customers=customers,
         starts_on=start_date,
         end_date=end_date,
         limit=limit,

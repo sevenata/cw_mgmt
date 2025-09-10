@@ -48,7 +48,8 @@
    "fieldname": "base_service",
    "fieldtype": "Link",
    "label": "\u0411\u0430\u0437\u043e\u0432\u0430\u044f \u0443\u0441\u043b\u0443\u0433\u0430",
-   "options": "Car wash service"
+   "options": "Car wash service",
+   "search_index": 1
   },
   {
    "fetch_from": "base_service.title",
@@ -72,7 +73,8 @@
    "fieldname": "tariff",
    "fieldtype": "Link",
    "label": "\u0422\u0430\u0440\u0438\u0444",
-   "options": "Car wash tariff"
+   "options": "Car wash tariff",
+   "search_index": 1
   },
   {
    "fieldname": "staff_reward",
@@ -84,7 +86,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-19 13:26:53.455697",
+ "modified": "2025-09-10 21:19:31.775542",
  "modified_by": "Administrator",
  "module": "Car Wash Management",
  "name": "Car wash service price",
