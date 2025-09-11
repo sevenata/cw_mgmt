@@ -294,6 +294,21 @@ def search_car_wash_clients(car_wash: str, query: str | None = None, limit: int 
 			fields=description_fields,
 			limit=1,
 		)
+		# Attach tags to description if present
+		if desc_list:
+			desc_name = desc_list[0]["name"]
+			tags_rows = frappe.db.sql(
+				"""
+				SELECT dt.tag AS tag, t.title AS tag_title, IFNULL(t.color, '') AS color
+				FROM `tabCar wash client description tag` dt
+				JOIN `tabCar wash tag` t ON t.name = dt.tag
+				WHERE dt.parent = %s
+				ORDER BY t.title ASC
+				""",
+				(desc_name,),
+				as_dict=1,
+			)
+			desc_list[0]["tags"] = tags_rows or []
 		items.append({
 			"client": client_doc,
 			"cars": cars,
@@ -301,3 +316,102 @@ def search_car_wash_clients(car_wash: str, query: str | None = None, limit: int 
 		})
 
 	return {"total": int(total or 0), "items": items}
+
+
+@frappe.whitelist()
+def set_client_tags(client_id: str, car_wash: str, tag_ids: list | None = None):
+	"""
+	Идёмпотентно задаёт точный набор тегов клиенту в рамках конкретной мойки.
+	Принимает только tag_ids (name из `Car wash tag`). Если описания клиента для мойки нет — создаём.
+	"""
+	if isinstance(tag_ids, str):
+		try:
+			tag_ids = frappe.parse_json(tag_ids)
+		except Exception:
+			tag_ids = []
+
+	if not tag_ids:
+		tag_ids = []
+
+	# Validate tag_ids belong to the car_wash
+	valid = set(
+		name for name, in frappe.db.sql(
+			"""
+			SELECT name FROM `tabCar wash tag`
+			WHERE car_wash=%(car_wash)s AND is_active=1 AND name IN %(ids)s
+			""",
+			{"car_wash": car_wash, "ids": tuple(tag_ids or ["__none__"])},
+		)
+	)
+	if set(tag_ids or []) - valid:
+		raise frappe.ValidationError("Some tags do not belong to this car wash or are inactive")
+
+	# Get or create description
+	desc_list = frappe.get_all(
+		"Car wash client description",
+		filters={"client": client_id, "car_wash": car_wash},
+		fields=["name"],
+		limit=1,
+	)
+	if desc_list:
+		doc = frappe.get_doc("Car wash client description", desc_list[0]["name"])
+	else:
+		doc = frappe.new_doc("Car wash client description")
+		doc.client = client_id
+		doc.car_wash = car_wash
+
+	# Replace tags child table
+	doc.set("tags", [])
+	for tag_id in (tag_ids or []):
+		doc.append("tags", {"tag": tag_id})
+	
+	doc.save()
+	return {"ok": True, "client": client_id, "car_wash": car_wash, "tag_ids": tag_ids}
+
+
+@frappe.whitelist()
+def get_client_description(client_id: str, car_wash: str):
+	"""
+	Возвращает описание клиента (в контексте мойки) вместе с тегами.
+	Не создаёт запись, если её нет — вернёт пустой объект.
+	"""
+	if not client_id or not car_wash:
+		raise frappe.ValidationError("client_id and car_wash are required")
+
+	row = frappe.get_all(
+		"Car wash client description",
+		filters={"client": client_id, "car_wash": car_wash},
+		fields=[
+			"name",
+			"client",
+			"car_wash",
+			"description",
+			"first_name",
+			"last_name",
+			"birth_date",
+			"email",
+			"telegram",
+			"whatsapp",
+			"allergies_notes",
+			"staff_preferences",
+		],
+		limit=1,
+	)
+	if not row:
+		return {}
+	desc = row[0]
+
+	# Fetch tags with titles and colors
+	tags = frappe.db.sql(
+		"""
+		SELECT dt.tag AS tag, t.title AS tag_title, IFNULL(t.color, '') AS color
+		FROM `tabCar wash client description tag` dt
+		JOIN `tabCar wash tag` t ON t.name = dt.tag
+		WHERE dt.parent = %s
+		ORDER BY t.title ASC
+		""",
+		(desc["name"],),
+		as_dict=1,
+	)
+	desc["tags"] = tags or []
+	return desc

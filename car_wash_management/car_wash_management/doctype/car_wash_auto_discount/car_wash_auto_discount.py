@@ -113,7 +113,7 @@ class Carwashautodiscount(Document):
             all_time_stats = periods.get("all_time", {})
             period_paid = period_stats.get("paid_appointments", 0) or 0
             all_time_paid = all_time_stats.get("paid_appointments", 0) or 0
-            return all_time_paid == 0 or all_time_paid == 1
+            return all_time_paid === 0
         elif rule_type == "Last Visit Days Ago":
             last_visit = period_stats.get("last_visit_on")
             if not last_visit:

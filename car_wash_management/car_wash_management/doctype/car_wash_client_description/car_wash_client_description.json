@@ -8,6 +8,7 @@
   "client",
   "car_wash",
   "company",
+  "tags",
   "first_name",
   "last_name",
   "birth_date",
@@ -41,6 +42,12 @@
    "fieldtype": "Link",
    "label": "\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f",
    "options": "Car wash company"
+  },
+  {
+   "fieldname": "tags",
+   "fieldtype": "Table",
+   "label": "\u0422\u0435\u0433\u0438",
+   "options": "Car wash client description tag"
   },
   {
    "fieldname": "description",
