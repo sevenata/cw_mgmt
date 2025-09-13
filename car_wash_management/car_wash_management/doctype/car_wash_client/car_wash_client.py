@@ -176,146 +176,24 @@ def get_client_statistics(client_id: str, car_wash: str | None = None, limit: in
 
 
 @frappe.whitelist()
-def search_car_wash_clients(car_wash: str, query: str | None = None, limit: int = 50, offset: int = 0):
-	"""
-	Поиск клиентов с возвратом информации о клиенте, его автомобилях и описании клиента
-	для конкретной автомойки (если описание есть). Клиенты без описания также включаются.
+def search_car_wash_clients(
+    car_wash: str,
+    query: str | None = None,
+    limit: int = 50,
+    include_total: int = 1,
+    cursor_modified: str | None = None,
+    cursor_name: str | None = None,
+):
+	from .search_service import search_clients
 
-	Аргументы:
-	- car_wash: Идентификатор docname автомойки (`Car wash`).
-	- query: Строка поиска (необязательная). Ищет по имени клиента, телефону, номеру авто,
-	         имени и фамилии в описании клиента.
-	- limit, offset: Пагинация результатов.
-
-	Возвращает структуру вида:
-	{
-	  "total": <int>,
-	  "items": [
-	    {
-	      "client": {...},
-	      "cars": [...],
-	      "description": {...} | None
-	    }
-	  ]
-	}
-	"""
-	if not car_wash:
-		raise frappe.ValidationError("car_wash is required")
-
-	params = {"car_wash": car_wash}
-	where_clauses = ["1=1"]
-	if query:
-		params["q"] = f"%{query}%"
-		where_clauses.append(
-			"("
-			"c.customer_name LIKE %(q)s OR "
-			"c.phone LIKE %(q)s OR "
-			"car.license_plate LIKE %(q)s OR "
-			"d.first_name LIKE %(q)s OR "
-			"d.last_name LIKE %(q)s"
-			")"
-		)
-
-	where_sql = " AND ".join(where_clauses)
-
-	# Подсчёт общего количества уникальных клиентов
-	count_sql = f"""
-		SELECT COUNT(DISTINCT c.name)
-		FROM `tabCar wash client` c
-		LEFT JOIN `tabCar wash client description` d
-		  ON d.client = c.name AND d.car_wash = %(car_wash)s
-		LEFT JOIN `tabCar wash car` car
-		  ON car.customer = c.name AND IFNULL(car.is_deleted, 0) = 0
-		WHERE {where_sql}
-	"""
-	total = frappe.db.sql(count_sql, params)[0][0]
-
-	# Получаем страницу клиентов
-	list_sql = f"""
-		SELECT DISTINCT c.name
-		FROM `tabCar wash client` c
-		LEFT JOIN `tabCar wash client description` d
-		  ON d.client = c.name AND d.car_wash = %(car_wash)s
-		LEFT JOIN `tabCar wash car` car
-		  ON car.customer = c.name AND IFNULL(car.is_deleted, 0) = 0
-		WHERE {where_sql}
-		ORDER BY c.modified DESC
-		LIMIT %(limit)s OFFSET %(offset)s
-	"""
-	params["limit"] = int(limit)
-	params["offset"] = int(offset)
-	client_names = [r[0] for r in frappe.db.sql(list_sql, params)]
-
-	if not client_names:
-		return {"total": int(total or 0), "items": []}
-
-	client_fields = [
-		"name",
-		"customer_name",
-		"phone",
-		"user",
-		"image",
-	]
-
-	car_fields = [
-		"name",
-		"license_plate",
-		"make",
-		"make_name",
-		"model",
-		"model_name",
-		"body_type",
-		"year",
-		"color",
-	]
-
-	description_fields = [
-		"name",
-		"client",
-		"car_wash",
-		"company",
-		"first_name",
-		"last_name",
-		"description",
-	]
-
-	items = []
-	for client_name in client_names:
-		client_doc = frappe.db.get_value("Car wash client", client_name, client_fields, as_dict=True)
-		cars = frappe.get_all(
-			"Car wash car",
-			filters={"customer": client_name, "is_deleted": 0},
-			fields=car_fields,
-			order_by="modified desc",
-		)
-		desc_list = frappe.get_all(
-			"Car wash client description",
-			filters={"client": client_name, "car_wash": car_wash},
-			fields=description_fields,
-			limit=1,
-		)
-		# Attach tags to description if present
-		if desc_list:
-			desc_name = desc_list[0]["name"]
-			tags_rows = frappe.db.sql(
-				"""
-				SELECT dt.tag AS tag, t.title AS tag_title, IFNULL(t.color, '') AS color
-				FROM `tabCar wash client description tag` dt
-				JOIN `tabCar wash tag` t ON t.name = dt.tag
-				WHERE dt.parent = %s
-				ORDER BY t.title ASC
-				""",
-				(desc_name,),
-				as_dict=1,
-			)
-			desc_list[0]["tags"] = tags_rows or []
-		items.append({
-			"client": client_doc,
-			"cars": cars,
-			"description": (desc_list[0] if desc_list else None),
-		})
-
-	return {"total": int(total or 0), "items": items}
+	return search_clients(
+		car_wash=car_wash,
+		query=query,
+		limit=int(limit),
+		include_total=int(include_total),
+		cursor_modified=cursor_modified,
+		cursor_name=cursor_name,
+	)
 
 
 @frappe.whitelist()

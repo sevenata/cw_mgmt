@@ -1,2 +1,3 @@
 car_wash_management.patches.add_auto_discount_indexes
+car_wash_management.patches.add_search_indexes
 
