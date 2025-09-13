@@ -39,12 +39,58 @@ def get_appointments_with_details(
         list: List of appointment dictionaries with embedded service details
     """
     
-    # Normalize list inputs (None/empty to [])
-    boxes = boxes or []
-    workers = workers or []
-    services = services or []
-    statuses = statuses or []
-    customers = customers or []
+    # Normalize inputs: parse JSON strings and coerce to lists where applicable
+    def _ensure_list(value):
+        if value is None:
+            return []
+        if isinstance(value, str):
+            try:
+                parsed = frappe.parse_json(value)
+                if isinstance(parsed, list):
+                    return parsed
+                # Single scalar in string case
+                return [parsed]
+            except Exception:
+                # Treat as comma-separated or single id string
+                v = value.strip()
+                if v.startswith("[") and v.endswith("]"):
+                    # malformed json, fallback to empty list
+                    return []
+                return [v] if v else []
+        if isinstance(value, (tuple, set)):
+            return list(value)
+        if isinstance(value, list):
+            return value
+        # Any other scalar
+        return [value]
+
+    boxes = _ensure_list(boxes)
+    workers = _ensure_list(workers)
+    services = _ensure_list(services)
+    statuses = _ensure_list(statuses)
+    customers = _ensure_list(customers)
+
+    # Clamp limit
+    try:
+        limit = int(limit or 200)
+    except Exception:
+        limit = 200
+    limit = max(1, min(limit, 500))
+
+    # Normalize is_deleted: accept 0/1/None, or strings "0"/"1"/"null"
+    if isinstance(is_deleted, str):
+        val = is_deleted.strip().lower()
+        if val in ("0", "false", "no"):
+            is_deleted = 0
+        elif val in ("1", "true", "yes"):
+            is_deleted = 1
+        elif val in ("none", "null", ""):
+            is_deleted = None
+        else:
+            try:
+                is_deleted = int(val)
+            except Exception:
+                is_deleted = 0
 
     # Main doctypes
     appointment = DocType("Car wash appointment")
