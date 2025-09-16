@@ -52,7 +52,12 @@ def _get_worker_stats(start_date=None, end_date=None, today_date=None):
     # Fetch worker appointments within the specified date range
     appointments = frappe.get_all(
         "Car wash appointment",
-        filters={"starts_on": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]], "workflow_state": "Finished", "car_wash": car_wash},
+        filters={
+            "payment_received_on": ["between", [start_date + " 00:00:00", end_date + " 23:59:59"]], 
+            "car_wash": car_wash,
+            "is_deleted": 0,
+            "payment_status": "Paid"
+        },
         fields=["car_wash_worker", "car_wash_worker_name", "duration_total", "services_total"]
     )
 

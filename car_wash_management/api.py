@@ -176,6 +176,7 @@ def login_and_get_jwt(email, password):
 	"""
 	# 1. Проверяем, есть ли пользователь
 	user_name = frappe.db.get_value("User", {"email": email, "enabled": 1}, "name")
+
 	if not user_name:
 		frappe.throw("Пользователь не найден или отключен", exc=frappe.AuthenticationError)
 
@@ -197,6 +198,12 @@ def login_and_get_jwt(email, password):
 		"Car wash worker",
 		{"user": user_name},
 		"car_wash"
+	)
+
+	role = frappe.db.get_value(
+		"Car wash worker",
+		{"user": user_name},
+		"role"
 	)
 
 	if not user_car_wash:
@@ -241,6 +248,7 @@ def login_and_get_jwt(email, password):
 		"api_key": user_api_keys_doc.api_key,
 		"api_secret": user_api_keys_doc.api_secret,  # хранится в DocType
 		"car_wash": user_car_wash,
+		"role": role,
 		"iat": datetime.datetime.utcnow(),
 		"exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=int(expiration_time))
 	}
