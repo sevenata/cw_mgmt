@@ -8,6 +8,10 @@
  "field_order": [
   "make",
   "model",
+  "cyrillic_name",
+  "class",
+  "year_from",
+  "year_to",
   "body_type",
   "alias",
   "make_alias"
@@ -29,11 +33,31 @@
    "reqd": 1
   },
   {
+   "fieldname": "cyrillic_name",
+   "fieldtype": "Data",
+   "label": "\u041a\u0438\u0440\u0438\u043b\u043b\u0438\u0446\u0430"
+  },
+  {
+   "fieldname": "class",
+   "fieldtype": "Data",
+   "label": "\u041a\u043b\u0430\u0441\u0441"
+  },
+  {
+   "fieldname": "year_from",
+   "fieldtype": "Int",
+   "label": "\u0413\u043e\u0434 \u043e\u0442"
+  },
+  {
+   "fieldname": "year_to",
+   "fieldtype": "Int",
+   "label": "\u0413\u043e\u0434 \u0434\u043e"
+  },
+  {
    "fieldname": "body_type",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "\u0422\u0438\u043f \u043a\u0443\u0437\u043e\u0432\u0430",
-   "options": "Passenger\nSUV\nMinivan",
+   "options": "ROADSTER\nCOUPE\nCABRIO\nTARGA\nSPEEDSTER\nLIMOUSINE\nHATCHBACK_3_DOORS\nHATCHBACK_4_DOORS\nHATCHBACK_5_DOORS\nSEDAN\nSEDAN_2_DOORS\nSEDAN_HARDTOP\nWAGON\nWAGON_3_DOORS\nWAGON_5_DOORS\nALLROAD_3_DOORS\nALLROAD_5_DOORS\nALLROAD_OPEN\nMINIVAN\nCOMPACTVAN\nMICROVAN\nPICKUP\nPICKUP_ONE\nPICKUP_ONE_HALF\nPICKUP_TWO\nLIFTBACK\nFASTBACK\nVAN\nPHAETON\nPHAETON_WAGON",
    "reqd": 1
   },
   {

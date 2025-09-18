@@ -10,6 +10,9 @@
   "general_section_break",
   "title",
   "alias",
+  "cyrillic_name",
+  "country",
+  "popular",
   "synonyms"
  ],
  "fields": [
@@ -38,6 +41,21 @@
    "label": "Alias",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "cyrillic_name",
+   "fieldtype": "Data",
+   "label": "\u041a\u0438\u0440\u0438\u043b\u043b\u0438\u0446\u0430"
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Data",
+   "label": "\u0421\u0442\u0440\u0430\u043d\u0430"
+  },
+  {
+   "fieldname": "popular",
+   "fieldtype": "Check",
+   "label": "\u041f\u043e\u043f\u0443\u043b\u044f\u0440\u043d\u0430\u044f"
   }
  ],
  "index_web_pages_for_search": 1,

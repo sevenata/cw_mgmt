@@ -205,7 +205,11 @@ def get_booking_price_and_duration(
         # 8) Финальные расчёты с учётом промокода
         final_services_price = promo_result['final_services_total']
         final_commission = promo_result['final_commission']
-        final_total = final_services_price + final_commission
+        # Для очереди обычного пользователя возвращаем к оплате только комиссию
+        if not created_by_admin and not is_time_booking:
+            final_total = final_commission
+        else:
+            final_total = final_services_price + final_commission
 
         response = {
             "status": "success",
