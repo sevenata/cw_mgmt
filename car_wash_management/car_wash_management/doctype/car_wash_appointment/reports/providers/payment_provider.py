@@ -30,3 +30,4 @@ class PaymentDataProvider(DataProvider):
             },
             order_by="posting_date asc",
         )
+

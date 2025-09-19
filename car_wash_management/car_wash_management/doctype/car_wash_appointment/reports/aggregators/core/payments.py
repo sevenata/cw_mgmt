@@ -32,3 +32,4 @@ class PaymentsAggregator(MetricAggregator):
     
     def get_section_name(self) -> str:
         return "payments"
+

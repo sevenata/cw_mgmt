@@ -43,3 +43,4 @@ class ScheduleAggregator(MetricAggregator):
     
     def get_section_name(self) -> str:
         return "schedule"
+

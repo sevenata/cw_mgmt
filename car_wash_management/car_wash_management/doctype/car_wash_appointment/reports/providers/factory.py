@@ -38,3 +38,4 @@ class DataProviderFactory:
     def create_payment_provider() -> PaymentDataProvider:
         """Создает провайдер платежей"""
         return PaymentDataProvider()
+

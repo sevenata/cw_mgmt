@@ -15,3 +15,4 @@ class DataProvider(ABC):
     def fetch_data(self, context: ReportContext) -> List[Dict[str, Any]]:
         """Загружает данные для отчета"""
         pass
+

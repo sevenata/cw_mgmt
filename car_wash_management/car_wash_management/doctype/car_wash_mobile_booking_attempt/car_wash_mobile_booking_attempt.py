@@ -80,7 +80,11 @@ class Carwashmobilebookingattempt(Document):
 		# total хранится как services_total + commission_user
 		self.services_total = applied["final_services_total"]
 		self.commission_user = applied["final_commission"]
-		self.total = applied["final_services_total"] + applied["final_commission"]
+		# Для очереди (не на время) клиент оплачивает только комиссию
+		if not bool(getattr(self, "is_time_booking", 0)):
+			self.total = applied["final_commission"]
+		else:
+			self.total = applied["final_services_total"] + applied["final_commission"]
 
 	def after_insert(self):
 		# Запишем историю автоскидок на момент создания попытки бронирования

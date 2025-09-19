@@ -22,3 +22,4 @@ class ServiceDataProvider(DataProvider):
             },
             order_by="service_name asc",
         )
+
