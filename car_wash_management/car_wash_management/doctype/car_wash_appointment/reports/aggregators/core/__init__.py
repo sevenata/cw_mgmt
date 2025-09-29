@@ -12,5 +12,7 @@ from .tariffs import TariffsAggregator
 __all__ = [
     'VisitsAggregator',
     'RevenueAggregator', 
-    'PaymentsAggregator'
+    'PaymentsAggregator',
+    'PriceControlAggregator',
+    'TariffsAggregator'
 ]

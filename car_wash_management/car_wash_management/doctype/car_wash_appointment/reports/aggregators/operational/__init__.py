@@ -13,5 +13,6 @@ __all__ = [
     'UtilizationAggregator',
     'ScheduleAggregator',
     'QueueAggregator',
-    'CancellationsAggregator'
+    'CancellationsAggregator',
+    'BoxCapacityTypeAggregator'
 ]

@@ -5,7 +5,10 @@
 
 from .payment_lag import PaymentLagAggregator
 from .forecast import ForecastAggregator
+from .anomalies import AnomaliesAggregator
 
 __all__ = [
-    'PaymentLagAggregator'
+    'PaymentLagAggregator',
+    'ForecastAggregator',
+    'AnomaliesAggregator'
 ]

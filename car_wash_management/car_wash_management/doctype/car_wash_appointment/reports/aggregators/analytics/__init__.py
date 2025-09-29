@@ -15,5 +15,8 @@ __all__ = [
     'ByDayAggregator',
     'ByBoxAggregator',
     'ByHourAggregator',
-    'StaffAggregator'
+    'StaffAggregator',
+    'CustomersAggregator',
+    'ServicesAggregator',
+    'CarSegmentAggregator'
 ]

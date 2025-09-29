@@ -37,6 +37,7 @@ from .analytics import (
 from .special import (
     PaymentLagAggregator,
     ForecastAggregator,
+    AnomaliesAggregator,
 )
 
 # Фабрика агрегаторов
@@ -69,6 +70,7 @@ __all__ = [
     # Специальные метрики
     'PaymentLagAggregator',
     'ForecastAggregator',
+    'AnomaliesAggregator',
     
     # Фабрика
     'AggregatorFactory'
