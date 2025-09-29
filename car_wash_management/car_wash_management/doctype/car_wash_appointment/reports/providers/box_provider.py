@@ -17,7 +17,7 @@ class BoxDataProvider(DataProvider):
         try:
             return frappe.get_all(
                 "Car wash box",
-                fields=["name", "type"],
+                fields=["name", "type", "box_title"],
                 filters={
                     "car_wash": context.car_wash,
                     "is_deleted": 0,
