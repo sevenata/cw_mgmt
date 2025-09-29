@@ -239,7 +239,7 @@ class ForecastAggregator(MetricAggregator):
             if not (start_dt <= dt < end_dt):
                 continue
             day_iso = dt.date().isoformat()
-            b = buckets.setdefault(day_iso, {"temps": [], "gusts": [], "precip": 0.0, "snow": 0.0})
+            b = buckets.setdefault(day_iso, {"temps": [], "gusts": [], "speeds": [], "precip": 0.0, "snow": 0.0})
             main = it.get("main") or {}
             wind = it.get("wind") or {}
             if isinstance(main.get("temp"), (int, float)):
@@ -247,6 +247,9 @@ class ForecastAggregator(MetricAggregator):
             gust = wind.get("gust")
             if isinstance(gust, (int, float)):
                 b["gusts"].append(float(gust))  # m/s в metric
+            speed = wind.get("speed")
+            if isinstance(speed, (int, float)):
+                b["speeds"].append(float(speed))  # m/s
             rain3h = 0.0
             snow3h = 0.0
             try:
@@ -266,9 +269,19 @@ class ForecastAggregator(MetricAggregator):
         for day_iso, b in buckets.items():
             temps: List[float] = b["temps"]
             gusts: List[float] = b["gusts"]
+            speeds: List[float] = b.get("speeds", [])
             temp_min = min(temps) if temps else None
             temp_max = max(temps) if temps else None
-            gust_ms = max(gusts) if gusts else None
+            gust_raw = max(gusts) if gusts else None
+            speed_max = max(speeds) if speeds else None
+            # Эффективный порыв: если нет gust, используем speed*1.3 как приближение
+            gust_ms = None
+            if gust_raw is not None and speed_max is not None:
+                gust_ms = max(gust_raw, 1.3 * speed_max)
+            elif gust_raw is not None:
+                gust_ms = gust_raw
+            elif speed_max is not None:
+                gust_ms = 1.3 * speed_max
             result[day_iso] = {
                 "temp_min": float(temp_min) if temp_min is not None else 0.0,
                 "temp_max": float(temp_max) if temp_max is not None else 0.0,
@@ -297,9 +310,9 @@ class ForecastAggregator(MetricAggregator):
         if wet_index > 0:
             factor *= min(1.20, 1.0 + 0.01 * wet_index)
 
-        # Ветер: после 10 м/с увеличиваем 2% за м/с, до +30%
-        if gust > 10.0:
-            factor *= min(1.30, 1.0 + 0.02 * (gust - 10.0))
+        # Ветер: считаем порывом эффективный порог 7 м/с, +1.5% за м/с сверх 7, до +30%
+        if gust > 7.0:
+            factor *= min(1.30, 1.0 + 0.015 * (gust - 7.0))
 
         # Температура: лёгкая надбавка в тёплые дни, без штрафов (согласно наблюдаемому смещению)
         if tmax >= 30.0:
