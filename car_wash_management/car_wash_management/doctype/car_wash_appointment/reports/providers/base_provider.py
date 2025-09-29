@@ -16,3 +16,4 @@ class DataProvider(ABC):
         """Загружает данные для отчета"""
         pass
 
+

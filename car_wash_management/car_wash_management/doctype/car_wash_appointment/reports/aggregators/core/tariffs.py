@@ -11,7 +11,10 @@ class TariffsAggregator(MetricAggregator):
         for r in data:
             key = r.get("tariff") or "Unknown"
             by_tariff[key]["count"] += 1
-            by_tariff[key]["revenue"] += float(r.get("grand_total") or 0)
+            revenue_value = r.get("services_total")
+            if revenue_value is None:
+                revenue_value = r.get("grand_total")
+            by_tariff[key]["revenue"] += float(revenue_value or 0)
         res = []
         total_visits = sum(v["count"] for v in by_tariff.values()) or 1
         for k, v in by_tariff.items():

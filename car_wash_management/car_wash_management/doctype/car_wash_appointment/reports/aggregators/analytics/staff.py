@@ -19,7 +19,10 @@ class StaffAggregator(MetricAggregator):
             wkey = r.get("car_wash_worker") or "Unknown"
             staff[wkey]["worker_name"] = r.get("car_wash_worker_name") or wkey
             staff[wkey]["visits"] += 1
-            staff[wkey]["revenue_total"] += float(r.get("grand_total") or 0)
+            revenue_value = r.get("services_total")
+            if revenue_value is None:
+                revenue_value = r.get("grand_total")
+            staff[wkey]["revenue_total"] += float(revenue_value or 0)
             staff[wkey]["reward_total"] += float(r.get("staff_reward_total") or 0)
         
         return [
@@ -35,4 +38,5 @@ class StaffAggregator(MetricAggregator):
     
     def get_section_name(self) -> str:
         return "staff"
+
 

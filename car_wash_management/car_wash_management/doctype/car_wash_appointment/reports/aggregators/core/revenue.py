@@ -41,3 +41,4 @@ class RevenueAggregator(MetricAggregator):
     def get_section_name(self) -> str:
         return "revenue"
 
+

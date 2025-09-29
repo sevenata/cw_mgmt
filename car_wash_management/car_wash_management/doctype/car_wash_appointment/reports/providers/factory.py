@@ -39,3 +39,4 @@ class DataProviderFactory:
         """Создает провайдер платежей"""
         return PaymentDataProvider()
 
+

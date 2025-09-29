@@ -21,7 +21,12 @@ class ByHourAggregator(MetricAggregator):
             dt = frappe.utils.get_datetime(ts)
             hour_key = f"{dt.hour:02d}:00"
             buckets[hour_key]["visits"] += 1
-            buckets[hour_key]["revenue"] += float(r.get("grand_total") or 0)
+            # Используем services_total как более точную выручку по услугам,
+            # с безопасным фоллбеком на grand_total, если поле отсутствует
+            revenue_value = r.get("services_total")
+            if revenue_value is None:
+                revenue_value = r.get("grand_total")
+            buckets[hour_key]["revenue"] += float(revenue_value or 0)
         return [
             {"hour": k, "visits": v["visits"], "revenue": round(v["revenue"], 2)}
             for k, v in sorted(buckets.items(), key=lambda kv: kv[0])

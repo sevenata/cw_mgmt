@@ -25,7 +25,12 @@ class ByDayAggregator(MetricAggregator):
             dkey = date_cache[starts_on_key]
             
             by_day[dkey]["visits"] += 1
-            by_day[dkey]["revenue"] += float(r.get("grand_total") or 0)
+            # Суммируем выручку по услугам; для обратной совместимости
+            # используем grand_total, если services_total не задано
+            revenue_value = r.get("services_total")
+            if revenue_value is None:
+                revenue_value = r.get("grand_total")
+            by_day[dkey]["revenue"] += float(revenue_value or 0)
         
         return [
             {"date": d, "visits": v["visits"], "revenue": round(v["revenue"], 2)}

@@ -48,13 +48,25 @@ class CustomersAggregator(MetricAggregator):
         }
 
     def _calc_total_revenue_for_customers(self, customers: List[str]) -> float:
-        rows = frappe.get_all(
-            "Car wash appointment",
-            fields=["customer", "sum(grand_total) as total"],
-            filters={"customer": ["in", customers], "is_deleted": 0},
-            group_by="customer",
-        )
-        return float(sum(float(r.get("total") or 0) for r in rows))
+        # Используем сумму services_total для LTV, чтобы согласовать с прочими сервисными метриками
+        # Фоллбек на grand_total оставляем на уровне суммирования в Python, если поле отсутствует
+        try:
+            rows = frappe.get_all(
+                "Car wash appointment",
+                fields=["customer", "sum(services_total) as total"],
+                filters={"customer": ["in", customers], "is_deleted": 0},
+                group_by="customer",
+            )
+            return float(sum(float(r.get("total") or 0) for r in rows))
+        except Exception:
+            # Фоллбек на grand_total если БД не поддерживает выражение или поле отсутствует
+            rows = frappe.get_all(
+                "Car wash appointment",
+                fields=["customer", "sum(grand_total) as total"],
+                filters={"customer": ["in", customers], "is_deleted": 0},
+                group_by="customer",
+            )
+            return float(sum(float(r.get("total") or 0) for r in rows))
 
     def _calc_repeat_ratio(self, customers: List[str], context: ReportContext, days: int) -> float:
         import datetime as _dt

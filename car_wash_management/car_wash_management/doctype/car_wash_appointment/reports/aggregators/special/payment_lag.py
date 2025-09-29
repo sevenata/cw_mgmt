@@ -31,3 +31,4 @@ class PaymentLagAggregator(MetricAggregator):
     def get_section_name(self) -> str:
         return "payment_lag"
 
+

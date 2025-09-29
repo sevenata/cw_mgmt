@@ -13,9 +13,15 @@ class CarSegmentAggregator(MetricAggregator):
             make = r.get("car_make") or "Unknown"
             model = r.get("car_model") or "Unknown"
             by_make[make]["visits"] += 1
-            by_make[make]["revenue"] += float(r.get("grand_total") or 0)
+            revenue_value = r.get("services_total")
+            if revenue_value is None:
+                revenue_value = r.get("grand_total")
+            by_make[make]["revenue"] += float(revenue_value or 0)
             by_model[model]["visits"] += 1
-            by_model[model]["revenue"] += float(r.get("grand_total") or 0)
+            revenue_value_model = r.get("services_total")
+            if revenue_value_model is None:
+                revenue_value_model = r.get("grand_total")
+            by_model[model]["revenue"] += float(revenue_value_model or 0)
         return {
             "make": [
                 {"key": k, "visits": v["visits"], "revenue": round(v["revenue"], 2)}
