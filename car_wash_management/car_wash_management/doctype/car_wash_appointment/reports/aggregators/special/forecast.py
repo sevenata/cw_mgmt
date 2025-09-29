@@ -280,7 +280,8 @@ class ForecastAggregator(MetricAggregator):
 
     def _weather_adjustment_factor(self, dw: Dict[str, float] | None) -> float:
         """Эвристический множитель по погоде.
-        Учитываем осадки (дождь/снег), порывы ветра и экстремальные температуры.
+        С учётом наблюдаемого смещения (недооценка в неблагоприятную погоду)
+        повышаем прогноз для ветреных/влажных дней вместо понижения.
         """
         if not dw:
             return 1.0
@@ -291,25 +292,23 @@ class ForecastAggregator(MetricAggregator):
         tmax = float(dw.get("temp_max", 0.0))
 
         factor = 1.0
-        # Осадки: 3% снижения за мм дождя (до 30%), снег в 2x сильнее.
+        # Осадки: увеличиваем прогноз на ~1% за мм дождя и 2% за мм снега, до +20% суммарно
         wet_index = precip + 2.0 * snow
         if wet_index > 0:
-            factor *= max(0.7, 1.0 - 0.03 * wet_index)
+            factor *= min(1.20, 1.0 + 0.01 * wet_index)
 
-        # Ветер: после 10 м/с уменьшаем 1% за м/с, до 15%
+        # Ветер: после 10 м/с увеличиваем 2% за м/с, до +30%
         if gust > 10.0:
-            factor *= max(0.85, 1.0 - 0.01 * (gust - 10.0))
+            factor *= min(1.30, 1.0 + 0.02 * (gust - 10.0))
 
-        # Температура: сильный мороз/жара влияют
-        if tmax < -20.0:
-            factor *= 0.8
-        elif tmax < -10.0:
-            factor *= 0.9
-        elif tmax > 35.0:
-            factor *= 0.9
+        # Температура: лёгкая надбавка в тёплые дни, без штрафов (согласно наблюдаемому смещению)
+        if tmax >= 30.0:
+            factor *= 1.05
+        elif tmax >= 25.0:
+            factor *= 1.02
 
         # Ограничим диапазон факторов
-        return max(0.5, min(1.1, factor))
+        return max(0.8, min(1.4, factor))
 
     def _weekday_quantiles(self, dow_series: Dict[int, List[float]]) -> Dict[int, tuple[float, float]]:
         """Оценка квантилей вариабельности по каждому дню недели.
