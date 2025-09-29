@@ -121,15 +121,31 @@ class ForecastAggregator(MetricAggregator):
         sum_prelim = sum(factored_prelim_by_wd.values())
         scale = (target_week_total / sum_prelim) if sum_prelim > 0 else 1.0
 
+        # Предсказательные интервалы: по исторической вариабельности по дням недели
+        wd_quantiles = self._weekday_quantiles(dow_series)
+
         # Следующая неделя (даты) с применением погодных факторов
         forecast: List[Dict[str, Any]] = []
         for i in range(7):
             day = next_week_start + _dt.timedelta(days=i)
             wd = day.weekday()
+            base_value = max(0.0, base_dow.get(wd, 0.0) * trend_multiplier)
+            weather_factor = factors_by_wd.get(wd, 1.0)
             value = factored_prelim_by_wd.get(wd, 0.0) * scale
+
+            # Интервалы как мультипликативные квантильные коэффициенты к финальному значению
+            q10, q90 = wd_quantiles.get(wd, (0.8, 1.2))
+            p10 = max(0.0, value * q10)
+            p90 = max(0.0, value * q90)
+
             forecast.append({
                 "date": day.isoformat(),
                 "visits_forecast": round(value, 2),
+                "base": round(base_value, 2),
+                "trend_multiplier": round(trend_multiplier, 3),
+                "weather_factor": round(weather_factor, 3),
+                "visits_p10": round(p10, 2),
+                "visits_p90": round(p90, 2),
             })
         return forecast
 
@@ -294,5 +310,36 @@ class ForecastAggregator(MetricAggregator):
 
         # Ограничим диапазон факторов
         return max(0.5, min(1.1, factor))
+
+    def _weekday_quantiles(self, dow_series: Dict[int, List[float]]) -> Dict[int, tuple[float, float]]:
+        """Оценка квантилей вариабельности по каждому дню недели.
+        Возвращает словарь wd -> (q10, q90) как мультипликаторы относительно медианы по этому дню.
+        """
+        result: Dict[int, tuple[float, float]] = {}
+        for wd, seq in dow_series.items():
+            if not seq:
+                result[wd] = (0.9, 1.1)
+                continue
+            med = median(seq) or 1.0
+            ratios = sorted([(x / med) if med > 0 else 1.0 for x in seq])
+            q10 = self._quantile(ratios, 0.10)
+            q90 = self._quantile(ratios, 0.90)
+            # Ограничим разумно
+            q10 = max(0.5, min(q10, 1.0))
+            q90 = max(1.0, min(q90, 1.7))
+            result[wd] = (q10, q90)
+        return result
+
+    def _quantile(self, sorted_values: List[float], q: float) -> float:
+        if not sorted_values:
+            return 1.0
+        n = len(sorted_values)
+        if n == 1:
+            return sorted_values[0]
+        idx = q * (n - 1)
+        lo = int(idx)
+        hi = min(lo + 1, n - 1)
+        frac = idx - lo
+        return sorted_values[lo] * (1 - frac) + sorted_values[hi] * frac
 
 
