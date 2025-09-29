@@ -14,10 +14,11 @@
 
 from collections import defaultdict
 from statistics import median
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 import datetime as _dt
 import frappe
 from ...base import MetricAggregator, ReportContext
+from car_wash_management import api as cw_api
 
 
 class ForecastAggregator(MetricAggregator):
@@ -93,13 +94,39 @@ class ForecastAggregator(MetricAggregator):
         sum_prelim = sum(preliminary_forecast_by_wd.values())
         scale = (target_week_total / sum_prelim) if sum_prelim > 0 else 1.0
 
-        # Следующая неделя (даты)
+        # Погодные корректировки: рассчитываем коэффициенты по дням следующей недели
         next_week_start = context.current_week.end
+        next_week_end = next_week_start + _dt.timedelta(days=7)
+        weather_by_date = self._summarize_upcoming_weather(next_week_start, next_week_end)
+
+        # Предварительно применим погодные факторы к значениям по дням недели
+        factors_by_wd: Dict[int, float] = {}
+        factors_list: List[float] = []
+        for i in range(7):
+            day = next_week_start + _dt.timedelta(days=i)
+            day_iso = day.date().isoformat()
+            weather = weather_by_date.get(day_iso)
+            factor = self._weather_adjustment_factor(weather)
+            factors_by_wd[day.weekday()] = factor
+            factors_list.append(factor)
+
+        factored_prelim_by_wd: Dict[int, float] = {}
+        for wd, base_val in preliminary_forecast_by_wd.items():
+            factored_prelim_by_wd[wd] = max(0.0, base_val * factors_by_wd.get(wd, 1.0))
+
+        # Масштабирование для сохранения недельной логики с учетом средней погоды
+        avg_factor = sum(factors_list) / 7.0 if factors_list else 1.0
+        last_total = weekly_totals[-1] if weekly_totals else 0.0
+        target_week_total = max(0.0, last_total * trend_multiplier * avg_factor)
+        sum_prelim = sum(factored_prelim_by_wd.values())
+        scale = (target_week_total / sum_prelim) if sum_prelim > 0 else 1.0
+
+        # Следующая неделя (даты) с применением погодных факторов
         forecast: List[Dict[str, Any]] = []
         for i in range(7):
             day = next_week_start + _dt.timedelta(days=i)
             wd = day.weekday()
-            value = preliminary_forecast_by_wd.get(wd, 0.0) * scale
+            value = factored_prelim_by_wd.get(wd, 0.0) * scale
             forecast.append({
                 "date": day.isoformat(),
                 "visits_forecast": round(value, 2),
@@ -154,5 +181,118 @@ class ForecastAggregator(MetricAggregator):
         if not ratios:
             return 1.0
         return max(0.0, self._ewma_last(ratios, alpha))
+
+    # ---------------------------
+    # Погода: загрузка и факторы
+    # ---------------------------
+
+    def _summarize_upcoming_weather(self, start_dt: _dt.datetime, end_dt: _dt.datetime) -> Dict[str, Dict[str, float]]:
+        """Возвращает суточные сводки погоды по датам ISO в интервале [start_dt, end_dt).
+        Поля: temp_min, temp_max, precip_mm, snow_mm, gust_ms.
+        """
+        cache_key = f"weather_forecast_astana"
+        cached = frappe.cache().get_value(cache_key)
+        raw = None
+        if cached:
+            try:
+                raw = frappe.parse_json(cached)
+            except Exception:
+                raw = None
+        if raw is None:
+            try:
+                raw = cw_api.get_weather()  # dict c ключами, как у OpenWeatherMap 5-day/3h
+                # кэшируем на 6 часов
+                try:
+                    frappe.cache().set_value(cache_key, raw, expires_in_sec=6 * 60 * 60)
+                except Exception:
+                    pass
+            except Exception:
+                raw = None
+        if not isinstance(raw, dict):
+            return {}
+
+        buckets: Dict[str, Dict[str, Any]] = {}
+        for it in raw.get("list", []) or []:
+            dt_txt = it.get("dt_txt")
+            if not dt_txt:
+                continue
+            try:
+                dt = frappe.utils.get_datetime(dt_txt)
+            except Exception:
+                continue
+            if not (start_dt <= dt < end_dt):
+                continue
+            day_iso = dt.date().isoformat()
+            b = buckets.setdefault(day_iso, {"temps": [], "gusts": [], "precip": 0.0, "snow": 0.0})
+            main = it.get("main") or {}
+            wind = it.get("wind") or {}
+            if isinstance(main.get("temp"), (int, float)):
+                b["temps"].append(float(main["temp"]))
+            gust = wind.get("gust")
+            if isinstance(gust, (int, float)):
+                b["gusts"].append(float(gust))  # m/s в metric
+            rain3h = 0.0
+            snow3h = 0.0
+            try:
+                if isinstance(it.get("rain", {}).get("3h"), (int, float)):
+                    rain3h = float(it["rain"]["3h"])
+            except Exception:
+                pass
+            try:
+                if isinstance(it.get("snow", {}).get("3h"), (int, float)):
+                    snow3h = float(it["snow"]["3h"])
+            except Exception:
+                pass
+            b["precip"] += rain3h
+            b["snow"] += snow3h
+
+        result: Dict[str, Dict[str, float]] = {}
+        for day_iso, b in buckets.items():
+            temps: List[float] = b["temps"]
+            gusts: List[float] = b["gusts"]
+            temp_min = min(temps) if temps else None
+            temp_max = max(temps) if temps else None
+            gust_ms = max(gusts) if gusts else None
+            result[day_iso] = {
+                "temp_min": float(temp_min) if temp_min is not None else 0.0,
+                "temp_max": float(temp_max) if temp_max is not None else 0.0,
+                "precip_mm": round(float(b["precip"]), 2),
+                "snow_mm": round(float(b["snow"]), 2),
+                "gust_ms": float(gust_ms) if gust_ms is not None else 0.0,
+            }
+        return result
+
+    def _weather_adjustment_factor(self, dw: Dict[str, float] | None) -> float:
+        """Эвристический множитель по погоде.
+        Учитываем осадки (дождь/снег), порывы ветра и экстремальные температуры.
+        """
+        if not dw:
+            return 1.0
+        precip = float(dw.get("precip_mm", 0.0))
+        snow = float(dw.get("snow_mm", 0.0))
+        gust = float(dw.get("gust_ms", 0.0))
+        tmin = float(dw.get("temp_min", 0.0))
+        tmax = float(dw.get("temp_max", 0.0))
+
+        factor = 1.0
+        # Осадки: 3% снижения за мм дождя (до 30%), снег в 2x сильнее.
+        wet_index = precip + 2.0 * snow
+        if wet_index > 0:
+            factor *= max(0.7, 1.0 - 0.03 * wet_index)
+
+        # Ветер: после 10 м/с уменьшаем 1% за м/с, до 15%
+        if gust > 10.0:
+            factor *= max(0.85, 1.0 - 0.01 * (gust - 10.0))
+
+        # Температура: сильный мороз/жара влияют
+        if tmax < -20.0:
+            factor *= 0.8
+        elif tmax < -10.0:
+            factor *= 0.9
+        elif tmax > 35.0:
+            factor *= 0.9
+
+        # Ограничим диапазон факторов
+        return max(0.5, min(1.1, factor))
 
 
