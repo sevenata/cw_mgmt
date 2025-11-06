@@ -293,6 +293,14 @@ class Carwashappointment(Document):
 		frappe.db.after_commit(_after_commit)
 
 	def on_trash(self):
+		# Fix for Issue #7: Cancel worker earnings before deletion
+		try:
+			# Set is_deleted to trigger earning cleanup
+			self.is_deleted = 1
+			try_sync_worker_earning(self)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_trash cancel worker earnings failed")
+		
 		# перед удалением документа гарантируем возврат товара и удаляем usage (только если есть фича shop)
 		try:
 			if self.has_shop_feature():
@@ -302,6 +310,14 @@ class Carwashappointment(Document):
 			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_trash revert stock failed")
 
 	def on_cancel(self):
+		# Fix for Issue #7: Cancel worker earnings on document cancellation
+		try:
+			# Set is_deleted to trigger earning cleanup
+			self.is_deleted = 1
+			try_sync_worker_earning(self)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Car wash appointment on_cancel cancel worker earnings failed")
+		
 		# при отмене документа вернуть стоки и удалить usage, как и для worker ledger entry (только если есть фича shop)
 		try:
 			if self.has_shop_feature():

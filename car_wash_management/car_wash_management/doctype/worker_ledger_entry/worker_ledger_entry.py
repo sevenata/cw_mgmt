@@ -3,11 +3,12 @@ from frappe.model.document import Document
 from frappe.utils import now_datetime, cint
 
 
+# Fix for Issue #2: Correction sign should use raw amount (can be positive or negative)
+# Removed "Correction" from ENTRY_SIGN to handle it separately
 ENTRY_SIGN = {
     "Earning":  +1,
     "Advance":  -1,
     "Payout":   -1,
-    "Correction":  1,
 }
 
 
@@ -84,9 +85,14 @@ def get_worker_balance(worker: str) -> dict:
     advances = 0
     payouts = 0
     for r in rows:
-        sign = ENTRY_SIGN.get(r.entry_type, 1)
         amt = int(r.amount or 0)
-        total += sign * amt
+        # Fix for Issue #2: Handle Correction with raw amount (can be positive or negative)
+        if r.entry_type == "Correction":
+            total += amt  # Use raw amount for corrections
+        else:
+            sign = ENTRY_SIGN.get(r.entry_type, 1)
+            total += sign * amt
+        
         if r.entry_type == "Earning":
             earnings += amt
         elif r.entry_type == "Advance":
