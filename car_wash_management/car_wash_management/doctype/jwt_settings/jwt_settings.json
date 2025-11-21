@@ -7,7 +7,10 @@
  "field_order": [
   "jwt_secret_key",
   "algorithm",
-  "expiration_time"
+  "expiration_time",
+  "telegram_section",
+  "telegram_bot_token",
+  "telegram_default_chat_id"
  ],
  "fields": [
   {
@@ -24,6 +27,23 @@
    "fieldname": "expiration_time",
    "fieldtype": "Int",
    "label": "Expiration time (minutes)"
+  },
+  {
+   "fieldname": "telegram_section",
+   "fieldtype": "Section Break",
+   "label": "Telegram Settings"
+  },
+  {
+   "fieldname": "telegram_bot_token",
+   "fieldtype": "Data",
+   "label": "Telegram Bot Token",
+   "description": "Bot token from @BotFather for sending daily reports"
+  },
+  {
+   "fieldname": "telegram_default_chat_id",
+   "fieldtype": "Data",
+   "label": "Telegram Default Chat ID",
+   "description": "Default chat ID for Telegram reports. Used as fallback if car wash doesn't have its own chat ID."
   }
  ],
  "index_web_pages_for_search": 1,

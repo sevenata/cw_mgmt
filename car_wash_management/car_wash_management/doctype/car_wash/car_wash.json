@@ -25,7 +25,10 @@
   "house",
   "connections_tab",
   "settings_tab",
-  "working_hours"
+  "working_hours",
+  "telegram_report_enabled",
+  "telegram_chat_id",
+  "telegram_report_time"
  ],
  "fields": [
   {
@@ -140,6 +143,24 @@
    "fieldname": "company_title",
    "fieldtype": "Data",
    "label": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u0438"
+  },
+  {
+   "default": "0",
+   "fieldname": "telegram_report_enabled",
+   "fieldtype": "Check",
+   "label": "Telegram Reports Enabled"
+  },
+  {
+   "fieldname": "telegram_chat_id",
+   "fieldtype": "Data",
+   "label": "Telegram Chat ID",
+   "description": "Telegram chat ID to send daily reports. Leave empty to use global default from site_config."
+  },
+  {
+   "fieldname": "telegram_report_time",
+   "fieldtype": "Time",
+   "label": "Telegram Report Time",
+   "description": "Time to send daily report (end of business day). Format: HH:MM:SS"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -154,23 +154,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"car_wash_management.tasks.all"
-# 	],
-# 	"daily": [
-# 		"car_wash_management.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"car_wash_management.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"car_wash_management.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"car_wash_management.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"hourly": [
+		"car_wash_management.tasks.daily_reports.send_daily_telegram_reports"
+	],
+}
 
 # Testing
 # -------
