@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard (optional)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml:ro
+      - ./traefik/acme.json:/acme.json
+    environment:
+      - TRAEFIK_LOG_LEVEL=INFO
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      # Optional: Traefik dashboard (comment out if not needed)
+      # - "traefik.http.routers.traefik.rule=Host(`traefik.yourdomain.com`)"
+      # - "traefik.http.routers.traefik.entrypoints=websecure"
+      # - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      # - "traefik.http.routers.traefik.service=api@internal"
+
+networks:
+  traefik-network:
+    driver: bridge

@@ -1,0 +1,226 @@
+name: Deploy Traefik
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      action:
+        description: 'Deployment action'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - restart
+          - down
+
+jobs:
+  deploy:
+    name: Deploy Traefik to ${{ github.event.inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        if: ${{ github.event.inputs.action != 'down' }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if [ -n "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
+            echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+            chmod 600 ~/.ssh/deploy_key
+            ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          else
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq expect
+            ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
+
+      - name: Install dependencies
+        if: ${{ github.event.inputs.action != 'down' }}
+        run: |
+          if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq expect
+          fi
+
+      - name: Set deployment variables
+        id: vars
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "staging" ]; then
+            echo "remote_host=${{ secrets.DEPLOY_HOST_STAGING || secrets.DEPLOY_HOST }}" >> $GITHUB_OUTPUT
+            echo "remote_user=${{ secrets.DEPLOY_USER_STAGING || secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+            echo "remote_path=${{ secrets.TRAEFIK_DEPLOY_PATH_STAGING || secrets.TRAEFIK_DEPLOY_PATH || '~/juu/traefik' }}" >> $GITHUB_OUTPUT
+          else
+            echo "remote_host=${{ secrets.DEPLOY_HOST }}" >> $GITHUB_OUTPUT
+            echo "remote_user=${{ secrets.DEPLOY_USER }}" >> $GITHUB_OUTPUT
+            echo "remote_path=${{ secrets.TRAEFIK_DEPLOY_PATH || '~/juu/traefik' }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Traefik configuration on server
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        env:
+          REMOTE_USER: ${{ steps.vars.outputs.remote_user }}
+          REMOTE_HOST: ${{ steps.vars.outputs.remote_host }}
+          REMOTE_PATH: ${{ steps.vars.outputs.remote_path }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' && '~/.ssh/deploy_key' || '' }}
+          SSH_PASSWORD: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+          ACME_EMAIL: ${{ secrets.ACME_EMAIL || 'admin@yourdomain.com' }}
+        run: |
+          # Create traefik.yml with email substitution
+          mkdir -p .github/traefik/traefik
+          sed "s/\${ACME_EMAIL:-your-email@example.com}/${ACME_EMAIL}/g" .github/traefik/traefik/traefik.yml > /tmp/traefik.yml
+          
+          # Ensure acme.json exists with proper permissions
+          if [ -n "$SSH_KEY" ]; then
+            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+              mkdir -p ${REMOTE_PATH}/traefik
+              touch ${REMOTE_PATH}/traefik/acme.json
+              chmod 600 ${REMOTE_PATH}/traefik/acme.json
+            "
+          else
+            expect << EXPECT_EOF
+          set timeout 30
+          spawn ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p ${REMOTE_PATH}/traefik && touch ${REMOTE_PATH}/traefik/acme.json && chmod 600 ${REMOTE_PATH}/traefik/acme.json"
+          expect {
+            -re "(?i)(password|passphrase):" {
+              send -- "${SSH_PASSWORD}\r"
+              expect eof
+            }
+            eof
+          }
+          EXPECT_EOF
+          fi
+          
+          # Copy configuration files
+          if [ -n "$SSH_KEY" ]; then
+            scp -i "$SSH_KEY" -o StrictHostKeyChecking=no .github/traefik/docker-compose.traefik.yml ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/docker-compose.yml
+            scp -i "$SSH_KEY" -o StrictHostKeyChecking=no /tmp/traefik.yml ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/traefik/traefik.yml
+          else
+            expect << EXPECT_EOF
+          set timeout 30
+          spawn scp -o StrictHostKeyChecking=no .github/traefik/docker-compose.traefik.yml ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/docker-compose.yml
+          expect {
+            -re "(?i)(password|passphrase):" {
+              send -- "${SSH_PASSWORD}\r"
+              expect eof
+            }
+            eof
+          }
+          EXPECT_EOF
+          expect << EXPECT_EOF
+          set timeout 30
+          spawn scp -o StrictHostKeyChecking=no /tmp/traefik.yml ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/traefik/traefik.yml
+          expect {
+            -re "(?i)(password|passphrase):" {
+              send -- "${SSH_PASSWORD}\r"
+              expect eof
+            }
+            eof
+          }
+          EXPECT_EOF
+          fi
+
+      - name: Deploy Traefik
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        env:
+          REMOTE_USER: ${{ steps.vars.outputs.remote_user }}
+          REMOTE_HOST: ${{ steps.vars.outputs.remote_host }}
+          REMOTE_PATH: ${{ steps.vars.outputs.remote_path }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' && '~/.ssh/deploy_key' || '' }}
+          SSH_PASSWORD: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        run: |
+          if [ -n "$SSH_KEY" ]; then
+            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+              cd ${REMOTE_PATH}
+              docker network create traefik-network 2>/dev/null || true
+              docker-compose up -d --build || docker compose up -d --build
+            "
+          else
+            expect << EXPECT_EOF
+          set timeout 300
+          spawn ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && docker network create traefik-network 2>/dev/null || true && (docker-compose up -d --build || docker compose up -d --build)"
+          expect {
+            -re "(?i)(password|passphrase):" {
+              send -- "${SSH_PASSWORD}\r"
+              expect {
+                timeout { exit 1 }
+                eof
+              }
+            }
+            eof
+          }
+          EXPECT_EOF
+          fi
+
+      - name: Restart Traefik
+        if: ${{ github.event.inputs.action == 'restart' }}
+        env:
+          REMOTE_USER: ${{ steps.vars.outputs.remote_user }}
+          REMOTE_HOST: ${{ steps.vars.outputs.remote_host }}
+          REMOTE_PATH: ${{ steps.vars.outputs.remote_path }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' && '~/.ssh/deploy_key' || '' }}
+          SSH_PASSWORD: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        run: |
+          if [ -n "$SSH_KEY" ]; then
+            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && (docker-compose restart || docker compose restart)"
+          else
+            expect << EXPECT_EOF
+          set timeout 60
+          spawn ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && (docker-compose restart || docker compose restart)"
+          expect {
+            -re "(?i)(password|passphrase):" {
+              send -- "${SSH_PASSWORD}\r"
+              expect eof
+            }
+            eof
+          }
+          EXPECT_EOF
+          fi
+
+      - name: Stop Traefik
+        if: ${{ github.event.inputs.action == 'down' }}
+        env:
+          REMOTE_USER: ${{ steps.vars.outputs.remote_user }}
+          REMOTE_HOST: ${{ steps.vars.outputs.remote_host }}
+          REMOTE_PATH: ${{ steps.vars.outputs.remote_path }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' && '~/.ssh/deploy_key' || '' }}
+          SSH_PASSWORD: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        run: |
+          if [ -n "$SSH_KEY" ]; then
+            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && (docker-compose down || docker compose down)"
+          else
+            expect << EXPECT_EOF
+          set timeout 60
+          spawn ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "cd ${REMOTE_PATH} && (docker-compose down || docker compose down)"
+          expect {
+            -re "(?i)(password|passphrase):" {
+              send -- "${SSH_PASSWORD}\r"
+              expect eof
+            }
+            eof
+          }
+          EXPECT_EOF
+          fi
+
+      - name: Verify deployment
+        if: ${{ github.event.inputs.action == 'deploy' }}
+        env:
+          REMOTE_USER: ${{ steps.vars.outputs.remote_user }}
+          REMOTE_HOST: ${{ steps.vars.outputs.remote_host }}
+          REMOTE_PATH: ${{ steps.vars.outputs.remote_path }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' && '~/.ssh/deploy_key' || '' }}
+          SSH_PASSWORD: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+        run: |
+          echo "Traefik deployment completed!"
+          echo "Traefik is running at: $REMOTE_USER@$REMOTE_HOST"
+          echo "To view logs: ssh $REMOTE_USER@$REMOTE_HOST 'cd $REMOTE_PATH && (docker-compose logs -f || docker compose logs -f)'"
