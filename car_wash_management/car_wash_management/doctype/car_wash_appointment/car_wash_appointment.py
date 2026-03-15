@@ -20,6 +20,7 @@ from .excel.export_workers_to_excel import export_workers_to_xls
 
 class Carwashappointment(Document):
 	"""Workflow:
+	- before_validate: default starts_on/work_started_on when missing so mandatory validation passes (e.g. API create without starts_on).
 	- before_insert: initialize counters, default payment, and start timestamps; inherit
 	  payment fields from linked booking when paid.
 	- validate:
@@ -47,6 +48,13 @@ class Carwashappointment(Document):
 			
 		car_wash_doc = frappe.get_doc("Car wash", self.car_wash)
 		return car_wash_doc.has_journal_feature("shop")
+
+	def before_validate(self):
+		"""Default starts_on when missing so mandatory validation passes (e.g. API create without starts_on)."""
+		if not self.starts_on:
+			self.starts_on = now_datetime()
+			self.work_started_on = self.starts_on
+
 	def before_insert(self):
 		if not self.car_wash:
 			frappe.throw("Car Wash is required")
